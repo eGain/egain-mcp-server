@@ -1,0 +1,34 @@
+speakeasyVersion: 1.636.3
+sources:
+    Knowledge Portal Manager APIs:
+        sourceNamespace: knowledge-portal-manager-ap-is
+        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
+        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
+        tags:
+            - latest
+            - 1.0.0
+targets:
+    egain-mcp:
+        source: Knowledge Portal Manager APIs
+        sourceNamespace: knowledge-portal-manager-ap-is
+        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
+        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
+    test-knowledge-mcp:
+        source: Knowledge Portal Manager APIs
+        sourceNamespace: knowledge-portal-manager-ap-is
+        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
+        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
+workflow:
+    workflowVersion: 1.0.0
+    speakeasyVersion: latest
+    sources:
+        Knowledge Portal Manager APIs:
+            inputs:
+                - location: full.yaml
+            output: .speakeasy/out.openapi.yaml
+            registry:
+                location: registry.speakeasyapi.dev/egain-corporation/mcp-test/knowledge-portal-manager-ap-is
+    targets:
+        egain-mcp:
+            target: mcp-typescript
+            source: Knowledge Portal Manager APIs

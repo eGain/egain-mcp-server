@@ -1,0 +1,342 @@
+{
+  "dxt_version": "0.1",
+  "name": "test-knowledge-mcp",
+  "version": "0.0.1",
+  "description": "",
+  "long_description": "Knowledge Portal Manager APIs: ### License\n  The following licenses are required to use the Knowledge Access APIs:\n  * If the user is an agent, then the *Knowledge + AI* license is required.\n  * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.\n### API Resource Limits\nThe following Resources have predefined limits for specific access attributes for Enterprise use.\n\n| Resource | Attribute | Enterprise\n| ---------------- | ---------------------------- | ----------\n| Article Reference Limits |Number of attachments used in any article | 50\n|  |Number of custom attributes in an article | 15\n|  |Number of publish views used in an article version | 20\n| Topic Reference Limits |User-defined topics in a department| 50000\n|  |Depth of topics  | 20\n|  |Topics at any level | 2500\n|  |Number of custom attributes in a topic | 15\n| Portal Reference Limits | Tag categories in a portal | 15\n|  |Topics to be included in a portal | 2500\n|  |Number of articles to display in announcements | 25\n|  |Maximum related articles in portal setting | 100\n|  |Usage links and link groups setup for a portal | 25\n    \n      \n",
+  "author": {
+    "name": "Speakeasy"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "./bin/mcp-server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "/Users/eloh/test-knowledge-mcp-typescript/bin/mcp-server.js",
+        "start",
+        "--api-domain",
+        "${user_config.api_domain}",
+        "--access-token",
+        "${user_config.access_token}"
+      ]
+    }
+  },
+  "display_name": "Test Knowledge Mcp",
+  "tools": [
+    {
+      "name": "portal-article-get-article-by-id",
+      "description": "Get Article by ID\n\n## Overview\n  * The Get Article by ID API allows a user to retrieve an Article using its ID.\n    * Additional Article attributes and contextual views can be specified in the query parameters.\n\n  * This API returns structured authoring attributes of Issue, Environment, Cause and Confidence Level when the following conditions are met:\n    * The \"Allow Structured Authoring\" setting is enabled at the partition/department level through the Administrative Console.\n    * The \"Use Structured Authoring\" flag is set on the article type.\n\n## Prerequisites\n  * Agents without a user profile and customers in a portal without a default user profile only have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n  * Agents with a user profile and customers in a portal with a default user profile have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n    * Contain access tags that are also in the assigned user profiles.\n    * Contain publish views with associated tags that are also in the assigned user profiles.\n  * Agents with the following assigned actions can view updates to articles currently being processed in workflows:\n    * View Author Portal – Allows agents to view updates to articles at any stage in a workflow.\n    * View Staging Portal – Allows agents to view updates to articles in the Staging stage or a subsequent stage in a workflow.\n"
+    },
+    {
+      "name": "portal-article-add-to-reply",
+      "description": "Add Article to Reply\n\n## Overview\nThe Add Article to Reply API captures events for articles used in a reply for a digital channel activity.\n\nNote:  Either the <code>x-ext-activity-id</code> or<br><code>x-ext-integration-id</code> and <code>x-ext-interaction-id</code> header must be provided.\n\n## Permissions\n  * Only Agents can invoke this API.\n"
+    },
+    {
+      "name": "portal-article-add-as-reference",
+      "description": "Add as Reference\n\n## Overview\nThe Add as Reference API captures events for articles that are referenced by agents replying inside of a digital channel activity.\n\nNote: Either the <code>x-ext-activity-id</code> or<br><code>x-ext-integration-id</code> and <code>x-ext-interaction-id</code> header must be provided.\n\n## Permissions\n  * Only Agents can invoke this API.\n"
+    },
+    {
+      "name": "portal-article-get-articles-in-topic",
+      "description": "Get Articles in Topic\n\n## Overview\nThe Get Articles in Topic API allows a user to retrieve the browsable articles in a topic.\n\n## Prerequisites\n  * Set the Article type’s parameter “Include in browse on portals” to \"Yes\" for an article to be returned by this API.\n  * Agents without a user profile and customers in a portal without a default user profile only have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain published views without any associated tags.\n  * Agents with a user profile and customers in a portal with a default user profile have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n    * Contain access tags that are also in the assigned user profiles.\n    * Contain publish views with associated tags that are also in the assigned user profiles.\n  \n## Permissions  \n  * Agents with the following assigned actions can view updates to articles currently being processed in workflows:\n    * View Author Portal – Allows agents to view updates to articles at any stage in a workflow.\n    * View Staging Portal – Allows agents to view updates to articles in the Staging stage or a subsequent stage in a workflow.\n"
+    },
+    {
+      "name": "portal-article-get-attachment-by-id",
+      "description": "Get Article Attachment\n\n## Overview\nThe Get Article Attachment API retrieves an attachment associated to an article by calling the attachment ID. \n"
+    },
+    {
+      "name": "portal-article-get-related-articles",
+      "description": "Get Related Articles\n\n## Overview\nThe Get Related Articles API retrieves all related articles associated to a given article.\n\n## Prerequisites\n  * Set the Article type’s parameter “Include in browse on portals” to \"Yes\" for an article to be returned by this API.\n  * Agents without a user profile and customers in a portal without a default user profile only have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n  * Agents with a user profile and customers in a portal with a default user profile have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n    * Contain access tags that are also in the assigned user profiles.\n    * Contain publish views with associated tags that are also in the assigned user profiles.\n\n## Permissions \n  * Agents with the following assigned actions can view updates to articles currently being processed in workflows:\n    * View Author Portal – Allows agents to view updates to articles at any stage in a workflow.\n    * View Staging Portal – Allows agents to view updates to articles in the Staging stage or a subsequent stage in a workflow.\n"
+    },
+    {
+      "name": "portal-article-get-announcement-articles",
+      "description": "Get Announcement Articles\n\n## Overview\nThe Get Announcement Articles API returns a portal's announcement articles. Only displayable announcement articles in the portal are returned. \n\n## Prerequisites\n  * For an article to display or be returned, set the Article type’s parameter, “Include in browse on portals,” to \"Yes\".\n  * Agents without a user profile and customers in a portal without a default user profile only have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n  * Agents with a user profile and customers in a portal with a default user profile have access to articles that:\n    * Do not contain any access tags.\n    * Do not contain any publish views.\n    * Contain publish views without any associated tags.\n    * Contain access tags that are also in the assigned user profiles.\n    * Contain publish views with associated tags that are also in the assigned user profiles.\n\n## Permissions \n  * Agents with the following assigned actions can view updates to articles currently being processed in workflows:\n    * View Author Portal – Allows agents to view updates to articles at any stage in a workflow.\n    * View Staging Portal – Allows agents to view updates to articles in the Staging stage or a subsequent stage in a workflow.\n    \n"
+    },
+    {
+      "name": "portal-article-get-article-ratings",
+      "description": "Get Article Ratings\n\n## Overview\nThe Get Article Ratings API returns ratings set for an Article. These ratings help you to assess the quality, helpfulness, or relevance of an article. \n"
+    },
+    {
+      "name": "portal-article-rate-article",
+      "description": "Rate an Article\n\n## Overview\nThe Rate an Article API allows a user to set a rating for an article. These ratings allow you to assess the quality, helpfulness, or relevance of an article. \n"
+    },
+    {
+      "name": "portal-article-get-pending-compliance-articles",
+      "description": "Get Pending Article Compliances\n\n## Overview\nThe Get Pending Article Compliances API retrieves all compliance-enabled articles in a portal that need to be read by the current user. Results are sorted in ascending order of the compliance due date.\n\n## Prerequisites\n* The Article compliances that are returned must be:\n    * Available for the current user profile.\n    * Displayable. An article is displayable when the \"Include in browse on portals\" property is enabled for the article.\n"
+    },
+    {
+      "name": "portal-article-get-acknowledged-compliance-articles",
+      "description": "Get Acknowledged Article Compliances\n\n## Overview\nThe Get Acknowledged Article Compliances API retrieves all compliance-enabled articles in a portal that have been read by the current user in the last 60 days. Results are sorted in descending order of the acknowledgement date.\n\n## Prerequisites\n* The Article compliances that are returned must be:\n    * Available for the current user profile.\n    * Displayable. An article is displayable when the \"Include in browse on portals\" property is enabled for the article.\n    * Acknowledged within the last 60 days.\n    * Only the latest version of a republished compliance article will be shown.\n    * Results will be sorted in descending order of acknowledgment date.\n"
+    },
+    {
+      "name": "portal-article-comply-article",
+      "description": "Comply With an Article\n\n## Overview\nThe Comply with an Article API allows the user to comply with an article by passing the Article's ID, which marks it as read by the user.            \n\n## Prerequisites\n  * The user must be an agent and:\n    * Be available in the portal.\n    * Be available for the current user profile.\n    * Have the Article's compliance policy enabled.\n  * If the Article has Access Tags, then it must be available for the agent's current user profile.\n  * If the Article has Publish Views, then at least one edition of the Article must be available for the agent's current user profile.\n"
+    },
+    {
+      "name": "portal-article-get-my-subscription",
+      "description": "My Subscription\n\n## Overview\nThe My Subscription API allows authenticated users and agents to retrieve the list of articles to which they are subscribed.\n"
+    },
+    {
+      "name": "portal-article-subscribe-article",
+      "description": "Subscribe to an Article\n\n## Overview\nThe Subscribe to an Article API allows eGain users, authenticated customers and agents to subscribe and receive notifications about changes to an Article.\n\n## Prerequisites\n  * Notifications are sent only if the following conditions are met:\n    * The Article content has been modified since the last published version.\n    * The attachment list has been modified since the last published version.\n    * The author has checked the \"Include Article in new and modified Article list\" option while publishing the Article.\n  * For the Subscribe to an Article API to execute successfully:\n    * The Article must be in the portal.\n    * The user must have provided an email address.\n\n## Permissions\n  * Agent Permissions: The following permissions are required if the user is an agent:\n    * If the Article has Access Tags:\n      * The Article must be available for the agent's current user profile.\n    * If the Article has Publish Views:\n      * At least one edition of the Article must be available for the agent's current user profile.\n    * If the Article has filters and the \"tags query parameter\" is provided:\n      * The Article filters must match the provided tags or tag groups.\n  * Customer Permissions: The following permissions are required if the user is a customer:\n    * If the Article has Access Tags:\n      * The portal must have a default user profile\n      * The Article must be available for the portal's default user profile.\n    * If the Article has Publish Views:\n      * The portal must have a default user profile\n      * At least one edition must be available for the portal's default user profile.\n    * If the Article has filters and the \"tags query parameter\" is provided, then the Article filters must match the provided tags or tag groups.\n"
+    },
+    {
+      "name": "portal-article-unsubscribe-article",
+      "description": "Unsubscribe to an Article\n\n## Overview\nThe Unsubscribe to an Article API allows authenticated users and agents to unsubscribe to an Article for which they were earlier subscribed to receive change notifications.\n"
+    },
+    {
+      "name": "portal-article-get-article-permissions-by-id",
+      "description": "Get Article Permissions By ID\n\n## Overview\n  * The Get Article Permission by ID permits a user to retrieve permissions associated to an article.\n"
+    },
+    {
+      "name": "portal-article-get-article-personalization",
+      "description": "Get Article Personalization Details\n\n## Overview\n  The Get Article Personalization Details API allows agents to retrieve the personalization tag details of an Article.\n"
+    },
+    {
+      "name": "portal-topic-getchildtopics",
+      "description": "Get Immediate Child Topics\n\n## Overview\n  The Get Immediate Child Topics API retrieves details about a topic and it's immediate child topics. The <code>$level</code> attribute determines how deep the topic hierarchy should go, or how many child topics of a topic are returned in the response.\n"
+    },
+    {
+      "name": "portal-topic-getancestortopics",
+      "description": "Get All Ancestor Topics\n\n## Overview\n  The Get All Ancestor Topics API retrieves the hierarchy from the root topic down to the given topic.\n"
+    },
+    {
+      "name": "portal-topic-getalltopics",
+      "description": "Get All Topics\n\n## Overview\n  The Get All Topics API retrieves the topic tree for a portal. The <code>$level</code> attribute determines how deep the topic hierarchy should go, or how many child topics of a topic are returned in the response.\n"
+    },
+    {
+      "name": "portal-populararticles-getpopulararticles",
+      "description": "Get Popular Articles\n\n## Overview\n  The Popular Articles API allows a user to retrieve popular articles. \n## Prerequisites \n    * Only displayable articles are returned. An Article is displayable when \"Include in browse on portals\" property is enable for the Article. \n## Permissions\n  * Agent permissions: The following permissions are required if user is an Agent:\n    * If Article has Access Tags, Article must be available for agent's current user profile.\n    * If Article has Publish Views, at least one edition of Article must be available for agent's current user profile.\n    * If Article has filters and tags query parameter provided, Article filters must match provided tags or tag groups.\n  * Customer permissions: The following permissions are required if user is a Customer:              \n      * If Article has Access tags: \n       * Portal must have default user profile, and;\n       * Article must be available for portal's default user profile.\n    * If Article has Publish Views:\n      * Portal must have default user profile, and;\n      * At least one edition must be available for portal's default user profile.\n    *  If Article has filters and tags query parameter provided, Article filters must match provided tags or tag groups.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-all-casebases-releases",
+      "description": "Get Available Casebases Releases\n\n## Overview\n  The Get Available Casebases Releases API retrieves all Casebase Releases associated with a portal.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-casebase-release-by-id",
+      "description": "Get Details of a Casebase Release\n\n## Overview\n  The Get Details of a Casebase Release API retrieves details of Casebase Release.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-cluster-by-casebase-release-id",
+      "description": "Get Cluster Details of a Casebase Release\n\n## Overview\n  The Get Cluster Details of a Casebase Release API retrieves cluster details of Casebase Release.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-all-profiles-in-portal",
+      "description": "Get All Profiles Available in Portal\n\n## Overview\n  The Get All Profiles Available in Portal API retrieves all Guided Help profiles associated with a portal.\n"
+    },
+    {
+      "name": "portal-guidedhelp-start-GH-search",
+      "description": "Start a Guided Help Search\n\n## Overview\n   The Start a Guided Help search can be used to start a search session in the Guided Help. \n   \n   A Guided Help profile can also be specified while starting the session and it is used to filter the results of search.\n   If this is not passed in the request, the default profile of the portal is used. Questions can also be answered at time of starting the search session. \n   \n   A Guided Help search session can be started in following ways:\n   * Launch session for a specific Casebase Release.\n   * Launch session for a Casebase and specify the release type.\n   * Use a Guided Help session Article and pass the required session parameters.\n\n## Prerequisites\n   * A Guided Help profile must be assigned to the user.\n   * Casebase Release passed in the request must be associated with the portal passed in URI. \n   \n"
+    },
+    {
+      "name": "portal-guidedhelp-step-GH-search",
+      "description": "Perform a Step in a Guided Help Search\n\n## Overview\n   The Perform a Step in a Guided Help Search API can be used to answer one or more questions (perform a step) in Guided Help search.\n\n## Prerequisites\n   * A Guided Help session must be in progress before this API is invoked.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-all-cases",
+      "description": "Get All Cases of a Cluster in Release\n\n## Overview\n  The Get All Cases of a Cluster in Release API retrieves all cases in cluster of a Casebase Release. A Case is a group of Questions, Articles, and control actions that work together to guide users through a series of questions and scenarios in a Guided Help session.  \n\n## Prerequisites\n  A Guided Help search session for the provided Casebase Release must be in progress before this API is invoked.\n"
+    },
+    {
+      "name": "portal-guidedhelp-get-case-by-id",
+      "description": "Get Details of a Case\n\n## Overview\n  The Get Details of a Case API retrieves details of a case in a release.\n\n## Prerequisites\n  * A Guided Help search session for the provided Casebase Release must be in progress before this API is invoked.\n"
+    },
+    {
+      "name": "portal-guidedhelp-accept-GH-solution",
+      "description": "Accept Solution\n\n## Overview\n  The Accept Solution API can be used to accept and add positive score to a solution of a Guided Help case.\n\n## Prerequisites\n   * A Guided Help search session must be started before invoking this API.\n"
+    },
+    {
+      "name": "portal-guidedhelp-reject-GH-solution",
+      "description": "Reject Solution\n\n## Overview\n  The Reject Solution API can be used to reject and add negative score to a solution of a Guided Help case.\n\n## Prerequisites\n   * A Guided Help search session must be started before invoking this API.\n"
+    },
+    {
+      "name": "portal-guidedhelp-create-quickpick",
+      "description": "Create Quickpick\n\n## Overview\n   The Create Quickpick API can be used to create a new quickpick(bookmark) for current Guided Help search session.\n\n  Note: If \"linkToActivity\" attribute is passed as true in request body then one of below must be passed in header\n   * <code>XEgainTenantId</code>\n   * <code>xEgainActivityId</code>\n   * <code>XInteractionId</code>\n\n## Prerequisites\n   * A Guided Help search session must be in progress before this API is invoked.\n   * QuickPick can only be created for a live release of a Casebase.\n   \n"
+    },
+    {
+      "name": "portal-guidedhelp-get-all-quick-picks",
+      "description": "Get All Quickpicks for a Portal\n\n## Overview\n  The Get All Quickpicks for a Portal API retrieves details of quickpicks created for the Casebase.\n\n## Conditions\n   If \"getLastSavedQuickPickForInteraction\" query parameter is passed as \"Yes\" then one of below must be passed in request header.\n   * X-ext-integration-id\n   * X-egain-activity-id\n   * X-ext-interaction-id\n  Either casebaseID or getLastSavedQuickPickForInteraction must be passed in request.\n"
+    },
+    {
+      "name": "portal-guidedhelp-restore-quickpick",
+      "description": "Resume a Quickpick\n\n## Overview\n  The Resume a Quickpick API can be used to restore (resume) a specific quickpick.\n\n## Prerequisites\n   * A Guided Help session for the Casebase must be started before invoking this API.\n"
+    },
+    {
+      "name": "portal-bookmark-addbookmark",
+      "description": "Add a Bookmark\n\n## Overview\n  * The Add a Bookmark API adds a bookmark from a portal.\n"
+    },
+    {
+      "name": "portal-bookmark-getbookmark",
+      "description": "Get All Bookmarks for a Portal\n\n## Overview\n  The Get All Bookmarks for a Portal API returns all bookmarks for a portal. Only the topic bookmarks that are available in the scope of the portal are returned.\n\n## Permissions\n  * The user must have the __View Author Portal__ action to access the authoring view.\n  * The user must have the __View Staging Portal__ action to access the staging view.\n"
+    },
+    {
+      "name": "portal-bookmark-deletebookmark",
+      "description": "Delete a Bookmark\n\n## Overview\n  The Delete a Bookmark API deletes a bookmark from a portal.\n"
+    },
+    {
+      "name": "portal-userprofile-get-all-user-profiles",
+      "description": "Get All User Profiles Assigned to User\n\n## Overview\n  The Get All User Profiles Assigned to User API retrieves all user profiles in the portal that are assigned to the user, displayed in ascending order of name.\n"
+    },
+    {
+      "name": "portal-userprofile-select-user-profile",
+      "description": "Select User Profile\n\n## Overview\n  The Select User Profile API allows a user to set the user profile for a portal.\n"
+    },
+    {
+      "name": "portal-userdetails-get-user-details",
+      "description": "Get User Details\n\n## Overview\n  The Get User Details API retrieves details of a knowledge user.\n"
+    },
+    {
+      "name": "portal-articlelists-get-all-article-lists",
+      "description": "Get All Article Lists\n\n## Overview\n  The Get All Article Lists API returns all quick Article lists that are configured for a portal.\n"
+    },
+    {
+      "name": "portal-articlelists-get-article-list-details",
+      "description": "Get Article List by ID\n\n## Overview\n  The Get Article Lists by ID API returns the details of a quick access Article list that is configured for a portal.\n\n  Only those articles in the quick access list articles are returned and are:\n\n  - Available for current user profile.\n  - Tagged with at least one of the provided tags, if tags query parameter is provided.\n  - Displayable. An Article is displayable if \"Include in browse on portals\" property is enable for the Article. \n"
+    },
+    {
+      "name": "portal-general-get-all-portals",
+      "description": "Get All Portals\n\n## Overview\n  The Get All Portals API returns all portals in a partition or department.\n"
+    },
+    {
+      "name": "portal-general-get-my-portals",
+      "description": "Get All Portals Accessible To User\n\n## Overview\n  The Get All Portals Accessible to User API allows a user to fetch all portals accessible to user across all department.\n  * If no access tags are specified for a portal, then any user can access the portal.\n  * If access tags are specified for a portal, users with a user profile that allows access have access to the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.\n  * All the global users(partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.\n  * The only articles returned are associated to an Article type when the parameter, “Include in browse on portals” is set to \"Yes\".\n  * When the \"shortUrlTemplate\" query parameter is provided, the API filters accessible portals according to the specified language and template name. Portal Short URL specific to to the \"shortUrlTemplate\" query parameter value is returned in the response.\n  * When there is no short URL available for a specific language, the API returns a portal object with an empty \"shortURL\" field.\n"
+    },
+    {
+      "name": "portal-general-get-portal-details-by-id",
+      "description": "Get Portal Details By ID\n\n## Overview\n  The Get Portal Details By ID API allows a user to fetch details of a portal by the ID.\n"
+    },
+    {
+      "name": "portal-general-get-tag-categories-for-interest-for-portal",
+      "description": "Get Tag Categories for Interest for a Portal\n\n## Overview\n  The Get Tag Categories for Interest for a Portal API retrieves the Tag Categories for Interest configured for a portal.\n  * Tag Categories are ordered in order of their addition in the \"Tag Categories for Interest\" in the Portal configuration.\n  * Tags are ordered as per their order defined in their Tag Category.\n  * Tag Groups are sorted by their name, in ascending order.\n"
+    },
+    {
+      "name": "portal-search-search",
+      "description": "Multi-Search\n\n## Overview\n  The Multi-Search API allows a user to perform search operations on articles, topics and external and internal web sites.\n  * The filter \"articles-in-topic-tree\" is not compatible with \"articles-in-topics\" and \"exclude-articles-in-topics\" as they are mutually exclusive.\n  * Any value supplied using the <code>$pagenum</code> and <code>$pagesize</code> parameters is honored for search results from articles and topics only. External and internal web sites search result uses default pagination.\n  \n  This API returns additional attributes of Issue, Environment, and Cause when the following prerequisites are met:\n  * The \"Allow Structured Authoring\" setting is enabled at the partition/department level in the Administrative Console.\n  * The \"Use Structured Authoring\" flag is set on the article type.\n"
+    },
+    {
+      "name": "portal-search-internet-search",
+      "description": "Internet Search\n\n## Overview\n  The Internet Search API allows a user to perform search operations on external web sites.\n\n## Prerequisite\n  * For the API to provide search results, configure the portal setting \"Include Web Search Section in Search Results\" to \"Yes\".\n"
+    },
+    {
+      "name": "portal-search-intranet-search",
+      "description": "Intranet Search\n\n## Overview\n  The Intranet Search API allows a user to perform search operations on internal web sites.\n## Prerequisites\n  * For the Intranet Search API to provide search results, configure the portal setting \"Include Intranet Search Section in Search Results\" to \"Yes\".\n"
+    },
+    {
+      "name": "portal-search-kb-search",
+      "description": "KB Search\n\n## Overview\n  The KB Search API allows a user to perform search operations on articles and topics in scope of the portal.\n\n  The filter \"articles-in-topic-tree\" is not compatible with \"topics\" and \"exclude-topics\" as they are mutually exclusive.\n  This API returns additional attributes of Issue, Environment, and Cause when the following prerequisites are met:\n  * The \"Allow Structured Authoring\" setting is enabled at the partition/department level in the Administrative Console.\n  * The \"Use Structured Authoring\" flag is set on the article type.\n  \n  \n"
+    },
+    {
+      "name": "portal-search-typeahead-suggestion",
+      "description": "Typeahead Suggestion\n\n## Overview\n  The Typeahead Suggestion API returns typeahead suggestions for a given search query string based on topics and Article's content.\n\n  Input search query string length should be greater than 2 characters for the API to respond.\n"
+    },
+    {
+      "name": "portal-suggestion-make-suggestion",
+      "description": "Make a Suggestion\n\n## Overview\n  The Make a Suggestion API allows users to create an Article Suggestion from within a knowledge portal.\n\n## Prerequisites\n  * Enable the setting \"Manage a Suggestion\" for the portal specified in the URL.\n  * If the user is a Customer, enable the setting \"Allow Customer Access\" for the portal.\n  * If you want to add an attachment to a Suggestion, first call the Generate Signed URL to Upload API to add an attachment using the provided returned altID in attachment request.\n"
+    },
+    {
+      "name": "portal-suggestion-modify-suggestions",
+      "description": "Modify Suggestion\n\n## Overview\n  The Modify Suggestion API allows authenticated users to modify their own Suggestion.\n\n## Prerequisites\n  * Enable the setting \"Manage a Suggestion\" for the portal specified in the URL.\n  * If the user is a Customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The \"Suggestion ID\" specified in the request body must exist and belong to the user.\n  * The status of this Suggestion as returned by the Get Suggestion by ID API must be \"pending\".\n  * At least one of the optional request body attributes must be provided.\n"
+    },
+    {
+      "name": "portal-suggestion-search-suggestion",
+      "description": "Get Suggestion by Status\n\n## Overview\n  The Get Suggestion by Status API allows authenticated users to retrieve their own suggestions based on Suggestion status.\n  \n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL.\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n"
+    },
+    {
+      "name": "portal-suggestion-get-suggestion",
+      "description": "Get Suggestion by ID\n\n## Overview\n  The Get Suggestion by ID API allows authenticated users to retrieve their own suggestions.\n\n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL.\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The \"Suggestion for the ID\" specified in the URL must belong to the user.\n \n"
+    },
+    {
+      "name": "portal-suggestion-delete-suggestion",
+      "description": "Delete a Suggestion\n\n## Overview\n  The Delete a Suggestion API allows authenticated users to delete their own Suggestion.\n\n## Prerequisites\n  * Enable the setting \"Manage a Suggestion\" for the portal specified in the URL.\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The Suggestion must belong to the user.\n  * The status of the Suggestion must not be \"approved\".\n"
+    },
+    {
+      "name": "portal-suggestion-get-related-articles-for-suggestion",
+      "description": "Get Related Articles for Suggestion\n\n## Overview\n  The Get Related Articles for Suggestion API allows authenticated users to retrieve related articles for a Suggestion.\n\n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL.\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The Suggestion specified in the URL must belong to the user.\n"
+    },
+    {
+      "name": "portal-suggestion-get-suggestion-comments",
+      "description": "Get Suggestion Comments\n\n## Overview\n  The Get Suggestion Comments API allows authenticated users to retrieve all comments for a Suggestion.\n\n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL. \n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The Suggestion specified in the URL must belong to the user.\n"
+    },
+    {
+      "name": "portal-suggestion-get-suggestion-attachments",
+      "description": "Get Suggestion Attachments\n\n## Overview\n  The Get Suggestion Attachments API allows authenticated users to retrieve attachments for a Suggestion.\n\n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The Suggestion specified in the URL must belong to the user.\n"
+    },
+    {
+      "name": "portal-suggestion-get-suggestion-attachment-by-id",
+      "description": "Get Suggestion Attachment by ID\n\n## Overview\n  The Get Suggestion Attachment by ID API allows authenticated users to get the details of an attachment that belongs to their own Suggestion. It also allows the download of attachment content. \n\n## Prerequisites\n  * Enable the setting \"My Suggestions\" for the portal specified in the URL\n  * If the user is a customer, enable the setting \"Allow Customer Access\" for the portal.\n  * The Suggestion specified in the URL must belong to the user.\n"
+    },
+    {
+      "name": "portal-usermilestones-get-user-milestones",
+      "description": "Get User Milestones\n\n## Overview\nThe User Milestones API provides information about the milestones of an agent within the article workflow. \nThis API helps track the progress of articles by grouping them into relevant milestones based on their current stage.\n\nFor example, an article might go through Knowledge Workflow Stages like Draft, Initial Review, Staging, Final Review and Publish. \n       Articles in the Draft and Initial Review stages are part of the \"authoring milestone\", while articles in the Staging and Final Review stages are part of the \"staging milestone\".\n"
+    },
+    {
+      "name": "portal-federated-create-search-result-event",
+      "description": "Event For Viewed Federated Search Result\n\n## Overview\n   The Federated Search Event API creates an event for federated search results that have been viewed.\n  An event for viewing an: \n  * External web page cannot be created for a portal where the value for the \"Include Web Search Section in Search Results\" attribute is \"Yes\".\n  * Internal web page cannot be created for a portal where the value for the \"Include Intranet Search Section in Search Results\" attribute is \"Yes\".\n"
+    },
+    {
+      "name": "portal-escalation-start-customer-escalation",
+      "description": "Start Customer Escalation\n\n## Overview\n  The Start Escalation API is called to initiate an escalation and it must be called before any other escalation API. \n  An escalation occurs when a customer is referred to a higher level of support, such as chat or email, to address their issue. \n  This process is initiated when the initial support resources are insufficient by themselves. \n\n  Customer object is optional for authenticated customers. Values provided in request takes precedence over the values provided during customer registration.\n"
+    },
+    {
+      "name": "portal-escalation-search-prior-to-escalation",
+      "description": "Search Prior To Customer Escalation\n\n## Overview\n  The Search Prior to Customer Escalation API performs search on the subject and description parameters, but filters out any articles that the customer has viewed in the current session.\n"
+    },
+    {
+      "name": "portal-escalation-complete-customer-escalation",
+      "description": "Complete Customer Escalation\n\n## Overview\n  The Complete Customer Escalation API allows customer to complete escalation and send an email to a customer service agent on behalf of the customer.\n\n  After invoking the Complete Escalation or Avert Escalation APIs, the escalation ID associated with the escalation becomes invalid. \n  **Important:** Further attempts to use or reference the same escalation ID results in an error or failure.\n"
+    },
+    {
+      "name": "portal-escalation-avert-customer-escalation",
+      "description": "Avert Customer Escalation\n\n## Overview\n  The Avert Customer Escalation API notifies the server that escalation to a live agent has been averted. Usually this means that the customer found the information they needed.\n\n  After invoking the Complete Escalation or Avert Escalation APIs, the escalation ID associated with the escalation becomes invalid. \n  **Important:** Further attempts to use or reference the same escalation ID results in an error or failure.\n"
+    },
+    {
+      "name": "portal-connectors-create-search-result-event",
+      "description": "Event for Search Using Connectors\n\n## Overview\n   The Event for Search Using Connectors API creates an event to initiate a search operation for retrieving content from external sources or integrations within the portal. \n   It allows users to set up search events based on specified criteria.\n"
+    },
+    {
+      "name": "portal-connectors-create-viewed-search-results-event",
+      "description": "Event for Viewed Search Results Using Connectors\n\n## Overview\n   The Event for Viewed Search Results Using Connectors API creates an event to log when search results from external content are viewed. \n   This helps in tracking and analyzing user interactions with search results retrieved from various external sources.\n"
+    },
+    {
+      "name": "portal-attachment-create-signed-URL",
+      "description": "Generate Signed URL to Upload API\n\n## Overview\n   The Generate Signed URL to Upload API produces a signature that is used to upload an attachment. \n"
+    },
+    {
+      "name": "portal-attachment-upload-attachment",
+      "description": "Upload Attachment\n\n## Overview\n   The Upload Attachment API uses the signed URL produced by the Generate Signed URL to Upload API to upload an attachment. \n   The Make a Suggestion API uses this API to upload attachments.\n"
+    },
+    {
+      "name": "portal-export-export-content",
+      "description": "Export Knowledge\n\n## Overview\n   The Content Export API initiates a bulk export of the Knowledge Hub to a client-provided Amazon S3 bucket or SFTP server path.\n   It returns a URL with a Job ID to enable tracking the status of this asynchronous operation.  More than one bulk export can take place, as needed, one per portal.\n\n## Permission\n  * Only a client application can invoke this API.   \n"
+    },
+    {
+      "name": "portal-export-export-status",
+      "description": "Get Export Job Status\n\n## Overview\n   The Content Export Status API provides real-time status information to monitor job progress and check completion status.\n\n## Status Values\n- **Pending**: Job is pending start of processing\n- **In Progress**: Job is actively processing content        \n- **Completed**: Job finished successfully\n- **Failed**: Job encountered errors and could not complete\n\n## Response Information\n- **Current Status**: Real-time job status\n- **Progress Metrics**: Items processed, total items\n- **Error Details**: Specific errors encountered during processing\n- **Timing Information**: Start time, estimated completion, actual completion           \n\n## Permission\n  * Only a client application can invoke this API.  \n"
+    }
+  ],
+  "prompts": [],
+  "keywords": [
+      "test",
+      "knowledge",
+      "mcp",
+      "portal",
+      "manager",
+      "apis",
+      "license"
+    ],
+  "user_config": {
+      "api_domain": {
+        "type": "string",
+        "title": "API_DOMAIN",
+        "description": " ",
+        "required": false,
+        "default": "api.egain.cloud"
+      },
+      "access_token": {
+        "type": "string",
+        "title": "accessToken",
+        "description": "The accessToken to use for the request",
+        "required": true,
+        "sensitive": true
+      }
+    }
+}

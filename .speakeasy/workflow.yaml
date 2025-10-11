@@ -1,0 +1,13 @@
+workflowVersion: 1.0.0
+speakeasyVersion: latest
+sources:
+    Knowledge Portal Manager APIs:
+        inputs:
+            - location: full.yaml
+        output: .speakeasy/out.openapi.yaml
+        registry:
+            location: registry.speakeasyapi.dev/egain-corporation/mcp-test/knowledge-portal-manager-ap-is
+targets:
+    egain-mcp:
+        target: mcp-typescript
+        source: Knowledge Portal Manager APIs

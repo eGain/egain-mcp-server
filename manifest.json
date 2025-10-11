@@ -1,0 +1,94 @@
+{
+  "dxt_version": "0.1",
+  "name": "egain-mcp",
+  "version": "0.4.6",
+  "description": "",
+  "long_description": "eGain API: Use the eGain API to get information about the eGain platform.",
+  "author": {
+    "name": "Speakeasy"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "./bin/mcp-server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/bin/mcp-server.js",
+        "start",
+        "--server-index",
+        "${user_config.server_index}",
+        "--api-domain",
+        "${user_config.api_domain}",
+        "--access-token",
+        "${user_config.access_token}"
+      ]
+    }
+  },
+  "display_name": "Egain Mcp",
+  "tools": [
+    {
+      "name": "get-article",
+      "description": "Get Article by ID\n\nGet Article by ID\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n- Requires a valid article ID. Article ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"PROD-2996\")\n\n## Overview\nThe Get Article by ID API allows a user to retrieve a specific article using its ID. Additional article attributes and contextual views can be specified in the query parameters.\n\nThis API returns structured authoring attributes of Issue, Environment, Cause and Confidence Level when the following conditions are met:\n- The \"Allow Structured Authoring\" setting is enabled at the partition/department level\n- The \"Use Structured Authoring\" flag is set on the article type\n"
+    },
+    {
+      "name": "get-announcements",
+      "description": "Get Announcement Articles\n\nGet Announcements\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.\n\nThis API returns announcement articles with their full content, metadata, and any associated attachments or links.\n"
+    },
+    {
+      "name": "get-popular-articles",
+      "description": "Get Popular Articles\n\nGet Popular Articles\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Popular Articles API allows a user to retrieve the most popular articles from a specific portal. Popular articles are typically determined by user engagement metrics such as views, ratings, or usage frequency.\n\nThis API returns a list of popular articles with their metadata, allowing users to discover the most relevant and frequently accessed content within the portal.\n"
+    },
+    {
+      "name": "get-portals",
+      "description": "Get All Portals Accessible To User\n\n## Overview\n  The Get All Portals Accessible to User API allows a user to fetch all portals accessible to user across all department.\n  * If no access tags are specified for a portal, then any user can access the portal.\n  * If access tags are specified for a portal, users with a user profile that allows access have access to the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.\n  * All the global users(partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.\n  * The only articles returned are associated to an Article type when the parameter, “Include in browse on portals” is set to \"Yes\".\n  * When the \"shortUrlTemplate\" query parameter is provided, the API filters accessible portals according to the specified language and template name. Portal Short URL specific to to the \"shortUrlTemplate\" query parameter value is returned in the response.\n  * When there is no short URL available for a specific language, the API returns a portal object with an empty \"shortURL\" field.\n"
+    },
+    {
+      "name": "make-suggestion",
+      "description": "Make a Suggestion\n\nMake a Suggestion\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Make a Suggestion API allows users to create an Article Suggestion from within a knowledge portal. This enables users to submit feedback, request new articles, or suggest improvements to existing content.\n\nUsers can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.\n"
+    },
+    {
+      "name": "get-answers",
+      "description": "Get the best answer for a user query\n\nGet Answers\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.\n\nThe API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.\n"
+    },
+    {
+      "name": "retrieve-chunks",
+      "description": "Retrieve Chunks\n\nRetrieve Chunks\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.\n\nIn addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.\n\nBy leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.\n"
+    },
+    {
+      "name": "search-ai-search",
+      "description": "Get the best search results for a user query\n\nThe Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores. <br>**This endpoint is only available for Self Service environments.**\n"
+    }
+  ],
+  "prompts": [],
+  "keywords": [
+      "egain",
+      "mcp",
+      "api",
+      "use",
+      "the"
+    ],
+  "user_config": {
+      "server_index": {
+        "type": "number",
+        "title": "Server Index",
+        "description": "Available servers: [https://{API_DOMAIN}/knowledge/portalmgr/v4, https://{API_DOMAIN}/core/aiservices/v4]",
+        "required": false,
+        "default": "0",
+        "max": 1
+      },
+      "api_domain": {
+        "type": "string",
+        "title": "API_DOMAIN",
+        "description": " Templated in https://{API_DOMAIN}/core/aiservices/v4.",
+        "required": false,
+        "default": "aiservices-qe.ezdev.net"
+      },
+      "access_token": {
+        "type": "string",
+        "title": "accessToken",
+        "description": "The accessToken to use for the request",
+        "required": true,
+        "sensitive": true
+      }
+    }
+}
