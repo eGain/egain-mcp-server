@@ -10,13 +10,6 @@ import {
 } from "./createsuggestion.js";
 import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
-export const MakeSuggestionOpServerList = [
-  /**
-   * Production Server
-   */
-  "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-] as const;
-
 export type MakeSuggestionRequest = {
   acceptLanguage?: AcceptLanguage | undefined;
   portalID: string;

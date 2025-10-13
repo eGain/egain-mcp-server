@@ -14,13 +14,10 @@ import {
 import { MCPScope } from "./scopes.js";
 import { createRegisterTool } from "./tools.js";
 import { tool$getAnnouncements } from "./tools/getAnnouncements.js";
-import { tool$getAnswers } from "./tools/getAnswers.js";
 import { tool$getArticle } from "./tools/getArticle.js";
 import { tool$getPopularArticles } from "./tools/getPopularArticles.js";
 import { tool$getPortals } from "./tools/getPortals.js";
 import { tool$makeSuggestion } from "./tools/makeSuggestion.js";
-import { tool$retrieveChunks } from "./tools/retrieveChunks.js";
-import { tool$searchAiSearch } from "./tools/searchAiSearch.js";
 
 export function createMCPServer(deps: {
   logger: ConsoleLogger;
@@ -34,7 +31,7 @@ export function createMCPServer(deps: {
 }) {
   const server = new McpServer({
     name: "EgainMcp",
-    version: "0.4.6",
+    version: "0.2.1",
   });
 
   const getClient = deps.getSDK || (() =>
@@ -83,9 +80,6 @@ export function createMCPServer(deps: {
   tool(tool$getPopularArticles);
   tool(tool$getPortals);
   tool(tool$makeSuggestion);
-  tool(tool$getAnswers);
-  tool(tool$retrieveChunks);
-  tool(tool$searchAiSearch);
 
   return server;
 }

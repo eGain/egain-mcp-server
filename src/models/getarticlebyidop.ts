@@ -19,13 +19,6 @@ import {
 } from "./workflowmilestone.js";
 import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
-export const GetArticleByIdOpServerList = [
-  /**
-   * Production Server
-   */
-  "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-] as const;
-
 /**
  * Provides information about the method in which the Article is accessed and is used for self-service analytics. Refer to the eGain User Guide regarding "Article View Contexts".
  *

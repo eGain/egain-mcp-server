@@ -4,6 +4,10 @@
 
 import * as z from "zod";
 import { AcceptLanguage, AcceptLanguage$zodSchema } from "./acceptlanguage.js";
+import {
+  ArticleResultAdditionalAttributes,
+  ArticleResultAdditionalAttributes$zodSchema,
+} from "./articleresultadditionalattributes.js";
 import { ArticleResults, ArticleResults$zodSchema } from "./articleresults.js";
 import {
   LanguageQueryParameter,
@@ -15,17 +19,13 @@ import {
 } from "./workflowmilestone.js";
 import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
-export const GetAnnouncementArticlesOpServerList = [
-  /**
-   * Production Server
-   */
-  "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-] as const;
-
 export type GetAnnouncementArticlesRequest = {
   acceptLanguage?: AcceptLanguage | undefined;
   portalID: string;
   dollarFilterTags?: string | undefined;
+  articleResultAdditionalAttributes?:
+    | Array<ArticleResultAdditionalAttributes>
+    | undefined;
   workflowMilestone?: WorkflowMilestone | undefined;
   Dollar_lang?: LanguageQueryParameter | undefined;
   Dollar_pagenum?: number | undefined;
@@ -45,6 +45,29 @@ export const GetAnnouncementArticlesRequest$zodSchema: z.ZodType<
     "Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.",
   ),
   acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
+  articleResultAdditionalAttributes: z.array(
+    ArticleResultAdditionalAttributes$zodSchema,
+  ).describe(
+    "The attributes of an Article to be returned *in addition to* the default list of attributes, listed below. Multiple additional attributes can be specified using a comma-separated list. Passing 'all' will return all attributes.\n"
+      + "\n"
+      + "#### Default Attributes\n"
+      + "These Article attributes are always returned:\n"
+      + "\n"
+      + "| Name | Description \n"
+      + "| ---- | -----------\n"
+      + "| id | The ID of the Article.\n"
+      + "| name  | The name of the Article.\n"
+      + "| articleType | The Article Type and its attributes.\n"
+      + "| createdBy | The ID, first name, middle name and last name of the user that created the Article.\n"
+      + "| createdDate | The date that the Article was created.\n"
+      + "| hasAttachments | True: The Article has one or more attachments.<br>False: The Article does not have any attachments.\n"
+      + "| languageCode | The language code of the Article language. \n"
+      + "| modifiedBy | The ID, first name, middle name and last name of the user that last modified the Article.\n"
+      + "| modifiedDate | The date that the Article was last modified on.\n"
+      + "| link | The link object, used to retrieve the details of the Article.\n"
+      + "| versionId | The ID of the Article version that is returned.\n"
+      + "",
+  ).optional(),
   dollarFilterTags: z.string().describe(
     "A comma separated list of Tag / Tag Group IDs. The query results will be filtered by the tags that are specified.<br><br>Tag IDs and Tag Group IDs can be mixed together.",
   ).optional(),

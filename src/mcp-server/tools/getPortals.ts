@@ -24,7 +24,6 @@ export const tool$getPortals: ToolDefinition<typeof args> = {
   * When there is no short URL available for a specific language, the API returns a portal object with an empty "shortURL" field.
 `,
   annotations: {
-    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

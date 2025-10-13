@@ -7,15 +7,15 @@ import { dlv } from "./dlv.js";
 import * as z from "zod";
 
 export interface Env {
-  EGAINMCP_ACCESS_TOKEN?: string | undefined;
+  EGAIN_MCP_ACCESS_TOKEN?: string | undefined;
 
-  EGAINMCP_DEBUG?: boolean | undefined;
+  EGAIN_MCP_DEBUG?: boolean | undefined;
 }
 
 export const envSchema: z.ZodType<Env, z.ZodTypeDef, unknown> = z.object({
-  EGAINMCP_ACCESS_TOKEN: z.string().optional(),
+  EGAIN_MCP_ACCESS_TOKEN: z.string().optional(),
 
-  EGAINMCP_DEBUG: z.coerce.boolean().optional(),
+  EGAIN_MCP_DEBUG: z.coerce.boolean().optional(),
 });
 
 let envMemo: Env | undefined = undefined;

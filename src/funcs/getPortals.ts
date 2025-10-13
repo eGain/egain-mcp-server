@@ -20,7 +20,6 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  GetMyPortalsOpServerList,
   GetMyPortalsRequest,
   GetMyPortalsRequest$zodSchema,
   GetMyPortalsResponse,
@@ -94,12 +93,6 @@ async function $do(
   }
   const payload$ = parsed$.value;
   const body$ = null;
-  const baseURL$ = options?.serverURL
-    || pathToFunc(GetMyPortalsOpServerList[0], { charEncoding: "percent" })(
-      {
-        API_DOMAIN: "api-dev9.knowledge.ai",
-      },
-    );
   const path$ = pathToFunc("/myportals")();
   const query$ = encodeFormQuery({
     "$lang": payload$.Dollar_lang,
@@ -125,7 +118,7 @@ async function $do(
 
   const context = {
     options: client$._options,
-    baseURL: baseURL$ ?? "",
+    baseURL: options?.serverURL ?? client$._baseURL ?? "",
     operationID: "getMyPortals",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
@@ -145,7 +138,7 @@ async function $do(
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
     method: "GET",
-    baseURL: baseURL$,
+    baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
     query: query$,

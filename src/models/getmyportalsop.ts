@@ -19,13 +19,6 @@ import {
 } from "./sortidnamedepartment.js";
 import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
-export const GetMyPortalsOpServerList = [
-  /**
-   * Production Server
-   */
-  "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-] as const;
-
 export type GetMyPortalsRequest = {
   acceptLanguage?: AcceptLanguage | undefined;
   Dollar_lang: MandatoryLanguageQueryParameter;
@@ -49,7 +42,7 @@ export const GetMyPortalsRequest$zodSchema: z.ZodType<
     "Pagination parameter that specifies the page number of results to be returned. Used in conjunction with $pagesize.",
   ),
   Dollar_pagesize: z.number().int().default(25).describe(
-    "Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.<br>Valid range of 5-25<br>_Default value_: 25",
+    "Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.<br>Valid range of 5-75<br>_Default value_: 25",
   ),
   Dollar_sort: SortIdNameDepartment$zodSchema.optional(),
   acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),

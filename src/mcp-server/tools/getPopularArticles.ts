@@ -26,7 +26,6 @@ The Popular Articles API allows a user to retrieve the most popular articles fro
 This API returns a list of popular articles with their metadata, allowing users to discover the most relevant and frequently accessed content within the portal.
 `,
   annotations: {
-    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

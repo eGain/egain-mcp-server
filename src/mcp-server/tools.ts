@@ -22,7 +22,6 @@ export type ToolDefinition<Args extends undefined | ZodRawShape = undefined> =
       scopes?: MCPScope[];
       args: Args;
       annotations: {
-        title: string;
         destructiveHint: boolean;
         idempotentHint: boolean;
         openWorldHint: boolean;
@@ -40,7 +39,6 @@ export type ToolDefinition<Args extends undefined | ZodRawShape = undefined> =
       scopes?: MCPScope[];
       args?: undefined;
       annotations: {
-        title: string;
         destructiveHint: boolean;
         idempotentHint: boolean;
         openWorldHint: boolean;

@@ -20,7 +20,6 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  MakeSuggestionOpServerList,
   MakeSuggestionRequest,
   MakeSuggestionRequest$zodSchema,
   MakeSuggestionResponse,
@@ -98,12 +97,6 @@ async function $do(
   const body$ = encodeJSON("body", payload$.CreateSuggestion, {
     explode: true,
   });
-  const baseURL$ = options?.serverURL
-    || pathToFunc(MakeSuggestionOpServerList[0], { charEncoding: "percent" })(
-      {
-        API_DOMAIN: "api-dev9.knowledge.ai",
-      },
-    );
 
   const pathParams$ = {
     portalID: encodeSimple("portalID", payload$.portalID, {
@@ -129,7 +122,7 @@ async function $do(
 
   const context = {
     options: client$._options,
-    baseURL: baseURL$ ?? "",
+    baseURL: options?.serverURL ?? client$._baseURL ?? "",
     operationID: "makeSuggestion",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
@@ -149,7 +142,7 @@ async function $do(
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
     method: "POST",
-    baseURL: baseURL$,
+    baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
     body: body$,

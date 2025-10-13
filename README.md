@@ -1,6 +1,6 @@
 # egain-mcp
 
-Model Context Protocol (MCP) Server for the *eGain* API.
+Model Context Protocol (MCP) Server for the *egain-mcp* API.
 
 <div align="left">
     <a href="https://www.speakeasy.com/?utm_source=egain-mcp&utm_campaign=mcp-typescript"><img src="https://www.speakeasy.com/assets/badges/built-by-speakeasy.svg" /></a>
@@ -8,40 +8,50 @@ Model Context Protocol (MCP) Server for the *eGain* API.
         <img src="https://img.shields.io/badge/License-MIT-blue.svg" style="width: 100px; height: 28px;" />
     </a>
 </div>
+<br />
 
 > ⚠️ **Development Status**: This MCP server is currently in active development. Features and APIs may change without notice.
-
-<br /><br />
 
 
 <!-- Start Summary [summary] -->
 ## Summary
 
-eGain API: Use the eGain API to get information about the eGain platform.
+Knowledge Portal Manager APIs:
+### MCP Tools
+- **Get Portals**: Lists portals accessible to the caller; supports pagination and tag/topic filtering.
+- **Get Article**: Retrieves a specific article by ID; optional attributes and publish view filtering.
+- **Get Announcements**: Returns announcement articles for a portal; includes metadata and links.
+- **Get Popular Articles**: Lists popular articles for a portal (optionally scoped to a topic).
+- **Make a Suggestion**: Submits an article suggestion/feedback with optional custom attributes and attachments.
+### License
+  The following licenses are required to use the Knowledge Access APIs:
+  * If the user is an agent, then the *Knowledge + AI* license is required.
+  * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.
+### API Resource Limits
+The following Resources have predefined limits for specific access attributes for Enterprise use.
 
-## Features
-
-This MCP server provides access to the eGain Knowledge Portal Manager APIs, enabling you to:
-
-- 🔍 **Search & Retrieve**: Get articles, announcements, and popular content from eGain portals
-- 🤖 **AI-Powered Answers**: Leverage eGain's AI services for intelligent question answering
-- 📝 **Content Management**: Create suggestions and manage knowledge base content
-- 🌐 **Portal Access**: Discover and access multiple eGain portals
-- 🔐 **Secure Authentication**: OAuth2 authentication with automatic token management
+| Resource | Attribute | Enterprise
+| ---------------- | ---------------------------- | ----------
+| Article Reference Limits |Number of attachments used in any article | 50
+|  |Number of custom attributes in an article | 15
+|  |Number of publish views used in an article version | 20
+| Topic Reference Limits |User-defined topics in a department| 50000
+|  |Depth of topics  | 20
+|  |Topics at any level | 2500
+|  |Number of custom attributes in a topic | 15
+| Portal Reference Limits | Tag categories in a portal | 15
+|  |Topics to be included in a portal | 2500
+|  |Number of articles to display in announcements | 25
+|  |Maximum related articles in portal setting | 100
+|  |Usage links and link groups setup for a portal | 25
 <!-- End Summary [summary] -->
 
 <!-- Start Table of Contents [toc] -->
 ## Table of Contents
 <!-- $toc-max-depth=2 -->
 * [egain-mcp](#egain-mcp)
-  * [Features](#features)
   * [Installation](#installation)
-  * [Environment Configuration](#environment-configuration)
-  * [Quick Start](#quick-start)
-  * [Authentication & Logout](#authentication-logout)
   * [Development](#development)
-  * [Troubleshooting](#troubleshooting)
-  * [Support](#support)
   * [Contributions](#contributions)
 
 <!-- End Table of Contents [toc] -->
@@ -119,7 +129,9 @@ Refer to [Official Windsurf documentation](https://docs.windsurf.com/windsurf/ca
       "args": [
         "egain-mcp",
         "start",
-        "--server-index",
+        "--api-domain",
+        "...",
+        "--access-token",
         "..."
       ]
     }
@@ -143,7 +155,9 @@ Refer to [Official VS Code documentation](https://code.visualstudio.com/api/exte
       "args": [
         "egain-mcp",
         "start",
-        "--server-index",
+        "--api-domain",
+        "...",
+        "--access-token",
         "..."
       ]
     }
@@ -159,7 +173,7 @@ Refer to [Official VS Code documentation](https://code.visualstudio.com/api/exte
 To start the MCP server, run:
 
 ```bash
-npx egain-mcp start --server-index ...
+npx egain-mcp start --api-domain ... --access-token ...
 ```
 
 For a full list of server arguments, run:
@@ -171,87 +185,39 @@ npx egain-mcp --help
 </details>
 <!-- End Installation [installation] -->
 
-## Environment Configuration
+## Authentication
 
-Before using the eGain MCP server, you need to set up your authentication credentials in a `.env` file.
+If you omit the `--access-token` flag, the server will use the interactive authentication flow. This requires a fully configured `.env` file in your project root.
 
-### Setting up your .env file
+Place a `.env` file with the following keys (values are examples/placeholders):
 
-Create a `.env` file in your project root with the following variables:
-
-```bash
-# eGain API Configuration
-EGAIN_API_DOMAIN=your-api-domain.com
-EGAIN_ACCESS_TOKEN=your-access-token-here
-
-# Optional: Force re-authentication (set to 'true' to force login)
-EGAIN_FORCE_LOGIN=false
+```
+EGAIN_ENVIRONMENT_URL=https://your-tenant.knowledge.ai
+EGAIN_CLIENT_ID=00000000-0000-0000-0000-000000000000
+EGAIN_REDIRECT_URI=https://oauth.pstmn.io/v1/callback
+AUTH_URL=https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_signin
+ACCESS_URL=https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1_signin
+EGAIN_SCOPE_PREFIX=https://your-tenant.scope.prefixvalue.com
+EGAIN_CLIENT_SECRET=your-client-secret-value
 ```
 
-### Getting your credentials
+Notes:
+- If `--access-token` is provided (or `EGAIN_MCP_ACCESS_TOKEN` is set), that token is used directly and the `.env` is not required.
+- Without `--access-token`, you must provide all required `.env` values above for authentication to occur. The flow will open a browser window, and a bearer token will be saved locally for reuse.
 
-1. **API Domain**: This is your eGain instance domain (e.g., `aiservices-qe.ezdev.net`)
-2. **Access Token**: Your eGain API access token for authentication
+For more details on eGain authentication flows, see the eGain Developer Portal guide: [API Authentication](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
 
-### Environment Variables
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `EGAIN_API_DOMAIN` | Your eGain API domain | Yes | - |
-| `EGAIN_ACCESS_TOKEN` | Your eGain API access token | Yes | - |
-| `EGAIN_FORCE_LOGIN` | Force re-authentication on startup | No | `false` |
-
-### Security Note
-
-⚠️ **Important**: Never commit your `.env` file to version control. Add it to your `.gitignore` file to keep your credentials secure.
+If you want to force a fresh login or clear local token data without waiting for token expiry, you can run the helper scripts:
 
 ```bash
-# Add to .gitignore
-.env
-.env.local
-.env.*.local
+# Force login (interactive OAuth flow)
+node ./scripts/login.js
+
+# Force logout (clears saved token files)
+node ./scripts/logout.js
 ```
 
-## Quick Start
-
-1. **Install the MCP server**:
-   ```bash
-   npm install -g egain-mcp
-   ```
-
-2. **Set up your environment**:
-   Create a `.env` file with your eGain credentials (see [Environment Configuration](#environment-configuration))
-
-3. **Start the server**:
-   ```bash
-   npx egain-mcp start --server-index 0
-   ```
-
-4. **Test the connection**:
-   The server will automatically authenticate and be ready to use with your MCP client.
-
-## Authentication & Logout
-
-This MCP server uses OAuth2 authentication with automatic token management:
-
-- **Automatic Login**: The server will automatically open a browser window for authentication when needed
-- **Token Expiration**: Tokens are automatically refreshed when they expire
-- **Manual Logout**: Use the logout command to clear all authentication data and force a fresh login
-
-### Logout Command
-
-To log out and clear all cached authentication data:
-
-```bash
-npm run logout
-```
-
-This command will:
-- Remove stored bearer tokens (`.bearer_token` and `.bearer_token_metadata`)
-- Clear the portal cache (`portals_cache.json`)
-- Force a fresh login on the next MCP request
-
-**Note**: The old `EGAIN_FORCE_LOGIN` environment variable has been removed in favor of this cleaner logout mechanism.
+<!-- Placeholder for Future Speakeasy SDK Sections -->
 
 ## Development
 
@@ -259,8 +225,7 @@ Run locally without a published npm package:
 1. Clone this repository
 2. Run `npm install`
 3. Run `npm run build`
-4. Set up your `.env` file with your eGain credentials (see [Environment Configuration](#environment-configuration))
-5. Run `node ./bin/mcp-server.js start --server-index ...`
+4. Run `node ./bin/mcp-server.js start --server-index ... --api-domain ... --access-token ...`
 To use this local version with Cursor, Claude or other MCP Clients, you'll need to add the following config:
 
 ```json
@@ -272,6 +237,10 @@ To use this local version with Cursor, Claude or other MCP Clients, you'll need 
         "./bin/mcp-server.js",
         "start",
         "--server-index",
+        "...",
+        "--api-domain",
+        "...",
+        "--access-token",
         "..."
       ]
     }
@@ -282,7 +251,7 @@ To use this local version with Cursor, Claude or other MCP Clients, you'll need 
 Or to debug the MCP server locally, use the official MCP Inspector: 
 
 ```bash
-npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --server-index ...
+npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --server-index ... --api-domain ... --access-token ...
 ```
 
 
@@ -314,37 +283,19 @@ claude mcp add --transport sse EgainMcp http://localhost:8787/sse --header "auth
 
 
 
-## Troubleshooting
-
-### Common Issues
-
-**Authentication Errors**
-- Ensure your `.env` file is properly configured with valid credentials
-- Check that your access token has the necessary permissions
-- Try running `npm run logout` to clear cached authentication data
-
-**Connection Issues**
-- Verify your API domain is correct and accessible
-- Check your network connection and firewall settings
-- Ensure the server index matches your eGain instance configuration
-
-**MCP Client Issues**
-- Restart your MCP client after making configuration changes
-- Check that the MCP server is running and accessible
-- Verify the server configuration in your MCP client settings
-
-
-## Support
-
-For technical support and questions about this MCP server:
-
-- **Primary Support**: [Emily Loh] - [eloh@egain.com]
-- **Documentation**: [GitHub Repository]
-- **Issues**: [GitHub Issues]
-
 ## Contributions
 
 While we value contributions to this MCP Server, the code is generated programmatically. Any manual changes added to internal files will be overwritten on the next generation. 
 We look forward to hearing your feedback. Feel free to open a PR or an issue with a proof of concept and we'll do our best to include it in a future release. 
 
 ### MCP Server Created by [Speakeasy](https://www.speakeasy.com/?utm_source=egain-mcp&utm_campaign=mcp-typescript)
+
+### Disclaimer
+
+This MCP server is an early preview and is not production‑ready. It is provided as a “taste test” so you can explore the direction while we continue to stabilize, complete features, and add tests. By Speakeasy standards this implementation is not yet finalized; expect limited functionality, frequent changes, and potential breaking updates.
+
+### Technical Support
+
+For technical support and questions about this MCP server:
+
+Primary Support: Emily Loh — eloh@egain.com

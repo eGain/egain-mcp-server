@@ -27,6 +27,7 @@ export type ArticleType = {
   articleCategoryId?: number | undefined;
   typeName?: TypeName | undefined;
   useStructuredAuthoring?: boolean | undefined;
+  articleTypeId?: string | undefined;
 };
 
 export const ArticleType$zodSchema: z.ZodType<
@@ -35,6 +36,7 @@ export const ArticleType$zodSchema: z.ZodType<
   unknown
 > = z.object({
   articleCategoryId: z.number().int().optional(),
+  articleTypeId: z.string().optional(),
   typeName: TypeName$zodSchema.optional(),
   useStructuredAuthoring: z.boolean().optional(),
 }).describe("The type of the Article and its attributes.");

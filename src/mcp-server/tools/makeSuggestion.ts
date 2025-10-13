@@ -26,7 +26,6 @@ The Make a Suggestion API allows users to create an Article Suggestion from with
 Users can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.
 `,
   annotations: {
-    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

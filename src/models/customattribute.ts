@@ -18,6 +18,7 @@ export type CustomAttributeType = z.infer<typeof CustomAttributeType$zodSchema>;
 
 export type CustomAttribute = {
   name?: string | undefined;
+  value?: Array<string> | undefined;
   type?: CustomAttributeType | undefined;
 };
 
@@ -28,4 +29,5 @@ export const CustomAttribute$zodSchema: z.ZodType<
 > = z.object({
   name: z.string().optional(),
   type: CustomAttributeType$zodSchema.optional(),
+  value: z.array(z.string()).optional(),
 });

@@ -3,17 +3,24 @@
  */
 
 import * as z from "zod";
+import { Link, Link$zodSchema } from "./link.js";
 
 /**
  * This schema contains the topic ID and name of the topics. This is used by TopicBreadcrumb.
  */
-export type TopicSummary = { name?: string | undefined };
+export type TopicSummary = {
+  id?: string | undefined;
+  name?: string | undefined;
+  link?: Link | undefined;
+};
 
 export const TopicSummary$zodSchema: z.ZodType<
   TopicSummary,
   z.ZodTypeDef,
   unknown
 > = z.object({
+  id: z.string().optional(),
+  link: Link$zodSchema.optional(),
   name: z.string().optional(),
 }).describe(
   "This schema contains the topic ID and name of the topics. This is used by TopicBreadcrumb.",

@@ -26,7 +26,6 @@ The Get Announcements API allows a user to retrieve all announcement articles fo
 This API returns announcement articles with their full content, metadata, and any associated attachments or links.
 `,
   annotations: {
-    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

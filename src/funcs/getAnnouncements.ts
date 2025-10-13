@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
+import { encodeFormQuery, encodeSimple, queryJoin } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -20,7 +20,6 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  GetAnnouncementArticlesOpServerList,
   GetAnnouncementArticlesRequest,
   GetAnnouncementArticlesRequest$zodSchema,
   GetAnnouncementArticlesResponse,
@@ -96,14 +95,6 @@ async function $do(
   }
   const payload$ = parsed$.value;
   const body$ = null;
-  const baseURL$ = options?.serverURL
-    || pathToFunc(GetAnnouncementArticlesOpServerList[0], {
-      charEncoding: "percent",
-    })(
-      {
-        API_DOMAIN: "api-dev9.knowledge.ai",
-      },
-    );
 
   const pathParams$ = {
     portalID: encodeSimple("portalID", payload$.portalID, {
@@ -114,13 +105,19 @@ async function $do(
   const path$ = pathToFunc("/portals/{portalID}/articles/announcements")(
     pathParams$,
   );
-  const query$ = encodeFormQuery({
-    "$filter[tags]": payload$.dollarFilterTags,
-    "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "workflowMilestone": payload$.workflowMilestone,
-  });
+  const query$ = queryJoin(
+    encodeFormQuery({
+      "articleResultAdditionalAttributes":
+        payload$.articleResultAdditionalAttributes,
+    }, { explode: false }),
+    encodeFormQuery({
+      "$filter[tags]": payload$.dollarFilterTags,
+      "$lang": payload$.Dollar_lang,
+      "$pagenum": payload$.Dollar_pagenum,
+      "$pagesize": payload$.Dollar_pagesize,
+      "workflowMilestone": payload$.workflowMilestone,
+    }),
+  );
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
@@ -135,7 +132,7 @@ async function $do(
 
   const context = {
     options: client$._options,
-    baseURL: baseURL$ ?? "",
+    baseURL: options?.serverURL ?? client$._baseURL ?? "",
     operationID: "getAnnouncementArticles",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
@@ -155,7 +152,7 @@ async function $do(
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
     method: "GET",
-    baseURL: baseURL$,
+    baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
     query: query$,

@@ -29,7 +29,6 @@ This API returns structured authoring attributes of Issue, Environment, Cause an
 - The "Use Structured Authoring" flag is set on the article type
 `,
   annotations: {
-    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

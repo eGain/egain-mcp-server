@@ -13,13 +13,9 @@ import { Params, pathToFunc } from "./url.js";
  */
 export const ServerList = [
   /**
-   * Portal Manager API Server
+   * Production Server
    */
   "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-  /**
-   * AI Services API Server
-   */
-  "https://{API_DOMAIN}/core/aiservices/v4",
 ] as const;
 
 export type SDKOptions = {
@@ -58,10 +54,7 @@ export function serverURLFromOptions(options: SDKOptions): URL | null {
 
   const serverParams: Params[] = [
     {
-      "API_DOMAIN": options.API_DOMAIN ?? "api-dev9.knowledge.ai",
-    },
-    {
-      "API_DOMAIN": options.API_DOMAIN ?? "aiservices-qe.ezdev.net",
+      "API_DOMAIN": options.API_DOMAIN ?? "api.egain.cloud",
     },
   ];
   let params: Params = {};
@@ -81,8 +74,8 @@ export function serverURLFromOptions(options: SDKOptions): URL | null {
 
 export const SDK_METADATA = {
   language: "typescript",
-  openapiDocVersion: "1.0.0",
-  sdkVersion: "0.4.6",
-  genVersion: "2.723.11",
-  userAgent: "speakeasy-sdk/mcp-typescript 0.4.6 2.723.11 1.0.0 egain-mcp",
+  openapiDocVersion: "4.0.0",
+  sdkVersion: "0.2.1",
+  genVersion: "2.723.8",
+  userAgent: "speakeasy-sdk/mcp-typescript 0.2.1 2.723.8 4.0.0 egain-mcp",
 } as const;
