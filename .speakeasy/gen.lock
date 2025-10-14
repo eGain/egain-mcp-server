@@ -1,24 +1,23 @@
 lockVersion: 2.0.0
-id: 281e7276-f78f-4122-9cc6-c35283e02eb0
+id: 7bd92bd3-c565-48d6-8aad-a25e07bfd58d
 management:
-  docChecksum: 508985674987a557b00f8171a6636cab
-  docVersion: 1.0.0
-  speakeasyVersion: 1.636.3
-  generationVersion: 2.723.11
-  releaseVersion: 0.4.6
-  configChecksum: a8323713ba9657e54212e33b30c76560
+  docChecksum: b49c19ca3d6d1a245de5d2fede2a003d
+  docVersion: 4.0.0
+  speakeasyVersion: 1.636.2
+  generationVersion: 2.723.8
+  releaseVersion: 0.2.4
+  configChecksum: 904a0790bfafe42702d7498f5635a5eb
 features:
   mcp-typescript:
     additionalDependencies: 0.1.0
     constsAndDefaults: 0.1.0
-    core: 0.6.0
+    core: 0.5.0
     defaultEnabledRetries: 0.1.0
     enumUnions: 0.1.0
     globalSecurity: 0.1.1
     globalSecurityCallbacks: 0.0.0
     globalServerURLs: 0.1.0
     ignores: 0.1.0
-    methodServerURLs: 0.1.0
     nameOverrides: 0.1.0
     responseFormat: 0.1.0
     retries: 0.1.0
@@ -34,13 +33,10 @@ generatedFiles:
   - src/cloudflare-worker/landing-page.ts
   - src/core.ts
   - src/funcs/getAnnouncements.ts
-  - src/funcs/getAnswers.ts
   - src/funcs/getArticle.ts
   - src/funcs/getPopularArticles.ts
   - src/funcs/getPortals.ts
   - src/funcs/makeSuggestion.ts
-  - src/funcs/retrieveChunks.ts
-  - src/funcs/searchAiSearch.ts
   - src/hooks/hooks.ts
   - src/hooks/types.ts
   - src/lib/base64.ts
@@ -74,26 +70,19 @@ generatedFiles:
   - src/mcp-server/shared.ts
   - src/mcp-server/tools.ts
   - src/mcp-server/tools/getAnnouncements.ts
-  - src/mcp-server/tools/getAnswers.ts
   - src/mcp-server/tools/getArticle.ts
   - src/mcp-server/tools/getPopularArticles.ts
   - src/mcp-server/tools/getPortals.ts
   - src/mcp-server/tools/makeSuggestion.ts
-  - src/mcp-server/tools/retrieveChunks.ts
-  - src/mcp-server/tools/searchAiSearch.ts
   - src/models/acceptlanguage.ts
   - src/models/accessibleportal.ts
-  - src/models/additionalsnippets.ts
-  - src/models/aisearchop.ts
   - src/models/allaccessibleportals.ts
-  - src/models/answersrequest.ts
-  - src/models/answersresponse.ts
   - src/models/article.ts
   - src/models/articleadditionalattributes.ts
   - src/models/articleattachment.ts
   - src/models/articleresult.ts
+  - src/models/articleresultadditionalattributes.ts
   - src/models/articleresults.ts
-  - src/models/articlesearchresult.ts
   - src/models/articletype.ts
   - src/models/attachmentforcreatesuggestion.ts
   - src/models/bookmarkstatus.ts
@@ -114,7 +103,6 @@ generatedFiles:
   - src/models/getpopulararticlesop.ts
   - src/models/l10nstring.ts
   - src/models/languagecode.ts
-  - src/models/languagecodeparameter.ts
   - src/models/languagequeryparameter.ts
   - src/models/link.ts
   - src/models/makesuggestionop.ts
@@ -126,20 +114,14 @@ generatedFiles:
   - src/models/ownedby.ts
   - src/models/paginationinfo.ts
   - src/models/personalization.ts
-  - src/models/postportalidanswersop.ts
-  - src/models/postportalidretrieveop.ts
   - src/models/publishview.ts
-  - src/models/referenceresponse.ts
-  - src/models/retrieverequest.ts
-  - src/models/retrieveresponse.ts
   - src/models/schemaslink.ts
-  - src/models/searchresponse.ts
-  - src/models/searchresult.ts
   - src/models/security.ts
   - src/models/shorturl.ts
   - src/models/sortidnamedepartment.ts
   - src/models/stage.ts
   - src/models/structuredauthoringfields.ts
+  - src/models/tag.ts
   - src/models/tagcategory.ts
   - src/models/taggroup.ts
   - src/models/taggroups.ts

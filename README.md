@@ -27,16 +27,130 @@ Knowledge Portal Manager APIs:
   The following licenses are required to use the Knowledge Access APIs:
   * If the user is an agent, then the *Knowledge + AI* license is required.
   * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.
+### API Resource Limits
+The following Resources have predefined limits for specific access attributes for Enterprise use.
+
+| Resource | Attribute | Enterprise
+| ---------------- | ---------------------------- | ----------
+| Article Reference Limits |Number of attachments used in any article | 50
+|  |Number of custom attributes in an article | 15
+|  |Number of publish views used in an article version | 20
+| Topic Reference Limits |User-defined topics in a department| 50000
+|  |Depth of topics  | 20
+|  |Topics at any level | 2500
+|  |Number of custom attributes in a topic | 15
+| Portal Reference Limits | Tag categories in a portal | 15
+|  |Topics to be included in a portal | 2500
+|  |Number of articles to display in announcements | 25
+|  |Maximum related articles in portal setting | 100
+|  |Usage links and link groups setup for a portal | 25
+<!-- End Summary [summary] -->
 
 <!-- Start Table of Contents [toc] -->
 ## Table of Contents
 <!-- $toc-max-depth=2 -->
 * [egain-mcp](#egain-mcp)
-  * [Installation](#installation)
   * [Development](#development)
+  * [Authentication](#authentication)
+  * [Installation](#installation)
   * [Contributions](#contributions)
 
 <!-- End Table of Contents [toc] -->
+
+## Development
+
+Run locally without a published npm package:
+1. Clone this repository
+2. Run `npm install`
+3. Run `npm run build`
+4. Run `node ./bin/mcp-server.js start --api-domain "..." --access-token "..."`
+
+To use this local version with Cursor, Claude or other MCP Clients, you'll need to add the following config:
+
+```json
+{
+  "mcpServers": {
+    "EgainMcp": {
+      "command": "node",
+      "args": [
+        "./bin/mcp-server.js",
+        "start",
+        "--api-domain",
+        "...",
+        "--access-token",
+        "..."
+      ]
+    }
+  }
+}
+```
+
+Or to debug the MCP server locally, use the official MCP Inspector: 
+
+```bash
+npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain "..." --access-token "..."
+```
+
+
+### Cloudflare Deployment
+
+To deploy to Cloudflare Workers:
+
+```bash
+npm install 
+npm run deploy
+```
+
+To run the cloudflare deployment locally:
+
+```bash
+npm install 
+npm run dev
+```
+
+The local development server will be available at `http://localhost:8787`
+
+Then install with Claude Code CLI:
+
+```bash
+claude mcp add --transport sse EgainMcp http://localhost:8787/sse --header "authorization: ..."
+```
+
+## Authentication
+
+If you omit the `--access-token` flag, the server will use the interactive authentication flow. This requires a fully configured `.env` file in your project root.
+
+Place a `.env` file with the following keys (values are examples/placeholders):
+
+```
+EGAIN_ENVIRONMENT_URL="https://your-tenant.knowledge.ai"
+EGAIN_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+EGAIN_REDIRECT_URI="https://oauth.pstmn.io/v1/callback"
+AUTH_URL="https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_signin"
+ACCESS_URL="https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1_signin"
+EGAIN_SCOPE_PREFIX="https://your-tenant.scope.prefixvalue.com"
+EGAIN_CLIENT_SECRET="your-client-secret-value"
+```
+
+Notes:
+- If `--access-token` is provided (or `EGAIN_MCP_ACCESS_TOKEN` is set), that token is used directly and the `.env` is not required.
+- Without `--access-token`, you must provide all required `.env` values above for authentication to occur. The flow will open a browser window, and a bearer token will be saved locally for reuse.
+- **`EGAIN_CLIENT_SECRET`**: This field is included in the configuration but is not technically required for the authentication flow to work. You can leave it as an empty string if not needed.
+- **`EGAIN_SCOPE_PREFIX`**: This is not required for Rigel setups. You can omit this or leave it as an empty string for Rigel environments.
+
+For more details on eGain authentication flows, see the eGain Developer Portal guide: [API Authentication](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
+
+If you want to force a fresh login or clear local token data without waiting for token expiry, you can run the helper scripts:
+
+```bash
+# Force login (interactive OAuth flow)
+node ./scripts/login.js
+
+# Force logout (clears saved token files)
+node ./scripts/logout.js
+```
+
+<!-- Placeholder for Future Speakeasy SDK Sections -->
 
 <!-- Start Installation [installation] -->
 ## Installation
@@ -166,104 +280,6 @@ npx egain-mcp --help
 
 </details>
 <!-- End Installation [installation] -->
-
-## Authentication
-
-If you omit the `--access-token` flag, the server will use the interactive authentication flow. This requires a fully configured `.env` file in your project root.
-
-Place a `.env` file with the following keys (values are examples/placeholders):
-
-```
-EGAIN_ENVIRONMENT_URL=https://your-tenant.knowledge.ai
-EGAIN_CLIENT_ID=00000000-0000-0000-0000-000000000000
-EGAIN_REDIRECT_URI=https://oauth.pstmn.io/v1/callback
-AUTH_URL=https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_signin
-ACCESS_URL=https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1_signin
-EGAIN_SCOPE_PREFIX=https://your-tenant.scope.prefixvalue.com
-EGAIN_CLIENT_SECRET=your-client-secret-value
-```
-
-Notes:
-- If `--access-token` is provided (or `EGAIN_MCP_ACCESS_TOKEN` is set), that token is used directly and the `.env` is not required.
-- Without `--access-token`, you must provide all required `.env` values above for authentication to occur. The flow will open a browser window, and a bearer token will be saved locally for reuse.
-
-For more details on eGain authentication flows, see the eGain Developer Portal guide: [API Authentication](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
-
-If you want to force a fresh login or clear local token data without waiting for token expiry, you can run the helper scripts:
-
-```bash
-# Force login (interactive OAuth flow)
-node ./scripts/login.js
-
-# Force logout (clears saved token files)
-node ./scripts/logout.js
-```
-
-<!-- Placeholder for Future Speakeasy SDK Sections -->
-
-## Development
-
-Run locally without a published npm package:
-1. Clone this repository
-2. Run `npm install`
-3. Run `npm run build`
-4. Run `node ./bin/mcp-server.js start --server-index ... --api-domain ... --access-token ...`
-To use this local version with Cursor, Claude or other MCP Clients, you'll need to add the following config:
-
-```json
-{
-  "mcpServers": {
-    "EgainMcp": {
-      "command": "node",
-      "args": [
-        "./bin/mcp-server.js",
-        "start",
-        "--server-index",
-        "...",
-        "--api-domain",
-        "...",
-        "--access-token",
-        "..."
-      ]
-    }
-  }
-}
-```
-
-Or to debug the MCP server locally, use the official MCP Inspector: 
-
-```bash
-npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --server-index ... --api-domain ... --access-token ...
-```
-
-
-### Cloudflare Deployment
-
-To deploy to Cloudflare Workers:
-
-```bash
-npm install 
-npm run deploy
-```
-
-To run the cloudflare deployment locally:
-
-```bash
-npm install 
-npm run dev
-```
-
-The local development server will be available at `http://localhost:8787`
-
-Then install with Claude Code CLI:
-
-```bash
-claude mcp add --transport sse EgainMcp http://localhost:8787/sse --header "authorization: ..."
-```
-
-
-
-
 
 ## Contributions
 

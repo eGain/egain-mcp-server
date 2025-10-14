@@ -309,12 +309,14 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       
       if (platform === 'darwin' && browserUsed.startsWith('Chrome')) {
         // Close specific Chrome auth window using AppleScript
+        const envHint = (this.authConfig.environmentUrl || '').replace(/\"/g, '\\\"');
+        const redirectHint = (this.authConfig.redirectUri || '').replace(/\"/g, '\\\"');
         const script = `
           tell application "Google Chrome"
             try
               repeat with theWindow in windows
                 repeat with theTab in tabs of theWindow
-                  if URL of theTab contains "oauth.pstmn.io" or URL of theTab contains "b2clogin.com" then
+                  if URL of theTab contains "oauth.pstmn.io" or URL of theTab contains "b2clogin.com" or URL of theTab contains "code=" or (${envHint ? `URL of theTab contains "${envHint}"` : 'false'}) or (${redirectHint ? `URL of theTab contains "${redirectHint}"` : 'false'}) then
                     close theWindow
                     return
                   end if
@@ -374,7 +376,8 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         }
         
         // Always check for callback URL (whether URL changed or not)
-        if (currentUrl && currentUrl.includes(this.authConfig.redirectUri!) && currentUrl.includes('code=')) {
+        // Accept any URL containing an authorization code (handles custom redirect handlers)
+        if (currentUrl && currentUrl.includes('code=')) {
           console.error('✅ Found authorization code in callback URL - closing popup immediately');
           // Close popup immediately when we detect the callback
           await this.closePopupWindow(browserUsed);

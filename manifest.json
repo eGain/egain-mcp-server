@@ -1,7 +1,7 @@
 {
   "dxt_version": "0.1",
   "name": "egain-mcp",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "description": "",
   "long_description": "Knowledge Portal Manager APIs: ### License\n  The following licenses are required to use the Knowledge Access APIs:\n  * If the user is an agent, then the *Knowledge + AI* license is required.\n  * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.\n### API Resource Limits\nThe following Resources have predefined limits for specific access attributes for Enterprise use.\n\n| Resource | Attribute | Enterprise\n| ---------------- | ---------------------------- | ----------\n| Article Reference Limits |Number of attachments used in any article | 50\n|  |Number of custom attributes in an article | 15\n|  |Number of publish views used in an article version | 20\n| Topic Reference Limits |User-defined topics in a department| 50000\n|  |Depth of topics  | 20\n|  |Topics at any level | 2500\n|  |Number of custom attributes in a topic | 15\n| Portal Reference Limits | Tag categories in a portal | 15\n|  |Topics to be included in a portal | 2500\n|  |Number of articles to display in announcements | 25\n|  |Maximum related articles in portal setting | 100\n|  |Usage links and link groups setup for a portal | 25\n    \n      \n",
   "author": {

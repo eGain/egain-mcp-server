@@ -1,34 +1,29 @@
-speakeasyVersion: 1.636.3
+speakeasyVersion: 1.636.2
 sources:
-    Knowledge Portal Manager APIs:
-        sourceNamespace: knowledge-portal-manager-ap-is
-        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
-        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
+    Retrieve API:
+        sourceNamespace: retrieve-api
+        sourceRevisionDigest: sha256:fe19d910e2840dd00a4c553753c1ff3ed60d8fc1cd1a01a79a0e0376eaaed642
+        sourceBlobDigest: sha256:38f66cc329c9ac29541b112255b68d3828040563c4cc77868edc59680973cb60
         tags:
             - latest
-            - 1.0.0
+            - 4.0.0
 targets:
     egain-mcp:
-        source: Knowledge Portal Manager APIs
-        sourceNamespace: knowledge-portal-manager-ap-is
-        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
-        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
-    test-knowledge-mcp:
-        source: Knowledge Portal Manager APIs
-        sourceNamespace: knowledge-portal-manager-ap-is
-        sourceRevisionDigest: sha256:bbf300d470a106074d27bc3dd9831fbe1de1d488e354cb6bc8b790e9ee8450b7
-        sourceBlobDigest: sha256:3f977b97012e6e35a72f6e672e45b90c0d5e58fea74da0d4296e639f2ec59334
+        source: Retrieve API
+        sourceNamespace: retrieve-api
+        sourceRevisionDigest: sha256:fe19d910e2840dd00a4c553753c1ff3ed60d8fc1cd1a01a79a0e0376eaaed642
+        sourceBlobDigest: sha256:38f66cc329c9ac29541b112255b68d3828040563c4cc77868edc59680973cb60
 workflow:
     workflowVersion: 1.0.0
-    speakeasyVersion: latest
+    speakeasyVersion: 1.636.2
     sources:
-        Knowledge Portal Manager APIs:
+        Retrieve API:
             inputs:
-                - location: full.yaml
+                - location: demo.yaml
             output: .speakeasy/out.openapi.yaml
             registry:
-                location: registry.speakeasyapi.dev/egain-corporation/mcp-test/knowledge-portal-manager-ap-is
+                location: registry.speakeasyapi.dev/egain-corporation/mcp-test/retrieve-api
     targets:
         egain-mcp:
             target: mcp-typescript
-            source: Knowledge Portal Manager APIs
+            source: Retrieve API

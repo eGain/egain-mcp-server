@@ -11,4 +11,3 @@
 .wrangler/
 .env
 .env.local
-portals_cache.json
