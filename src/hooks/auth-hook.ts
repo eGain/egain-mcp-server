@@ -8,6 +8,8 @@ import { SDKOptions } from "../lib/config.js";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
+import * as http from "http";
+import * as os from "os";
 import { fileURLToPath } from 'url';
 import * as crypto from "crypto";
 
@@ -260,10 +262,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           }
         }
       } else if (platform === 'win32') {
-        // Windows - Use cmd instead of PowerShell to avoid escaping issues (match Python)
-        await execAsync(`cmd /c start chrome --incognito --new-window "${url}"`);
-        console.error('✅ Chrome incognito window opened successfully');
-        return 'Chrome-incognito';
+        // Windows - Use cmd with app mode (popup-like) and incognito
+        await execAsync(`cmd /c start "" chrome --incognito --app="${url}"`);
+        console.error('✅ Chrome incognito app-mode popup opened successfully');
+        return 'Chrome-app-incognito';
       } else {
         throw new Error('Linux is not supported. Use macOS or Windows for automatic authentication.');
       }
@@ -309,14 +311,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       
       if (platform === 'darwin' && browserUsed.startsWith('Chrome')) {
         // Close specific Chrome auth window using AppleScript
-        const envHint = (this.authConfig.environmentUrl || '').replace(/\"/g, '\\\"');
-        const redirectHint = (this.authConfig.redirectUri || '').replace(/\"/g, '\\\"');
         const script = `
           tell application "Google Chrome"
             try
               repeat with theWindow in windows
                 repeat with theTab in tabs of theWindow
-                  if URL of theTab contains "oauth.pstmn.io" or URL of theTab contains "b2clogin.com" or URL of theTab contains "code=" or (${envHint ? `URL of theTab contains "${envHint}"` : 'false'}) or (${redirectHint ? `URL of theTab contains "${redirectHint}"` : 'false'}) then
+                  if URL of theTab contains "oauth.pstmn.io" or URL of theTab contains "b2clogin.com" then
                     close theWindow
                     return
                   end if
@@ -347,13 +347,13 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     this.validateConfig();
     
     const oauthUrl = this.buildAuthUrl();
-    const browserUsed = await this.openChromePopup(oauthUrl);
     
     const platform = process.platform;
     const timeout = 120; // 2 minutes (reduced from 5)
     const startTime = Date.now();
     
     if (platform === 'darwin') {
+      const browserUsed = await this.openChromePopup(oauthUrl);
       // macOS - automatic URL monitoring
       let lastUrl = '';
       let firstCheck = true;
@@ -376,8 +376,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         }
         
         // Always check for callback URL (whether URL changed or not)
-        // Accept any URL containing an authorization code (handles custom redirect handlers)
-        if (currentUrl && currentUrl.includes('code=')) {
+        if (currentUrl && currentUrl.includes(this.authConfig.redirectUri!) && currentUrl.includes('code=')) {
           console.error('✅ Found authorization code in callback URL - closing popup immediately');
           // Close popup immediately when we detect the callback
           await this.closePopupWindow(browserUsed);
@@ -413,9 +412,164 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       await this.closePopupWindow(browserUsed);
       throw new Error('Authentication timeout. Please try again.');
       
+    } else if (platform === 'win32') {
+      // Windows - support both loopback redirect and non-loopback (e.g., oauth.pstmn.io) via DevTools
+      const redirectUri = this.authConfig.redirectUri!;
+      let parsed: URL;
+      try {
+        parsed = new URL(redirectUri);
+      } catch {
+        throw new Error('Invalid EGAIN_REDIRECT_URI. Expected a valid URL.');
+      }
+
+      const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) && !!parsed.port;
+
+      if (isLoopback) {
+        const host = parsed.hostname;
+        const port = parseInt(parsed.port, 10);
+        const pathname = parsed.pathname || '/';
+        console.error(`🔊 Starting local callback server at ${host}:${port}${pathname} to capture auth code...`);
+
+        const authCodePromise = new Promise<string>((resolve, reject) => {
+          let settled = false;
+          const server = http.createServer((req, res) => {
+            try {
+              if (!req.url) return;
+              const reqUrl = new URL(req.url, `http://${host}:${port}`);
+              if (reqUrl.pathname !== pathname) {
+                res.statusCode = 404;
+                res.end('Not Found');
+                return;
+              }
+
+              const code = reqUrl.searchParams.get('code');
+              const err = reqUrl.searchParams.get('error');
+
+              if (code) {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                res.end('<html><body><h3>Authentication complete. You can close this window.</h3><script>window.close && window.close();</script></body></html>');
+                if (!settled) {
+                  settled = true;
+                  server.close(() => {});
+                  resolve(code);
+                }
+              } else if (err) {
+                const desc = reqUrl.searchParams.get('error_description') || 'No description';
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                res.end(`<html><body><h3>Authentication error: ${err}</h3><p>${desc}</p></body></html>`);
+                if (!settled) {
+                  settled = true;
+                  server.close(() => {});
+                  reject(new Error(`OAuth error: ${err} - ${desc}`));
+                }
+              } else {
+                res.statusCode = 400;
+                res.end('Missing code');
+              }
+            } catch (e) {
+              try { res.statusCode = 500; res.end('Internal Server Error'); } catch {}
+            }
+          });
+
+          server.listen(port, host, () => {
+            console.error('✅ Local callback server is listening');
+          });
+
+          const to = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              server.close(() => {});
+              reject(new Error('Authentication timeout. Please try again.'));
+            }
+          }, timeout * 1000);
+
+          server.on('close', () => {
+            clearTimeout(to);
+          });
+        });
+
+        const browserUsed = await this.openChromePopup(oauthUrl);
+        try {
+          const code = await authCodePromise;
+          console.error('✅ Found authorization code via loopback redirect - closing popup immediately');
+          await this.closePopupWindow(browserUsed);
+          console.error(`🔑 Extracted authorization code: ${code.substring(0, 10)}...`);
+          console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
+          return code;
+        } catch (e) {
+          await this.closePopupWindow(browserUsed);
+          throw e;
+        }
+      }
+
+      // Non-loopback (e.g., oauth.pstmn.io): Use Chrome DevTools protocol to watch URL changes
+      const debugPort = Math.floor(40000 + Math.random() * 10000);
+      const tempUserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'egain-chrome-'));
+      console.error(`🛠️  Launching Chrome with remote debugging port ${debugPort}`);
+
+      // Launch Chrome directly here to include remote debugging flags
+      await execAsync(`cmd /c start "" chrome --incognito --remote-debugging-port=${debugPort} --user-data-dir="${tempUserDataDir}" --app="${oauthUrl}"`);
+
+      const browserUsed = 'Chrome-app-incognito';
+
+      const redirectBase = `${parsed.origin}${parsed.pathname}`;
+      const deadline = Date.now() + timeout * 1000;
+
+      const pollTargets = async (): Promise<string> => {
+        const endpoints = [
+          `http://127.0.0.1:${debugPort}/json/list`,
+          `http://127.0.0.1:${debugPort}/json`
+        ];
+        while (Date.now() < deadline) {
+          for (const ep of endpoints) {
+            try {
+              const resp = await fetch(ep);
+              if (!resp.ok) throw new Error(String(resp.status));
+              const targets = await resp.json() as Array<{ url?: string }>;
+              for (const t of targets) {
+                const tUrl = t.url || '';
+                if (tUrl.includes(redirectBase)) {
+                  const codeMatch = tUrl.match(/[?&]code=([^&]+)/);
+                  if (codeMatch && codeMatch[1]) {
+                    return codeMatch[1];
+                  }
+                  const errMatch = tUrl.match(/[?&]error=([^&]+)/);
+                  if (errMatch && errMatch[1]) {
+                    const errDescMatch = tUrl.match(/error_description=([^&]+)/);
+                    const errDesc = errDescMatch && errDescMatch[1] ? decodeURIComponent(errDescMatch[1]) : 'No description';
+                    throw new Error(`OAuth error: ${decodeURIComponent(errMatch[1])} - ${errDesc}`);
+                  }
+                }
+              }
+            } catch {
+              // Ignore and keep polling
+            }
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+        throw new Error('Authentication timeout. Please try again.');
+      };
+
+      try {
+        const code = await pollTargets();
+        console.error('✅ Found authorization code via DevTools polling - closing popup immediately');
+        await this.closePopupWindow(browserUsed);
+        console.error(`🔑 Extracted authorization code: ${code.substring(0, 10)}...`);
+        console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
+        return code;
+      } catch (e) {
+        await this.closePopupWindow(browserUsed);
+        throw e;
+      } finally {
+        try {
+          // Best-effort cleanup of temp profile directory
+          fs.rmSync(tempUserDataDir, { recursive: true, force: true });
+        } catch {}
+      }
     } else {
-      // Windows - not implemented clipboard monitoring for now
-      throw new Error('Windows clipboard monitoring not implemented in TypeScript version yet. Use macOS for now.');
+      throw new Error('Linux is not supported. Use macOS or Windows for automatic authentication.');
     }
   }
 

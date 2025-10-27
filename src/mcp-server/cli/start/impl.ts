@@ -19,7 +19,7 @@ interface StartCommandFlags {
   readonly tool?: string[];
   readonly "access-token"?: string;
   readonly "server-url"?: string;
-  readonly "server-index"?: SDKOptions["serverIdx"];
+  readonly server?: SDKOptions["server"];
   readonly "api-domain"?: SDKOptions["API_DOMAIN"];
   readonly "log-level": ConsoleLoggerLevel;
   readonly env?: [string, string][];
@@ -50,7 +50,7 @@ async function startStdio(flags: StartCommandFlags) {
     allowedTools: flags.tool,
     security: { accessToken: flags["access-token"] ?? "" },
     serverURL: flags["server-url"],
-    serverIdx: flags["server-index"],
+    server: flags.server,
     API_DOMAIN: flags["api-domain"],
   });
   await server.connect(transport);
@@ -71,7 +71,7 @@ async function startSSE(flags: StartCommandFlags) {
     allowedTools: flags.tool,
     security: { accessToken: flags["access-token"] ?? "" },
     serverURL: flags["server-url"],
-    serverIdx: flags["server-index"],
+    server: flags.server,
     API_DOMAIN: flags["api-domain"],
   });
   let transport: SSEServerTransport | undefined;

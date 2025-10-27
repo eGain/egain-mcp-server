@@ -1,12 +1,12 @@
 lockVersion: 2.0.0
 id: 7bd92bd3-c565-48d6-8aad-a25e07bfd58d
 management:
-  docChecksum: b49c19ca3d6d1a245de5d2fede2a003d
-  docVersion: 4.0.0
+  docChecksum: b1fb881624e6a282c470615d04a9168d
+  docVersion: 1.0.0
   speakeasyVersion: 1.636.2
   generationVersion: 2.723.8
-  releaseVersion: 0.2.4
-  configChecksum: 904a0790bfafe42702d7498f5635a5eb
+  releaseVersion: 0.3.0
+  configChecksum: 27678207c4f7f3eada5491feb5211d20
 features:
   mcp-typescript:
     additionalDependencies: 0.1.0
@@ -22,6 +22,7 @@ features:
     responseFormat: 0.1.0
     retries: 0.1.0
     sdkHooks: 0.2.0
+    serverIDs: 0.1.0
 generatedFiles:
   - .dxtignore
   - .gitattributes
@@ -37,6 +38,9 @@ generatedFiles:
   - src/funcs/getPopularArticles.ts
   - src/funcs/getPortals.ts
   - src/funcs/makeSuggestion.ts
+  - src/funcs/queryAnswers.ts
+  - src/funcs/queryRetrieve.ts
+  - src/funcs/querySearch.ts
   - src/hooks/hooks.ts
   - src/hooks/types.ts
   - src/lib/base64.ts
@@ -74,15 +78,22 @@ generatedFiles:
   - src/mcp-server/tools/getPopularArticles.ts
   - src/mcp-server/tools/getPortals.ts
   - src/mcp-server/tools/makeSuggestion.ts
+  - src/mcp-server/tools/queryAnswers.ts
+  - src/mcp-server/tools/queryRetrieve.ts
+  - src/mcp-server/tools/querySearch.ts
   - src/models/acceptlanguage.ts
   - src/models/accessibleportal.ts
+  - src/models/additionalsnippets.ts
+  - src/models/aisearchop.ts
   - src/models/allaccessibleportals.ts
+  - src/models/answersrequest.ts
+  - src/models/answersresponse.ts
   - src/models/article.ts
   - src/models/articleadditionalattributes.ts
   - src/models/articleattachment.ts
   - src/models/articleresult.ts
-  - src/models/articleresultadditionalattributes.ts
   - src/models/articleresults.ts
+  - src/models/articlesearchresult.ts
   - src/models/articletype.ts
   - src/models/attachmentforcreatesuggestion.ts
   - src/models/bookmarkstatus.ts
@@ -103,6 +114,7 @@ generatedFiles:
   - src/models/getpopulararticlesop.ts
   - src/models/l10nstring.ts
   - src/models/languagecode.ts
+  - src/models/languagecodeparameter.ts
   - src/models/languagequeryparameter.ts
   - src/models/link.ts
   - src/models/makesuggestionop.ts
@@ -114,14 +126,20 @@ generatedFiles:
   - src/models/ownedby.ts
   - src/models/paginationinfo.ts
   - src/models/personalization.ts
+  - src/models/postportalidanswersop.ts
+  - src/models/postportalidretrieveop.ts
   - src/models/publishview.ts
+  - src/models/referenceresponse.ts
+  - src/models/retrieverequest.ts
+  - src/models/retrieveresponse.ts
   - src/models/schemaslink.ts
+  - src/models/searchresponse.ts
+  - src/models/searchresult.ts
   - src/models/security.ts
   - src/models/shorturl.ts
   - src/models/sortidnamedepartment.ts
   - src/models/stage.ts
   - src/models/structuredauthoringfields.ts
-  - src/models/tag.ts
   - src/models/tagcategory.ts
   - src/models/taggroup.ts
   - src/models/taggroups.ts

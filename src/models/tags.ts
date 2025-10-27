@@ -3,10 +3,13 @@
  */
 
 import * as z from "zod";
-import { Tag, Tag$zodSchema } from "./tag.js";
 
-export type Tags = { tag?: Array<Tag> | undefined };
+export type Tags = {
+  id?: string | undefined;
+  tags?: Array<string> | undefined;
+};
 
 export const Tags$zodSchema: z.ZodType<Tags, z.ZodTypeDef, unknown> = z.object({
-  tag: z.array(Tag$zodSchema).optional(),
+  id: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });

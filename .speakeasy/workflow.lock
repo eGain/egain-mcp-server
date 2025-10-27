@@ -2,24 +2,24 @@ speakeasyVersion: 1.636.2
 sources:
     Retrieve API:
         sourceNamespace: retrieve-api
-        sourceRevisionDigest: sha256:fe19d910e2840dd00a4c553753c1ff3ed60d8fc1cd1a01a79a0e0376eaaed642
-        sourceBlobDigest: sha256:38f66cc329c9ac29541b112255b68d3828040563c4cc77868edc59680973cb60
+        sourceRevisionDigest: sha256:6c454cf0af8fc90103775cdac7eb584ac45aa7012de374ab2ad46ee2b069ed84
+        sourceBlobDigest: sha256:a0f64b8a5e30d5c4122ff086bead130de674635d18e50eeac9969dd80ea570f8
         tags:
             - latest
-            - 4.0.0
+            - 1.0.0
 targets:
     egain-mcp:
         source: Retrieve API
         sourceNamespace: retrieve-api
-        sourceRevisionDigest: sha256:fe19d910e2840dd00a4c553753c1ff3ed60d8fc1cd1a01a79a0e0376eaaed642
-        sourceBlobDigest: sha256:38f66cc329c9ac29541b112255b68d3828040563c4cc77868edc59680973cb60
+        sourceRevisionDigest: sha256:6c454cf0af8fc90103775cdac7eb584ac45aa7012de374ab2ad46ee2b069ed84
+        sourceBlobDigest: sha256:a0f64b8a5e30d5c4122ff086bead130de674635d18e50eeac9969dd80ea570f8
 workflow:
     workflowVersion: 1.0.0
     speakeasyVersion: 1.636.2
     sources:
         Retrieve API:
             inputs:
-                - location: demo.yaml
+                - location: egainMCP.yaml
             output: .speakeasy/out.openapi.yaml
             registry:
                 location: registry.speakeasyapi.dev/egain-corporation/mcp-test/retrieve-api

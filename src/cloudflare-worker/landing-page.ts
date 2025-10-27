@@ -287,7 +287,7 @@ export function landingPage(req: Request) {
                 <div class="method-description">Start the MCP server manually using npx:</div>
                 <div class="code-container">
                     <button class="copy-button" onclick="copyToClipboard('manual-install', this)">Copy</button>
-                    <pre id="manual-install">npx egain-mcp start --api-domain ... --access-token ...</pre>
+                    <pre id="manual-install">npx egain-mcp start --server ... --api-domain ... --access-token ...</pre>
                 </div>
                 <div class="method-description" style="margin-top: 12px;">For a full list of server arguments:</div>
                 <div class="code-container">

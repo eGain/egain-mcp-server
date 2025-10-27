@@ -3,7 +3,7 @@ speakeasyVersion: 1.636.2
 sources:
     Retrieve API:
         inputs:
-            - location: demo.yaml
+            - location: egainMCP.yaml
         output: .speakeasy/out.openapi.yaml
         registry:
             location: registry.speakeasyapi.dev/egain-corporation/mcp-test/retrieve-api

@@ -4,6 +4,9 @@
 
 import * as z from "zod";
 
+/**
+ * The language used for fetching the details of a resource. Resources available in different languages may differ from each other. **Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.
+ */
 export const MandatoryLanguageQueryParameter$zodSchema = z.enum([
   "en-US",
   "fr-FR",
@@ -35,7 +38,9 @@ export const MandatoryLanguageQueryParameter$zodSchema = z.enum([
   "hr-HR",
   "ro-RO",
   "th-TH",
-]);
+]).describe(
+  "The language used for fetching the details of a resource. Resources available in different languages may differ from each other. **Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.",
+);
 
 export type MandatoryLanguageQueryParameter = z.infer<
   typeof MandatoryLanguageQueryParameter$zodSchema

@@ -9,14 +9,20 @@ import { RetryConfig } from "./retries.js";
 import { Params, pathToFunc } from "./url.js";
 
 /**
+ * Portal Manager API Server
+ */
+export const ServerServer0 = "server_0";
+/**
+ * AI Services API Server
+ */
+export const ServerServer1 = "server_1";
+/**
  * Contains the list of servers available to the SDK
  */
-export const ServerList = [
-  /**
-   * Production Server
-   */
-  "https://{API_DOMAIN}/knowledge/portalmgr/v4",
-] as const;
+export const ServerList = {
+  [ServerServer0]: "https://{API_DOMAIN}/knowledge/portalmgr/v4",
+  [ServerServer1]: "https://{API_DOMAIN}/core/aiservices/v4",
+} as const;
 
 export type SDKOptions = {
   /**
@@ -28,7 +34,7 @@ export type SDKOptions = {
   /**
    * Allows overriding the default server used by the SDK
    */
-  serverIdx?: number | undefined;
+  server?: keyof typeof ServerList | undefined;
   /**
    * Sets the API_DOMAIN variable for url substitution
    */
@@ -52,20 +58,21 @@ export type SDKOptions = {
 export function serverURLFromOptions(options: SDKOptions): URL | null {
   let serverURL = options.serverURL;
 
-  const serverParams: Params[] = [
-    {
-      "API_DOMAIN": options.API_DOMAIN ?? "api.egain.cloud",
+  const serverParams: Record<string, Params> = {
+    "server_0": {
+      "API_DOMAIN": options.API_DOMAIN ?? "api.aidev.egain.cloud",
     },
-  ];
+    "server_1": {
+      "API_DOMAIN": options.API_DOMAIN ?? "api.aidev.egain.cloud",
+    },
+  };
+
   let params: Params = {};
 
   if (!serverURL) {
-    const serverIdx = options.serverIdx ?? 0;
-    if (serverIdx < 0 || serverIdx >= ServerList.length) {
-      throw new Error(`Invalid server index ${serverIdx}`);
-    }
-    serverURL = ServerList[serverIdx] || "";
-    params = serverParams[serverIdx] || {};
+    const server = options.server ?? ServerServer0;
+    serverURL = ServerList[server] || "";
+    params = serverParams[server] || {};
   }
 
   const u = pathToFunc(serverURL)(params);
@@ -74,8 +81,8 @@ export function serverURLFromOptions(options: SDKOptions): URL | null {
 
 export const SDK_METADATA = {
   language: "typescript",
-  openapiDocVersion: "4.0.0",
-  sdkVersion: "0.2.4",
+  openapiDocVersion: "1.0.0",
+  sdkVersion: "0.3.0",
   genVersion: "2.723.8",
-  userAgent: "speakeasy-sdk/mcp-typescript 0.2.4 2.723.8 4.0.0 egain-mcp",
+  userAgent: "speakeasy-sdk/mcp-typescript 0.3.0 2.723.8 1.0.0 egain-mcp",
 } as const;

@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
+import { encodeFormQuery, encodeJSON, encodeSimple } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -20,36 +20,38 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  GetAnnouncementArticlesRequest,
-  GetAnnouncementArticlesRequest$zodSchema,
-  GetAnnouncementArticlesResponse,
-  GetAnnouncementArticlesResponse$zodSchema,
-} from "../models/getannouncementarticlesop.js";
+  PostPortalIDRetrieveRequest,
+  PostPortalIDRetrieveRequest$zodSchema,
+  PostPortalIDRetrieveResponse,
+  PostPortalIDRetrieveResponse$zodSchema,
+} from "../models/postportalidretrieveop.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Get Announcement Articles
+ * Retrieve Chunks
  *
  * @remarks
- * Get Announcements
+ * Retrieve Chunks
  *
  * ## Prerequisites
- * - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
+ * - **Requires a valid portal ID** (required parameter). If you don't have the portal ID, first call 'get-portals' to get available portals.
  * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
  *
  * ## Overview
- * The Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.
+ * The Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.
  *
- * This API returns announcement articles with their full content, metadata, and any associated attachments or links.
+ * In addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.
+ *
+ * By leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.
  */
-export function getAnnouncements(
+export function queryRetrieve(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: PostPortalIDRetrieveRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    GetAnnouncementArticlesResponse,
+    PostPortalIDRetrieveResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -68,12 +70,12 @@ export function getAnnouncements(
 
 async function $do(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: PostPortalIDRetrieveRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      GetAnnouncementArticlesResponse,
+      PostPortalIDRetrieveResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -87,14 +89,14 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => GetAnnouncementArticlesRequest$zodSchema.parse(value$),
+    (value$) => PostPortalIDRetrieveRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
     return [parsed$, { status: "invalid" }];
   }
   const payload$ = parsed$.value;
-  const body$ = null;
+  const body$ = encodeJSON("body", payload$.RetrieveRequest, { explode: true });
 
   const pathParams$ = {
     portalID: encodeSimple("portalID", payload$.portalID, {
@@ -102,24 +104,20 @@ async function $do(
       charEncoding: "percent",
     }),
   };
-  const path$ = pathToFunc("/portals/{portalID}/articles/announcements")(
+  const path$ = pathToFunc("/{portalID}/retrieve")(
     pathParams$,
   );
   const query$ = encodeFormQuery({
     "$filter[tags]": payload$.dollarFilterTags,
+    "$filter[topicIds]": payload$.dollarFilterTopicIds,
+    "$filter[userProfileID]": payload$.dollarFilterUserProfileID,
     "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "workflowMilestone": payload$.workflowMilestone,
+    "q": payload$.q,
   });
 
   const headers$ = new Headers(compactMap({
+    "Content-Type": "application/json",
     Accept: "application/json",
-    "Accept-Language": encodeSimple(
-      "Accept-Language",
-      payload$.acceptLanguage,
-      { explode: false, charEncoding: "none" },
-    ),
   }));
   const securityInput = await extractSecurity(client$._options.security);
   const requestSecurity = resolveGlobalSecurity(securityInput);
@@ -127,7 +125,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "getAnnouncementArticles",
+    operationID: "post_/{portalID}/retrieve",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -145,7 +143,7 @@ async function $do(
 
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
-    method: "GET",
+    method: "POST",
     baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
@@ -175,7 +173,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    GetAnnouncementArticlesResponse,
+    PostPortalIDRetrieveResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -184,16 +182,13 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, GetAnnouncementArticlesResponse$zodSchema, {
-      key: "ArticleResults",
+    M.json(200, PostPortalIDRetrieveResponse$zodSchema, {
+      key: "RetrieveResponse",
     }),
-    M.nil(204, GetAnnouncementArticlesResponse$zodSchema),
-    M.json(
-      [400, 401, 403, 404, 406],
-      GetAnnouncementArticlesResponse$zodSchema,
-      { key: "WSErrorCommon" },
-    ),
-    M.json(500, GetAnnouncementArticlesResponse$zodSchema, {
+    M.json(400, PostPortalIDRetrieveResponse$zodSchema, {
+      key: "WSErrorCommon",
+    }),
+    M.json(500, PostPortalIDRetrieveResponse$zodSchema, {
       key: "WSErrorCommon",
     }),
   )(response, req$, { extraFields: responseFields$ });

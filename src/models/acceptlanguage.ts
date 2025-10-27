@@ -4,6 +4,9 @@
 
 import * as z from "zod";
 
+/**
+ * The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.
+ */
 export const AcceptLanguage$zodSchema = z.enum([
   "en-US",
   "es-ES",
@@ -20,6 +23,8 @@ export const AcceptLanguage$zodSchema = z.enum([
   "ja-JP",
   "ko-KR",
   "sv-SE",
-]);
+]).describe(
+  "The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.",
+);
 
 export type AcceptLanguage = z.infer<typeof AcceptLanguage$zodSchema>;

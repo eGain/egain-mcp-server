@@ -13,7 +13,7 @@ export const Detail$zodSchema: z.ZodType<Detail, z.ZodTypeDef, unknown> = z
   });
 
 /**
- * Bad Request
+ * Error Schema
  */
 export type WSErrorCommon = {
   code: string;
@@ -31,4 +31,4 @@ export const WSErrorCommon$zodSchema: z.ZodType<
   details: z.array(z.lazy(() => Detail$zodSchema)).optional(),
   developerMessage: z.string(),
   userMessage: z.string().optional(),
-}).describe("Bad Request");
+}).describe("Error Schema");

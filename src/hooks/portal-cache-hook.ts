@@ -3,9 +3,6 @@
  * Caches portal names and IDs using v4 API after authentication
  */
 
-// Configuration: Change this to match your API domain
-const API_DOMAIN = 'api-dev9.knowledge.ai';
-
 import { BeforeCreateRequestHook, BeforeCreateRequestContext, SDKInitHook } from "./types.js";
 import { RequestInput } from "../lib/http.js";
 import { SDKOptions } from "../lib/config.js";
@@ -62,6 +59,7 @@ export class PortalCacheHook implements SDKInitHook, BeforeCreateRequestHook {
   private portalCache: Map<string, string> = new Map(); // name -> id mapping
   private cacheInitialized: boolean = false;
   private cachePromise: Promise<void> | null = null;
+  private apiDomain: string = 'api.egain.cloud'; // Default, will be overridden by SDK options
 
   constructor() {
     console.error('🏗️  CACHE: PortalCacheHook constructor called');
@@ -73,6 +71,14 @@ export class PortalCacheHook implements SDKInitHook, BeforeCreateRequestHook {
   // SDKInit hook - initialize portal cache early during SDK initialization
   sdkInit(opts: SDKOptions): SDKOptions {
     console.error('🚀 CACHE: Portal cache SDKInit hook called - preparing for early initialization');
+    
+    // Capture API_DOMAIN from SDK options (respects --api-domain flag)
+    if (opts.API_DOMAIN) {
+      this.apiDomain = opts.API_DOMAIN;
+      console.error(`🌐 CACHE: Using API domain from SDK options: ${this.apiDomain}`);
+    } else {
+      console.error(`🌐 CACHE: No API_DOMAIN in SDK options, using default: ${this.apiDomain}`);
+    }
     
     // Always ensure we try to load from cache file during SDK init
     if (!this.cacheInitialized) {
@@ -103,7 +109,7 @@ export class PortalCacheHook implements SDKInitHook, BeforeCreateRequestHook {
         if (bearerToken) {
           console.error('🔄 CACHE: Found existing bearer token, starting background cache initialization...');
           // Create a fake request for background initialization
-          const fakeRequest = new Request(`https://${API_DOMAIN}/knowledge`, {
+          const fakeRequest = new Request(`https://${this.apiDomain}/knowledge`, {
             headers: { 'Authorization': `Bearer ${bearerToken}` }
           });
           
@@ -162,9 +168,9 @@ export class PortalCacheHook implements SDKInitHook, BeforeCreateRequestHook {
 
       try {
         while (currentPage <= maxPages) {
-          const v4ApiUrl = `https://${API_DOMAIN}/knowledge/portalmgr/v4/myportals?$lang=en-US&$pagenum=${currentPage}&$pagesize=${pageSize}`;
+          const v4ApiUrl = `https://${this.apiDomain}/knowledge/portalmgr/v4/myportals?$lang=en-US&$pagenum=${currentPage}&$pagesize=${pageSize}`;
           
-          console.error(`🔍 CACHE: Fetching portals from v4 API (page ${currentPage}): ${v4ApiUrl}`);
+          console.error(`🔍 CACHE: Fetching portals from v4 API (page ${currentPage}) using domain ${this.apiDomain}`);
           
           const response = await fetch(v4ApiUrl, {
             method: 'GET',
@@ -490,7 +496,7 @@ export class PortalCacheHook implements SDKInitHook, BeforeCreateRequestHook {
     this.portalCache.clear();
 
     // Create a fake request with the bearer token
-    const fakeRequest = new Request(`https://${API_DOMAIN}/knowledge`, {
+    const fakeRequest = new Request(`https://${this.apiDomain}/knowledge`, {
       headers: { 'Authorization': `Bearer ${bearerToken}` }
     });
 

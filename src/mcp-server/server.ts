@@ -18,6 +18,9 @@ import { tool$getArticle } from "./tools/getArticle.js";
 import { tool$getPopularArticles } from "./tools/getPopularArticles.js";
 import { tool$getPortals } from "./tools/getPortals.js";
 import { tool$makeSuggestion } from "./tools/makeSuggestion.js";
+import { tool$queryAnswers } from "./tools/queryAnswers.js";
+import { tool$queryRetrieve } from "./tools/queryRetrieve.js";
+import { tool$querySearch } from "./tools/querySearch.js";
 
 export function createMCPServer(deps: {
   logger: ConsoleLogger;
@@ -26,19 +29,19 @@ export function createMCPServer(deps: {
   getSDK?: () => EgainMcpCore;
   serverURL?: string | undefined;
   security?: SDKOptions["security"] | undefined;
-  serverIdx?: SDKOptions["serverIdx"] | undefined;
+  server?: SDKOptions["server"] | undefined;
   API_DOMAIN?: SDKOptions["API_DOMAIN"] | undefined;
 }) {
   const server = new McpServer({
     name: "EgainMcp",
-    version: "0.2.4",
+    version: "0.3.0",
   });
 
   const getClient = deps.getSDK || (() =>
     new EgainMcpCore({
       security: deps.security,
       serverURL: deps.serverURL,
-      serverIdx: deps.serverIdx,
+      server: deps.server,
       API_DOMAIN: deps.API_DOMAIN,
       debugLogger: deps.logger.level === "debug"
         ? {
@@ -80,6 +83,9 @@ export function createMCPServer(deps: {
   tool(tool$getPopularArticles);
   tool(tool$getPortals);
   tool(tool$makeSuggestion);
+  tool(tool$queryAnswers);
+  tool(tool$querySearch);
+  tool(tool$queryRetrieve);
 
   return server;
 }

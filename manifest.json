@@ -1,9 +1,9 @@
 {
   "dxt_version": "0.1",
   "name": "egain-mcp",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "",
-  "long_description": "Knowledge Portal Manager APIs: ### License\n  The following licenses are required to use the Knowledge Access APIs:\n  * If the user is an agent, then the *Knowledge + AI* license is required.\n  * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.\n### API Resource Limits\nThe following Resources have predefined limits for specific access attributes for Enterprise use.\n\n| Resource | Attribute | Enterprise\n| ---------------- | ---------------------------- | ----------\n| Article Reference Limits |Number of attachments used in any article | 50\n|  |Number of custom attributes in an article | 15\n|  |Number of publish views used in an article version | 20\n| Topic Reference Limits |User-defined topics in a department| 50000\n|  |Depth of topics  | 20\n|  |Topics at any level | 2500\n|  |Number of custom attributes in a topic | 15\n| Portal Reference Limits | Tag categories in a portal | 15\n|  |Topics to be included in a portal | 2500\n|  |Number of articles to display in announcements | 25\n|  |Maximum related articles in portal setting | 100\n|  |Usage links and link groups setup for a portal | 25\n    \n      \n",
+  "long_description": "eGain Portal, Retrieve, Search, Answers APIs: Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations.",
   "author": {
     "name": "Speakeasy"
   },
@@ -15,6 +15,8 @@
       "args": [
         "${__dirname}/bin/mcp-server.js",
         "start",
+        "--server",
+        "${user_config.server}",
         "--api-domain",
         "${user_config.api_domain}",
         "--access-token",
@@ -43,25 +45,43 @@
     {
       "name": "make-suggestion",
       "description": "Make a Suggestion\n\nMake a Suggestion\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Make a Suggestion API allows users to create an Article Suggestion from within a knowledge portal. This enables users to submit feedback, request new articles, or suggest improvements to existing content.\n\nUsers can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.\n"
+    },
+    {
+      "name": "query-answers",
+      "description": "Get the best answer for a user query\n\nGet Answers\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.\n\nThe API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.\n"
+    },
+    {
+      "name": "query-search",
+      "description": "Get the best search results for a user query\n\nThe Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores. <br>**This endpoint is only available for Self Service environments.**\n"
+    },
+    {
+      "name": "query-retrieve",
+      "description": "Retrieve Chunks\n\nRetrieve Chunks\n\n## Prerequisites\n- **Requires a valid portal ID** (required parameter). If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.\n\nIn addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.\n\nBy leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.\n"
     }
   ],
   "prompts": [],
   "keywords": [
       "egain",
       "mcp",
-      "knowledge",
       "portal",
-      "manager",
-      "apis",
-      "license"
+      "retrieve",
+      "search",
+      "answers"
     ],
   "user_config": {
+      "server": {
+        "type": "string",
+        "title": "Server",
+        "description": "Available servers: [server_0: https://{API_DOMAIN}/knowledge/portalmgr/v4, server_1: https://{API_DOMAIN}/core/aiservices/v4]",
+        "required": false,
+        "default": "server_0"
+      },
       "api_domain": {
         "type": "string",
         "title": "API_DOMAIN",
-        "description": " ",
+        "description": " Templated in https://{API_DOMAIN}/core/aiservices/v4.",
         "required": false,
-        "default": "api.egain.cloud"
+        "default": "api.aidev.egain.cloud"
       },
       "access_token": {
         "type": "string",

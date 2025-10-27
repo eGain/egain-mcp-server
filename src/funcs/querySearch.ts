@@ -10,6 +10,12 @@ import { safeParse } from "../lib/schemas.js";
 import { RequestOptions } from "../lib/sdks.js";
 import { extractSecurity, resolveGlobalSecurity } from "../lib/security.js";
 import { pathToFunc } from "../lib/url.js";
+import {
+  AiSearchRequest,
+  AiSearchRequest$zodSchema,
+  AiSearchResponse,
+  AiSearchResponse$zodSchema,
+} from "../models/aisearchop.js";
 import { APIError } from "../models/errors/apierror.js";
 import {
   ConnectionError,
@@ -19,37 +25,22 @@ import {
   UnexpectedClientError,
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
-import {
-  GetAnnouncementArticlesRequest,
-  GetAnnouncementArticlesRequest$zodSchema,
-  GetAnnouncementArticlesResponse,
-  GetAnnouncementArticlesResponse$zodSchema,
-} from "../models/getannouncementarticlesop.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Get Announcement Articles
+ * Get the best search results for a user query
  *
  * @remarks
- * Get Announcements
- *
- * ## Prerequisites
- * - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
- * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
- *
- * ## Overview
- * The Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.
- *
- * This API returns announcement articles with their full content, metadata, and any associated attachments or links.
+ * The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores. <br>**This endpoint is only available for Self Service environments.**
  */
-export function getAnnouncements(
+export function querySearch(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: AiSearchRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    GetAnnouncementArticlesResponse,
+    AiSearchResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -68,12 +59,12 @@ export function getAnnouncements(
 
 async function $do(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: AiSearchRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      GetAnnouncementArticlesResponse,
+      AiSearchResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -87,7 +78,7 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => GetAnnouncementArticlesRequest$zodSchema.parse(value$),
+    (value$) => AiSearchRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
@@ -102,24 +93,21 @@ async function $do(
       charEncoding: "percent",
     }),
   };
-  const path$ = pathToFunc("/portals/{portalID}/articles/announcements")(
+  const path$ = pathToFunc("/{portalID}/search")(
     pathParams$,
   );
   const query$ = encodeFormQuery({
     "$filter[tags]": payload$.dollarFilterTags,
+    "$filter[topicIds]": payload$.dollarFilterTopicIds,
+    "$filter[userProfileID]": payload$.dollarFilterUserProfileID,
     "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "workflowMilestone": payload$.workflowMilestone,
+    "articleCustomAdditionalAttributes":
+      payload$.articleCustomAdditionalAttributes,
+    "q": payload$.q,
   });
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
-    "Accept-Language": encodeSimple(
-      "Accept-Language",
-      payload$.acceptLanguage,
-      { explode: false, charEncoding: "none" },
-    ),
   }));
   const securityInput = await extractSecurity(client$._options.security);
   const requestSecurity = resolveGlobalSecurity(securityInput);
@@ -127,7 +115,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "getAnnouncementArticles",
+    operationID: "aiSearch",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -175,7 +163,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    GetAnnouncementArticlesResponse,
+    AiSearchResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -184,18 +172,9 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, GetAnnouncementArticlesResponse$zodSchema, {
-      key: "ArticleResults",
-    }),
-    M.nil(204, GetAnnouncementArticlesResponse$zodSchema),
-    M.json(
-      [400, 401, 403, 404, 406],
-      GetAnnouncementArticlesResponse$zodSchema,
-      { key: "WSErrorCommon" },
-    ),
-    M.json(500, GetAnnouncementArticlesResponse$zodSchema, {
-      key: "WSErrorCommon",
-    }),
+    M.json(200, AiSearchResponse$zodSchema, { key: "SearchResponse" }),
+    M.nil(400, AiSearchResponse$zodSchema),
+    M.nil(500, AiSearchResponse$zodSchema),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

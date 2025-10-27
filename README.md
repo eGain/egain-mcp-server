@@ -16,35 +16,21 @@ Model Context Protocol (MCP) Server for the *egain-mcp* API.
 <!-- Start Summary [summary] -->
 ## Summary
 
-Knowledge Portal Manager APIs:
-### MCP Tools
-- **Get Portals**: Lists portals accessible to the caller; supports pagination and tag/topic filtering.
-- **Get Article**: Retrieves a specific article by ID; optional attributes and publish view filtering.
-- **Get Announcements**: Returns announcement articles for a portal; includes metadata and links.
-- **Get Popular Articles**: Lists popular articles for a portal (optionally scoped to a topic).
-- **Make a Suggestion**: Submits an article suggestion/feedback with optional custom attributes and attachments.
-### License
-  The following licenses are required to use the Knowledge Access APIs:
-  * If the user is an agent, then the *Knowledge + AI* license is required.
-  * If the user is a customer, the *Self-Service* and *Advanced Self-Service* licenses must be available.
-### API Resource Limits
-The following Resources have predefined limits for specific access attributes for Enterprise use.
-
-| Resource | Attribute | Enterprise
-| ---------------- | ---------------------------- | ----------
-| Article Reference Limits |Number of attachments used in any article | 50
-|  |Number of custom attributes in an article | 15
-|  |Number of publish views used in an article version | 20
-| Topic Reference Limits |User-defined topics in a department| 50000
-|  |Depth of topics  | 20
-|  |Topics at any level | 2500
-|  |Number of custom attributes in a topic | 15
-| Portal Reference Limits | Tag categories in a portal | 15
-|  |Topics to be included in a portal | 2500
-|  |Number of articles to display in announcements | 25
-|  |Maximum related articles in portal setting | 100
-|  |Usage links and link groups setup for a portal | 25
+eGain Portal, Retrieve, Search, Answers APIs: Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations.
 <!-- End Summary [summary] -->
+
+### What is the eGain MCP?
+
+The Model Context Protocol (MCP) server exposes eGain knowledge APIs to MCP‑enabled clients (Claude Desktop, Cursor, etc.). It unifies semantic search, chunk retrieval, and Certified/Generative Answers so you can access your knowledge base directly from AI tools.
+
+- What it can do:
+  - Use tools like `getPortals`, `getPopularArticles`, `querySearch`, `queryRetrieve`, and `queryAnswers`
+  - Return Certified/Generative answers with references and scores, or raw chunks for RAG
+  - Enforce portal permissions with secure, token‑based access
+
+Learn more: [eGain MCP](https://apidev.egain.com/developer-portal/guides/mcp/mcp/)
+
+🎥 [Watch the demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385)
 
 <!-- Start Table of Contents [toc] -->
 ## Table of Contents
@@ -53,6 +39,7 @@ The following Resources have predefined limits for specific access attributes fo
   * [Development](#development)
   * [Authentication](#authentication)
   * [Installation](#installation)
+  * [Help Guides](#help-guides)
   * [Contributions](#contributions)
 
 <!-- End Table of Contents [toc] -->
@@ -85,35 +72,12 @@ To use this local version with Cursor, Claude or other MCP Clients, you'll need 
 }
 ```
 
-Or to debug the MCP server locally, use the official MCP Inspector: 
+This is my recommended method of using MCP. Claude and Cursor are the easiest to work with and are very MCP friendly. It is also recommended you omit the  `--access-token` flag and follow the steps for [Authentication](#authentication) to setup smart authentication.
+
+To debug the MCP server locally, use the official MCP Inspector: 
 
 ```bash
 npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain "..." --access-token "..."
-```
-
-
-### Cloudflare Deployment
-
-To deploy to Cloudflare Workers:
-
-```bash
-npm install 
-npm run deploy
-```
-
-To run the cloudflare deployment locally:
-
-```bash
-npm install 
-npm run dev
-```
-
-The local development server will be available at `http://localhost:8787`
-
-Then install with Claude Code CLI:
-
-```bash
-claude mcp add --transport sse EgainMcp http://localhost:8787/sse --header "authorization: ..."
 ```
 
 ## Authentication
@@ -129,7 +93,6 @@ EGAIN_REDIRECT_URI="https://oauth.pstmn.io/v1/callback"
 AUTH_URL="https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_signin"
 ACCESS_URL="https://your-tenant.b2clogin.com/your-tenant.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1_signin"
 EGAIN_SCOPE_PREFIX="https://your-tenant.scope.prefixvalue.com"
-EGAIN_CLIENT_SECRET="your-client-secret-value"
 ```
 
 Notes:
@@ -137,8 +100,21 @@ Notes:
 - Without `--access-token`, you must provide all required `.env` values above for authentication to occur. The flow will open a browser window, and a bearer token will be saved locally for reuse.
 - **`EGAIN_CLIENT_SECRET`**: This field is included in the configuration but is not technically required for the authentication flow to work. You can leave it as an empty string if not needed.
 - **`EGAIN_SCOPE_PREFIX`**: This is not required for Rigel setups. You can omit this or leave it as an empty string for Rigel environments.
+- If you install via the DXT (Desktop Extension) file instead of configuring with a JSON `mcpServers` entry, a local `.env` file will not be read because `.env` files are excluded from the packaged extension. You must provide the required access token from within Claude Desktop Extensions settings.
 
-For more details on eGain authentication flows, see the eGain Developer Portal guide: [API Authentication](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
+### Required API permissions
+Ensure your client app (and issued token) has the following API permissions:
+- `knowledge.portalmgr.manage`
+- `knowledge.portalmgr.read`
+- `core.aiservices.read`
+
+For more details on eGain authentication, see [eGain Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
+
+### Platform prerequisites
+This MCP surfaces existing eGain APIs. If your tenant does not have required services provisioned or data available, related tools will not function:
+- AI Services (Search/Retrieve/Answers) require AI indexing to be enabled and content indexed. Without an index, `querySearch`, `queryRetrieve`, and `queryAnswers` will fail or return empty results.
+- Knowledge Portal Manager endpoints require a Knowledge Base and at least one portal with accessible content. Without this, `getPortals`, `getPopularArticles`, `getAnnouncements`, and `getArticle` will not return data.
+If you’re unsure about your tenant’s setup, consult your eGain admin to confirm provisioning and access.
 
 If you want to force a fresh login or clear local token data without waiting for token expiry, you can run the helper scripts:
 
@@ -150,13 +126,20 @@ node ./scripts/login.js
 node ./scripts/logout.js
 ```
 
+## Help Guides
+
+Helpful walkthroughs live in the `help/` folder:
+
+- [What is MCP?](./help/what-is-mcp.md)
+- [Authentication Deep Dive](./help/authentication.md)
+- [Claude Example: Setup to First Query](./help/claude-example.md)
+- [FAQ](./help/faq.md)
+
 <!-- Placeholder for Future Speakeasy SDK Sections -->
 
 <!-- Start Installation [installation] -->
 ## Installation
 
-> [!TIP]
-> To finish publishing your MCP Server to npm and others you must [run your first generation action](https://www.speakeasy.com/docs/github-setup#step-by-step-guide).
 <details>
 <summary>DXT (Desktop Extension)</summary>
 
@@ -225,6 +208,8 @@ Refer to [Official Windsurf documentation](https://docs.windsurf.com/windsurf/ca
       "args": [
         "egain-mcp",
         "start",
+        "--server",
+        "...",
         "--api-domain",
         "...",
         "--access-token",
@@ -251,6 +236,8 @@ Refer to [Official VS Code documentation](https://code.visualstudio.com/api/exte
       "args": [
         "egain-mcp",
         "start",
+        "--server",
+        "...",
         "--api-domain",
         "...",
         "--access-token",
@@ -269,7 +256,7 @@ Refer to [Official VS Code documentation](https://code.visualstudio.com/api/exte
 To start the MCP server, run:
 
 ```bash
-npx egain-mcp start --api-domain ... --access-token ...
+npx egain-mcp start --server ... --api-domain ... --access-token ...
 ```
 
 For a full list of server arguments, run:
@@ -297,3 +284,5 @@ This MCP server is an early preview and is not production‑ready. It is provide
 For technical support and questions about this MCP server:
 
 Primary Support: Emily Loh — eloh@egain.com
+
+Or you can open an issue via the repository’s Issues tab.

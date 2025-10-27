@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple, queryJoin } from "../lib/encodings.js";
+import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -105,19 +105,13 @@ async function $do(
   const path$ = pathToFunc("/portals/{portalID}/populararticles")(
     pathParams$,
   );
-  const query$ = queryJoin(
-    encodeFormQuery({
-      "articleResultAdditionalAttributes":
-        payload$.articleResultAdditionalAttributes,
-    }, { explode: false }),
-    encodeFormQuery({
-      "$filter[tags]": payload$.dollarFilterTags,
-      "$filter[topicId]": payload$.dollarFilterTopicId,
-      "$lang": payload$.Dollar_lang,
-      "$pagenum": payload$.Dollar_pagenum,
-      "$pagesize": payload$.Dollar_pagesize,
-    }),
-  );
+  const query$ = encodeFormQuery({
+    "$filter[tags]": payload$.dollarFilterTags,
+    "$filter[topicId]": payload$.dollarFilterTopicId,
+    "$lang": payload$.Dollar_lang,
+    "$pagenum": payload$.Dollar_pagenum,
+    "$pagesize": payload$.Dollar_pagesize,
+  });
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
