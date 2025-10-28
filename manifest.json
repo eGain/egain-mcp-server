@@ -1,7 +1,7 @@
 {
   "dxt_version": "0.1",
   "name": "egain-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "",
   "long_description": "eGain Portal, Retrieve, Search, Answers APIs: Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations.",
   "author": {
@@ -87,7 +87,7 @@
         "type": "string",
         "title": "accessToken",
         "description": "The accessToken to use for the request",
-        "required": true,
+        "required": false,
         "sensitive": true
       }
     }

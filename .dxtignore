@@ -3,9 +3,6 @@
 bun.lock
 eslint.config.mjs
 node_modules
-.env
-.bearer_token
-.bearer_token_metadata
 portals_cache.json
 .DS_Store
 *.log

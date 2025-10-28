@@ -1,6 +1,6 @@
 {
   "name": "egain-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Speakeasy",
   "type": "module",
   "sideEffects": false,

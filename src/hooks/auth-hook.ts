@@ -134,6 +134,30 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               const cleanValue = value.replace(/['"]/g, '');
             
               switch (cleanKey) {
+                // New variable names (preferred)
+                case 'EGAIN_URL':
+                  config.environmentUrl = cleanValue;
+                  break;
+                case 'CLIENT_ID':
+                  config.clientId = cleanValue;
+                  break;
+                case 'CLIENT_SECRET':
+                  config.clientSecret = cleanValue;
+                  break;
+                case 'REDIRECT_URL':
+                  config.redirectUri = cleanValue;
+                  break;
+                case 'AUTH_URL':
+                  config.authUrl = cleanValue;
+                  break;
+                case 'ACCESS_TOKEN_URL':
+                  config.accessUrl = cleanValue;
+                  break;
+                case 'SCOPE_PREFIX':
+                  config.scopePrefix = cleanValue;
+                  break;
+                
+                // Backward compatibility with old names
                 case 'EGAIN_ENVIRONMENT_URL':
                   config.environmentUrl = cleanValue;
                   break;
@@ -145,9 +169,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                   break;
                 case 'EGAIN_REDIRECT_URI':
                   config.redirectUri = cleanValue;
-                  break;
-                case 'AUTH_URL':
-                  config.authUrl = cleanValue;
                   break;
                 case 'ACCESS_URL':
                   config.accessUrl = cleanValue;
@@ -175,14 +196,14 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     if (!environmentUrl || !clientId || !redirectUri || !authUrl || !accessUrl) {
       throw new Error(
         'Missing required environment variables. Please set:\n' +
-        '- EGAIN_ENVIRONMENT_URL\n' +
-        '- EGAIN_CLIENT_ID\n' +
-        '- EGAIN_REDIRECT_URI\n' +
+        '- EGAIN_URL or EGAIN_ENVIRONMENT_URL\n' +
+        '- CLIENT_ID or EGAIN_CLIENT_ID\n' +
+        '- REDIRECT_URL or EGAIN_REDIRECT_URI\n' +
         '- AUTH_URL\n' +
-        '- ACCESS_URL\n' +
+        '- ACCESS_TOKEN_URL or ACCESS_URL\n' +
         '\nOptional variables:\n' +
-        '- EGAIN_SCOPE_PREFIX (defaults to empty string if not provided)\n' +
-        '- EGAIN_CLIENT_SECRET (required only for confidential clients)'
+        '- SCOPE_PREFIX or EGAIN_SCOPE_PREFIX (defaults to empty string if not provided)\n' +
+        '- CLIENT_SECRET or EGAIN_CLIENT_SECRET (required only for confidential clients)'
       );
     }
   }
@@ -468,8 +489,8 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 res.statusCode = 400;
                 res.end('Missing code');
               }
-            } catch (e) {
-              try { res.statusCode = 500; res.end('Internal Server Error'); } catch {}
+          } catch (e) {
+            try { res.statusCode = 500; res.end('Internal Server Error'); } catch (innerErr) { /* ignore */ }
             }
           });
 
@@ -566,7 +587,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         try {
           // Best-effort cleanup of temp profile directory
           fs.rmSync(tempUserDataDir, { recursive: true, force: true });
-        } catch {}
+        } catch (cleanupErr) { /* ignore */ }
       }
     } else {
       throw new Error('Linux is not supported. Use macOS or Windows for automatic authentication.');

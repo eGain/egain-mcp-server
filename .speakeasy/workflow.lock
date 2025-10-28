@@ -7,23 +7,30 @@ sources:
         tags:
             - latest
             - 1.0.0
+    eGain API:
+        sourceNamespace: egain-api
+        sourceRevisionDigest: sha256:6c454cf0af8fc90103775cdac7eb584ac45aa7012de374ab2ad46ee2b069ed84
+        sourceBlobDigest: sha256:a0f64b8a5e30d5c4122ff086bead130de674635d18e50eeac9969dd80ea570f8
+        tags:
+            - latest
+            - 1.0.0
 targets:
     egain-mcp:
-        source: Retrieve API
-        sourceNamespace: retrieve-api
+        source: eGain API
+        sourceNamespace: egain-api
         sourceRevisionDigest: sha256:6c454cf0af8fc90103775cdac7eb584ac45aa7012de374ab2ad46ee2b069ed84
         sourceBlobDigest: sha256:a0f64b8a5e30d5c4122ff086bead130de674635d18e50eeac9969dd80ea570f8
 workflow:
     workflowVersion: 1.0.0
     speakeasyVersion: 1.636.2
     sources:
-        Retrieve API:
+        eGain API:
             inputs:
                 - location: egainMCP.yaml
             output: .speakeasy/out.openapi.yaml
             registry:
-                location: registry.speakeasyapi.dev/egain-corporation/mcp-test/retrieve-api
+                location: registry.speakeasyapi.dev/egain-corporation/mcp-test/egain-api
     targets:
         egain-mcp:
             target: mcp-typescript
-            source: Retrieve API
+            source: eGain API

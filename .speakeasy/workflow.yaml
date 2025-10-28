@@ -1,13 +1,13 @@
 workflowVersion: 1.0.0
 speakeasyVersion: 1.636.2
 sources:
-    Retrieve API:
+    eGain API:
         inputs:
             - location: egainMCP.yaml
         output: .speakeasy/out.openapi.yaml
         registry:
-            location: registry.speakeasyapi.dev/egain-corporation/mcp-test/retrieve-api
+            location: registry.speakeasyapi.dev/egain-corporation/mcp-test/egain-api
 targets:
     egain-mcp:
         target: mcp-typescript
-        source: Retrieve API
+        source: eGain API
