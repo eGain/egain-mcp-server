@@ -1,6 +1,6 @@
-# Claude Example: Setup to First Query
+# Cursor Example: Setup to First Query
 
-This is a precise, click-by-click guide starting immediately *after* you clone the repo. It uses stdio and the PKCE login flow. Download the Claude Desktop to run this example
+This is a precise, click-by-click guide starting immediately *after* you clone the repo. It uses stdio and the PKCE login flow. Download Cursor IDE to run this example.
 
 *Prerequisites:* eGain 21.22+, appropriate user access, AI Services enabled, and some KB content.
 
@@ -12,15 +12,16 @@ npm install
 npm run build
 ```
 
-**Step 3:** Configure Claude Desktop for local  
-Open Claude Desktop → `Settings` → `Developer` → `Edit Config` → open `claude_desktop_config.json`. Use this JSON as a reference for the configuration:
+**Step 3:** Configure Cursor for local  
+Open Cursor → `Settings` (⌘, on Mac or Ctrl+, on Windows/Linux) → `Tools & MCP` → `New MCP Server`. Use this JSON as a reference for the configuration:
+
 ```json
 {
   "mcpServers": {
     "EgainMcp": {
       "command": "node",
       "args": [
-        "./bin/mcp-server.js", // Replace with absolute path, if needed
+        "/Users/eloh/egain-mcp/bin/mcp-server.js", // Replace with absolute path to your project
         "start",
         "--api-domain",
         "api.aidev.egain.cloud" // Replace with your API domain
@@ -29,12 +30,15 @@ Open Claude Desktop → `Settings` → `Developer` → `Edit Config` → open `c
   }
 }
 ```
-To find your API domain, go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see “API Domain”). No access? Contact your eGain PA.
+
+Alternatively, you can manually edit the MCP configuration file at `~/.cursor/mcp.json` (or `%APPDATA%\Cursor\User\mcp.json` on Windows) with the same JSON structure.
+
+To find your API domain, go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
 
 Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
 
-**Step 4:** Your first Claude query
-Restart Claude to process the configuration. Open a new chat and try:
+**Step 4:** Your first Cursor query
+Restart Cursor to process the configuration. Open a new chat and try:
 - "List the portals I can access." → uses `getPortals`.
 - "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.
 - "Create a suggestion for more articles in the Master portal." → uses `makeSuggestion` with `portalID`.
@@ -43,6 +47,5 @@ On your first MCP request, Chrome opens an incognito window for sign-in.
 
 Tip: Start with "List the portals I can access" to discover valid `portalID` and portal names.
 
-Watch a quick [demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385) to see MCP on Claude in action.
-
 For more background on MCP and workflows, see the eGain MCP guide: [eGain MCP](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).
+
