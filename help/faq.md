@@ -19,7 +19,7 @@ A: Run `node ./scripts/logout.js`. It removes `.bearer_token`, `.bearer_token_me
 A: Call `getPortals` first; it lists portals accessible to your user.
 
 **Q: What is my `--api-domain`?**  
-A: Find it in the Client Application’s Metadata in the eGain Admin Console. Pass it via `--api-domain`. See: [API authentication guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
+A: Find it in the Client Application Metadata in the eGain Admin Console. Pass it via `--api-domain`. See: [API authentication guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
 
 **Q: Which tools are available?**  
 A: `getPortals`, `getPopularArticles`, `getAnnouncements`, `getArticle`, `makeSuggestion`, `querySearch`, `queryRetrieve`, `queryAnswers`.

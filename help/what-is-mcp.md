@@ -11,6 +11,10 @@ Model Context Protocol (MCP) is an open standard that lets AI clients (Claude De
 - Faster adoption: Consistent setup across teams and environments.
 - Discoverable tools: Typed schemas so UIs can guide parameter entry.
 
+**Why MCP vs. Portal/Console?** One place + AI-native: Run your query and receive a response, then have your LLM reflect, refine, or tailor the result—no copy/paste.
+
+Example: Agent gets `queryAnswers`, then asks Claude to turn it into a customer-ready email (optionally citing snippets via `queryRetrieve`).
+
 ## Common use cases
 
 - Intelligent customer support automation: Power chatbots with accurate knowledge.

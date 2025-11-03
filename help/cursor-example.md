@@ -13,7 +13,7 @@ npm run build
 ```
 
 **Step 3:** Configure Cursor for local  
-Open Cursor → `Settings` (⌘, on Mac or Ctrl+, on Windows/Linux) → `Tools & MCP` → `New MCP Server`. Use this JSON as a reference for the configuration:
+Open Cursor → `Settings` → `Tools & MCP` → `New MCP Server`. Use this JSON as a reference for the configuration:
 
 ```json
 {

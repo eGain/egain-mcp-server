@@ -58,7 +58,7 @@ npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain 
 ### Step 4: Configuring with MCP Clients  
 Firstly, to find your API domain, use the eGain Administrator Console to retrieve the correct values:
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
-2. Open your client application and click `Metadata`. The value `API Domain` is detailed in the window.  
+2. Click `Metadata`. The value `API Domain` is detailed in the window.  
 
 Please contact your eGain PA if you do not have access to these admin-only details.
 
