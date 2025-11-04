@@ -6,6 +6,12 @@ A: AI agents sometimes deviate from MCP tool schemas (rename fields, skip requir
 **Q: I can't find my API Domain or Scope Prefix. Where is it?**  
 A: Certain applications may be configured differently. For more details and specifics, visit our [Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
 
+**Q: All these tools are asking for some portal ID. How do I discover my `portalID`?**  
+A: Call `getPortals` first; it lists portals accessible to your user.
+
+**Q: Cursor keeps making code suggestions instead of running the tools. What do I do?**  
+A: DO NOT accept code edits. Use a separate window for the chat so it can’t see or modify your repo. If you accept edits and it breaks, we can’t support fixing it as you’ve modified the product.
+
 **Q: Where is the access token stored?**  
 A: At the repository root in `.bearer_token` with metadata in `.bearer_token_metadata` (created by the PKCE login flow or `scripts/login.js`).
 
@@ -14,9 +20,6 @@ A: With PKCE, you’ll be prompted to sign in again automatically on the next re
 
 **Q: How do I force a fresh login or clear token/cache?**  
 A: Run `node ./scripts/logout.js`. It removes `.bearer_token`, `.bearer_token_metadata`, and `portals_cache.json`. To log in again, make any MCP request or run `node ./scripts/login.js`.
-
-**Q: How do I discover my `portalID`?**  
-A: Call `getPortals` first; it lists portals accessible to your user.
 
 **Q: What is my `--api-domain`?**  
 A: Find it in the Client Application Metadata in the eGain Admin Console. Pass it via `--api-domain`. See: [API authentication guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
@@ -61,6 +64,8 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 **"invalid_client" error:**
 - Verify `CLIENT_ID` is correct and matches your client application
 - Ensure the client app exists and is enabled in your tenant
+- Make sure the client app is a SPA platform for public client
+- Make sure Web confidential clients have their client secret
 
 **"redirect_uri" mismatch:**
 - Ensure `REDIRECT_URL` in `.env` exactly matches the redirect URI configured in your client application (including trailing slashes, protocols)
@@ -88,7 +93,7 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 - On Windows: Use forward slashes (`/`) in paths even on Windows for MCP configuration
 - Check that `node` is in your PATH and accessible
 - Fully restart your MCP client (Claude Desktop, Cursor, etc.) after configuration changes—closing the window is not enough, you must quit and relaunch the application
-- For Cursor: Verify configuration at `~/.cursor/mcp.json` (or `%APPDATA%\Cursor\User\mcp.json` on Windows)
+- For Cursor: Verify configuration at `~/.cursor/mcp.json` (or `%APPDATA%\Cursor\User\mcp.json` on Windows) and toggle the server on/off
 - For Claude Desktop: Verify configuration in `claude_desktop_config.json`
 
 **Missing API Domain or Scope Prefix:**

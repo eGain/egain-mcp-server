@@ -4,6 +4,8 @@ This is a precise, click-by-click guide starting immediately *after* you clone t
 
 *Prerequisites:* eGain 21.22+, appropriate user access, AI Services enabled, and some KB content.
 
+> ⚠️ Do not modify the repository after cloning. The MCP works as intended
+
 **Step 1:** Set up `.env` — see the [Env Guide](./env-guide.md).
 
 **Step 2:** Run `npm` commands to install and build the MCP.   
@@ -38,7 +40,7 @@ To find your API domain, go to your Admin Console → `Partition` → `Integrati
 Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
 
 **Step 4:** Your first Cursor query
-Restart Cursor to process the configuration. Open a new chat and try:
+Restart Cursor to process the configuration. Open a new chat on an empty window and try:
 - "List the portals I can access." → uses `getPortals`.
 - "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.
 - "Create a suggestion for more articles in the Master portal." → uses `makeSuggestion` with `portalID`.

@@ -7,7 +7,7 @@
 </div>
 <br />
 
-> ⚠️ This MCP server is currently in active development. Features and APIs may change without notice.
+> ⚠️ This MCP hosts eGain v4 APIs. Please do not attempt tool usage with previous API versions' standards. For more details about the v4 APIs, visit our [developer portal](https://apidev.egain.com/).
 
 ## Overview
 
@@ -26,6 +26,7 @@ Learn more in the [eGain MCP guide](https://apidev.egain.com/developer-portal/gu
 
 ## Local Configuration
 ### Step 1: Clone repository and create a `.env` file.  
+> ⚠️ Do not modify the repository after cloning. The MCP works as intended
 Clone this repository and create the `.env` file in the *root* of the folder to setup PKCE Authentication Flow. Below is an example of `.env`:
 ```
 EGAIN_URL="https://aidev.egain.cloud/q8ml"

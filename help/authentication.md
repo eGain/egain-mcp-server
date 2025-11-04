@@ -18,7 +18,6 @@ Note:
 - `CLIENT_SECRET`:
   - Not needed for public clients (PKCE), e.g., local login flows used by native/desktop apps and SPAs.
   - Required for confidential clients (server-side web apps/SSO) where the token endpoint expects a client secret.
-  - If your organization uses a “local login” product/flow, it is typically a public PKCE app and does not need a secret.
 
 To find your tenant-specific values, use the eGain Administrator Console to retrieve the correct values:
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.

@@ -230,10 +230,18 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       `&client_id=${clientId}` +
       `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(redirectUri!)}` +
-      `&scope=${encodeURIComponent(scope)}` +
-      `&code_challenge=${this.codeChallenge}` +
-      `&code_challenge_method=S256`
+      `&scope=${encodeURIComponent(scope)}`
     );
+    
+    // Only add PKCE parameters for public clients (SPAs/Native apps)
+    // Web Applications (confidential clients with client_secret) should NOT use PKCE
+    if (!this.authConfig.clientSecret) {
+      fullUrl += `&code_challenge=${this.codeChallenge}`;
+      fullUrl += `&code_challenge_method=S256`;
+      console.error('🔐 Using PKCE flow (public client - no client_secret detected)');
+    } else {
+      console.error('🔐 Using standard Authorization Code flow (confidential client - client_secret detected)');
+    }
     
     // Force login mechanism removed - tokens are now managed automatically
     // Always use prompt=login to ensure fresh authentication when needed
@@ -671,22 +679,24 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       if (clientSecret) {
         console.error('🔄 Attempt 2: Trying token exchange with client_secret (confidential client mode)...');
         
-        const confidentialClientUrl = (
-          `${accessUrl}` +
-          `?code=${code}` +
-          `&grant_type=authorization_code` +
-          `&redirect_uri=${redirectUri}` +
-          `&client_id=${clientId}` +
-          `&client_secret=${clientSecret}` +
-          `&code_verifier=${this.codeVerifier}`
-        );
+        // For Web Applications (confidential clients), parameters go in the body
+        const confidentialClientBody = new URLSearchParams({
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri!,
+          client_id: clientId!,
+          client_secret: clientSecret
+          // Note: code_verifier is only for PKCE (SPA/Native), not for Web Applications
+        });
 
         console.error('🌐 Making token request (confidential client)...');
-        console.error('   URL preview:', confidentialClientUrl.substring(0, 100) + '...');
+        console.error('   URL:', accessUrl);
+        console.error('   Body preview:', confidentialClientBody.toString().substring(0, 100) + '...');
         
-        const confidentialResponse = await fetch(confidentialClientUrl, {
+        const confidentialResponse = await fetch(accessUrl!, {
           method: 'POST',
-          headers
+          headers,
+          body: confidentialClientBody
         });
 
         console.error('📨 Token response received (confidential client):', confidentialResponse.status, confidentialResponse.statusText);
