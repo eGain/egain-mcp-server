@@ -12,6 +12,7 @@ import * as http from "http";
 import * as os from "os";
 import { fileURLToPath } from 'url';
 import * as crypto from "crypto";
+import { promisify } from "util";
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -30,7 +31,23 @@ const getProjectRoot = (): string => {
   // If package.json not found, use current working directory as fallback
   return process.cwd();
 };
-import { promisify } from "util";
+
+// Get user's home directory for storing config securely
+const getConfigDir = (): string => {
+  const homeDir = os.homedir();
+  const configDir = path.join(homeDir, '.egain-mcp');
+  
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true, mode: 0o700 }); // Only user can read/write
+  }
+  
+  return configDir;
+};
+
+const getConfigPath = (): string => {
+  return path.join(getConfigDir(), 'config.json');
+};
 
 const execAsync = promisify(exec);
 
@@ -49,12 +66,19 @@ interface PKCEValues {
   codeChallenge: string;
 }
 
+const CONFIG_SERVER_PORT = 3333;
+const CONFIG_SERVER_HOST = 'localhost';
+
 export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
   private token: string | null = null;
   private authConfig: AuthConfig;
   private codeVerifier: string;
   private codeChallenge: string;
   private portalCacheHook?: any; // PortalCacheHook reference
+  private configServer: http.Server | null = null; // HTTP server for configuration form
+  private detectedBrowser: string = 'Google Chrome'; // Default fallback
+  private authCancelled: boolean = false; // Track if user cancelled authentication
+  private oauthRedirectStarted: boolean = false; // Track when OAuth redirect happens
 
 
   /**
@@ -94,8 +118,269 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     this.codeChallenge = pkceValues.codeChallenge;
   }
 
+  /**
+   * Detect the default browser on macOS or Windows
+   */
+  private async detectDefaultBrowser(): Promise<void> {
+    console.error('🔍 Attempting to detect default browser...');
+    
+    const platform = process.platform;
+    
+    // Force specific browser for testing if FORCE_BROWSER env var is set
+    const forcedBrowser = process.env['FORCE_BROWSER'] || (process.env['FORCE_SAFARI_BROWSER'] === 'true' ? 'Safari' : null);
+    if (forcedBrowser) {
+      console.error(`   🧪 TEST MODE: Forcing ${forcedBrowser} browser...`);
+      this.detectedBrowser = forcedBrowser;
+      
+      if (forcedBrowser === 'Safari') {
+        console.error(`⚠️  Found Safari, but it has limited private browsing support via CLI`);
+        console.error(`   For better security, consider installing Chrome, Firefox, or Edge`);
+      } else {
+        console.error(`✅ Using ${forcedBrowser} for testing`);
+      }
+      return;
+    }
+    
+    if (platform === 'darwin') {
+      await this.detectBrowserMacOS();
+    } else if (platform === 'win32') {
+      await this.detectBrowserWindows();
+    }
+  }
 
+  /**
+   * Detect browser on macOS
+   */
+  private async detectBrowserMacOS(): Promise<void> {
+    // Map bundle IDs to application names
+    const browserMap: { [key: string]: string } = {
+      'com.google.chrome': 'Google Chrome',
+      'com.apple.safari': 'Safari',
+      'org.mozilla.firefox': 'Firefox',
+      'com.microsoft.edgemac': 'Microsoft Edge',
+      'com.brave.browser': 'Brave Browser',
+      'com.vivaldi.vivaldi': 'Vivaldi',
+      'com.operasoftware.opera': 'Opera'
+    };
+    
+    // Method 1: Try using defaultbrowser command (if installed)
+    try {
+      console.error('   Method 1: Trying defaultbrowser command...');
+      const { stdout } = await execAsync('which defaultbrowser');
+      if (stdout.trim()) {
+        const { stdout: browserOutput } = await execAsync('defaultbrowser');
+        const bundleId = browserOutput.trim();
+        console.error(`   Bundle ID from defaultbrowser: ${bundleId}`);
+        
+        if (bundleId && browserMap[bundleId]) {
+          this.detectedBrowser = browserMap[bundleId];
+          console.error(`✅ Successfully detected: ${this.detectedBrowser}`);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('   Method 1 failed (defaultbrowser not installed)');
+    }
+    
+    // Method 2: Check LaunchServices
+    try {
+      console.error('   Method 2: Checking LaunchServices...');
+      const { stdout } = await execAsync(`defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers 2>/dev/null | grep -B 1 -A 3 'https' | grep LSHandlerRoleAll -A 2 | grep LSHandlerContentTag | head -1 | cut -d '"' -f 2`);
+      const bundleId = stdout.trim();
+      console.error(`   Bundle ID from LaunchServices: ${bundleId || '(none)'}`);
+      
+      if (bundleId && browserMap[bundleId]) {
+        this.detectedBrowser = browserMap[bundleId];
+        console.error(`✅ Successfully detected: ${this.detectedBrowser}`);
+        return;
+      }
+    } catch (error) {
+      console.error('   Method 2 failed');
+    }
+    
+    // Method 3: Scan for installed browsers
+    console.error('   Method 3: Scanning for installed browsers...');
+    const browsersToCheck = [
+      'Google Chrome',
+      'Microsoft Edge',
+      'Firefox',
+      'Brave Browser',
+      'Vivaldi',
+      'Opera',
+      'Safari'
+    ];
+    
+    for (const browser of browsersToCheck) {
+      try {
+        await execAsync(`osascript -e 'exists application "${browser}"'`);
+        this.detectedBrowser = browser;
+        
+        if (browser === 'Safari') {
+          console.error(`⚠️  Found Safari, but it has limited private browsing support via CLI`);
+          console.error(`   For better security, consider installing Chrome, Firefox, or Edge`);
+        } else {
+          console.error(`✅ Found installed browser: ${this.detectedBrowser}`);
+        }
+        return;
+      } catch (error) {
+        // Browser not installed, continue
+      }
+    }
+    
+    console.error(`⚠️  No browsers detected, falling back to: ${this.detectedBrowser}`);
+  }
+
+  /**
+   * Detect browser on Windows
+   */
+  private async detectBrowserWindows(): Promise<void> {
+    console.error('   Method 1: Checking Windows registry for default browser...');
+    
+    // Try to get default browser from Windows registry
+    try {
+      const { stdout } = await execAsync(
+        `powershell -Command "$browser = (Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice' -ErrorAction SilentlyContinue).ProgId; Write-Output $browser"`
+      );
+      
+      const progId = stdout.trim().toLowerCase();
+      console.error(`   ProgID detected: ${progId || '(none)'}`);
+      
+      // Map Windows ProgIDs to browser names
+      if (progId.includes('chromehtml')) {
+        this.detectedBrowser = 'chrome';
+        console.error(`✅ Successfully detected: Google Chrome`);
+        return;
+      } else if (progId.includes('msedgehtm')) {
+        this.detectedBrowser = 'msedge';
+        console.error(`✅ Successfully detected: Microsoft Edge`);
+        return;
+      } else if (progId.includes('firefox')) {
+        this.detectedBrowser = 'firefox';
+        console.error(`✅ Successfully detected: Firefox`);
+        return;
+      } else if (progId.includes('bravehtml')) {
+        this.detectedBrowser = 'brave';
+        console.error(`✅ Successfully detected: Brave`);
+        return;
+      }
+    } catch (error) {
+      console.error('   Method 1 failed');
+    }
+    
+    // Method 2: Scan for installed browsers in common locations
+    console.error('   Method 2: Scanning for installed browsers...');
+    const browsersToCheck = [
+      { name: 'chrome', paths: [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+      ]},
+      { name: 'msedge', paths: [
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+      ]},
+      { name: 'firefox', paths: [
+        'C:\\Program Files\\Mozilla Firefox\\firefox.exe',
+        'C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe'
+      ]},
+      { name: 'brave', paths: [
+        'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+        'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
+      ]}
+    ];
+    
+    for (const browser of browsersToCheck) {
+      for (const browserPath of browser.paths) {
+        try {
+          // Check if file exists using PowerShell
+          const { stdout } = await execAsync(
+            `powershell -Command "Test-Path '${browserPath}'"`
+          );
+          
+          if (stdout.trim().toLowerCase() === 'true') {
+            this.detectedBrowser = browser.name;
+            const displayName = browser.name === 'msedge' ? 'Microsoft Edge' : 
+                               browser.name === 'chrome' ? 'Google Chrome' :
+                               browser.name === 'firefox' ? 'Firefox' : 'Brave';
+            console.error(`✅ Found installed browser: ${displayName}`);
+            return;
+          }
+        } catch (error) {
+          // Continue checking other paths
+        }
+      }
+    }
+    
+    // Default to Edge (ships with Windows 10+)
+    console.error(`⚠️  No browsers detected, falling back to: Microsoft Edge`);
+    this.detectedBrowser = 'msedge';
+  }
+
+  /**
+   * Get incognito flag for the detected browser
+   */
+  private getIncognitoFlag(): string {
+    const flagMap: { [key: string]: string } = {
+      // macOS browser names
+      'Google Chrome': '--incognito',
+      'Brave Browser': '--incognito',
+      'Microsoft Edge': '--inprivate',
+      'Vivaldi': '--incognito',
+      'Opera': '--private',
+      'Firefox': '--private-window',
+      'Safari': '', // Safari doesn't support private browsing via CLI well
+      // Windows browser executable names
+      'chrome': '--incognito',
+      'msedge': '--inprivate',
+      'firefox': '--private-window',
+      'brave': '--incognito'
+    };
+    
+    // Use 'in' operator to check if key exists, allowing empty string values
+    if (this.detectedBrowser in flagMap) {
+      return flagMap[this.detectedBrowser]!; // Non-null assertion since we just checked
+    }
+    return '--incognito';
+  }
+
+
+  /**
+   * Save OAuth config to user's home directory (secure file storage)
+   */
+  private saveConfigToFile(config: AuthConfig): void {
+    try {
+      const configPath = getConfigPath();
+      
+      // Set restrictive permissions (only current user can read/write)
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), { 
+        mode: 0o600 
+      });
+      
+      console.error(`💾 Created config file: ${configPath}`);
+      console.error('   (Secured with user-only read/write permissions)');
+    } catch (error) {
+      console.error('❌ Failed to save config:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load OAuth config from user's home directory, falling back to .env
+   */
   private loadAuthConfig(): AuthConfig {
+    // Priority 1: Try loading from secure user config file
+    try {
+      const configPath = getConfigPath();
+      if (fs.existsSync(configPath)) {
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        const config = JSON.parse(configContent) as AuthConfig;
+        console.error(`✅ Loaded config from: ${configPath}`);
+        return config;
+      }
+    } catch (error) {
+      console.error('⚠️  Could not load config from home directory:', error);
+    }
+
+    // Priority 2: Try loading from .env file (for development)
     try {
       // Try multiple possible locations for the .env file
       const possiblePaths = [
@@ -114,8 +399,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           envPath = possiblePath;
           console.error(`✅ Found .env file at: ${envPath}`);
           break;
-        } else {
-          console.error(`❌ No .env file at: ${possiblePath}`);
         }
       }
       
@@ -190,413 +473,234 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     return {};
   }
 
-  private validateConfig(): void {
-    const { environmentUrl, clientId, redirectUri, authUrl, accessUrl } = this.authConfig;
-    
-    if (!environmentUrl || !clientId || !redirectUri || !authUrl || !accessUrl) {
-      throw new Error(
-        'Missing required environment variables. Please set:\n' +
-        '- EGAIN_URL or EGAIN_ENVIRONMENT_URL\n' +
-        '- CLIENT_ID or EGAIN_CLIENT_ID\n' +
-        '- REDIRECT_URL or EGAIN_REDIRECT_URI\n' +
-        '- AUTH_URL\n' +
-        '- ACCESS_TOKEN_URL or ACCESS_URL\n' +
-        '\nOptional variables:\n' +
-        '- SCOPE_PREFIX or EGAIN_SCOPE_PREFIX (defaults to empty string if not provided)\n' +
-        '- CLIENT_SECRET or EGAIN_CLIENT_SECRET (required only for confidential clients)'
-      );
+  /**
+   * Generate Safari warning page (Safari doesn't support private browsing via CLI)
+   */
+  private getSafariWarningPage(): string {
+    try {
+      const projectRoot = getProjectRoot();
+      const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'safari-warning.html');
+      return fs.readFileSync(htmlPath, 'utf8');
+    } catch (error) {
+      console.error('⚠️  Could not load Safari warning page:', error);
+      // Fallback minimal HTML
+      return '<html><body><h1>Safari Not Supported</h1><p>Safari does not support private browsing mode via command line.</p></body></html>';
+    }
+  }
+
+  /**
+   * Load HTML page for browser-based configuration
+   */
+  private getConfigPage(): string {
+    try {
+      const projectRoot = getProjectRoot();
+      const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.html');
+      return fs.readFileSync(htmlPath, 'utf8');
+    } catch (error) {
+      console.error('⚠️  Could not load config page:', error);
+      // Fallback minimal HTML
+      return '<html><body><h1>Configuration Error</h1><p>Could not load configuration page.</p></body></html>';
+    }
+  }
+
+  /**
+   * Serve JavaScript for config page
+   */
+  private getConfigPageJS(): string {
+    try {
+      const projectRoot = getProjectRoot();
+      const jsPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.js');
+      return fs.readFileSync(jsPath, 'utf8');
+    } catch (error) {
+      console.error('⚠️  Could not load config page JS:', error);
+      return ''; // Return empty string if JS fails to load
     }
   }
 
   private buildAuthUrl(): string {
     const { environmentUrl, clientId, redirectUri, authUrl, scopePrefix } = this.authConfig;
     
-    console.error('🔧 Building OAuth URL with:');
-    console.error('   Environment URL (domain_hint):', environmentUrl);
-    console.error('   Auth URL:', authUrl);
-    console.error('   Client ID:', clientId?.substring(0, 8) + '...');
-    console.error('   Scope Prefix:', scopePrefix || '(none - using default scopes)');
+    console.error('🔧 Building OAuth URL...');
     
-    // Use scopePrefix if provided, otherwise use default scopes without prefix
     const prefix = scopePrefix || '';
     const scope = `${prefix}knowledge.portalmgr.manage ${prefix}knowledge.portalmgr.read ${prefix}core.aiservices.read`;
     
-    // Token expiration is now handled automatically by isTokenValid() method
-    
-    // Build URL manually like Python version to avoid URLSearchParams encoding issues
     let fullUrl = (
       `${authUrl}` +
       `?domain_hint=${environmentUrl}` +
       `&client_id=${clientId}` +
       `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(redirectUri!)}` +
-      `&scope=${encodeURIComponent(scope)}`
+      `&scope=${encodeURIComponent(scope)}` +
+      `&forceLogin=yes`
     );
     
-    // Only add PKCE parameters for public clients (SPAs/Native apps)
-    // Web Applications (confidential clients with client_secret) should NOT use PKCE
+    // Add PKCE for public clients only
     if (!this.authConfig.clientSecret) {
       fullUrl += `&code_challenge=${this.codeChallenge}`;
       fullUrl += `&code_challenge_method=S256`;
-      console.error('🔐 Using PKCE flow (public client - no client_secret detected)');
+      console.error('🔐 Using PKCE flow (public client)');
     } else {
-      console.error('🔐 Using standard Authorization Code flow (confidential client - client_secret detected)');
+      console.error('🔐 Using confidential client flow');
     }
     
-    // Force login mechanism removed - tokens are now managed automatically
-    // Always use prompt=login to ensure fresh authentication when needed
     fullUrl += `&prompt=login`;
-    console.error('🔄 Added prompt=login to ensure fresh authentication');
-    
-    console.error('🌐 Full OAuth URL constructed');
     return fullUrl;
   }
 
-  private async openChromePopup(url: string): Promise<string> {
-    console.error('🌐 Opening Chrome authentication popup...');
-    console.error('📋 Authentication URL:', url);
-    console.error('Complete authentication in the popup - it will close automatically when done.');
-
+  /**
+   * Monitor browser window for authorization code in URL
+   * Works with ANY redirect URL - detects when URL contains code= parameter
+   */
+  private async monitorBrowserForAuthCode(): Promise<string> {
     const platform = process.platform;
-    
-    try {
-      if (platform === 'darwin') {
-        // macOS - Prefer app mode for popup style, but with better URL handling
-        try {
-          // Method 1: Chrome app mode with incognito (exact match to Python)
-          console.error(`🚀 Method 1: Opening Chrome incognito app mode popup (matching Python)...`);
-          await execAsync(`open -n -a "Google Chrome" --args --incognito --app="${url}"`);
-          console.error('✅ Chrome incognito app mode popup opened successfully');
-          await new Promise(resolve => setTimeout(resolve, 3000)); // Give more time for app mode
-          return 'Chrome-app-incognito';
-        } catch (error) {
-          console.error(`❌ Method 1 failed: ${error}`);
-          try {
-            // Method 2: Fallback to regular incognito new window (exact match to Python)
-            console.error(`🚀 Method 2: Fallback to regular incognito new window...`);
-            await execAsync(`open -n -a "Google Chrome" --args --incognito --new-window "${url}"`);
-            console.error('✅ Chrome incognito new window opened successfully');
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            return 'Chrome-incognito';
-          } catch (error2) {
-            console.error(`❌ Method 2 failed: ${error2}`);
-            // Method 3: Two-step approach
-            console.error(`🚀 Method 3: Two-step approach...`);
-            await execAsync(`open -n -a "Google Chrome" --args --incognito`);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            await execAsync(`open "${url}"`);
-            console.error('✅ Chrome two-step opened');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            return 'Chrome-two-step';
-          }
-        }
-      } else if (platform === 'win32') {
-        // Windows - Use cmd with app mode (popup-like) and incognito
-        await execAsync(`cmd /c start "" chrome --incognito --app="${url}"`);
-        console.error('✅ Chrome incognito app-mode popup opened successfully');
-        return 'Chrome-app-incognito';
-      } else {
-        throw new Error('Linux is not supported. Use macOS or Windows for automatic authentication.');
-      }
-    } catch (error) {
-      throw new Error(`Chrome failed to open: ${error}`);
-    }
-  }
-
-  private async getPopupUrl(browserUsed: string): Promise<string> {
-    try {
-      const platform = process.platform;
-      
-      if (platform === 'darwin' && browserUsed.startsWith('Chrome')) {
-        // Get URL from Chrome using AppleScript
-        const script = `
-          tell application "Google Chrome"
-            try
-              set currentURL to URL of active tab of front window
-              return currentURL
-            on error
-              return ""
-            end try
-          end tell
-        `;
-        
-        const { stdout } = await execAsync(`osascript -e '${script}'`);
-        return stdout.trim();
-      }
-    } catch {
-      // Ignore errors
-    }
-    
-    return '';
-  }
-
-  private async closePopupWindow(browserUsed: string): Promise<void> {
-    if (browserUsed === 'failed') return;
-    
-    console.error('🔒 Closing popup window...');
-    
-    try {
-      const platform = process.platform;
-      
-      if (platform === 'darwin' && browserUsed.startsWith('Chrome')) {
-        // Close specific Chrome auth window using AppleScript
-        const script = `
-          tell application "Google Chrome"
-            try
-              repeat with theWindow in windows
-                repeat with theTab in tabs of theWindow
-                  if URL of theTab contains "oauth.pstmn.io" or URL of theTab contains "b2clogin.com" then
-                    close theWindow
-                    return
-                  end if
-                end repeat
-              end repeat
-              -- Fallback: close the most recent incognito window
-              repeat with theWindow in reverse of windows
-                if incognito of theWindow is true then
-                  close theWindow
-                  return
-                end if
-              end repeat
-            end try
-          end tell
-        `;
-        
-        await execAsync(`osascript -e '${script}'`);
-      } else if (platform === 'win32') {
-        // Windows - send Ctrl+W
-        await execAsync('powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^w\')"');
-      }
-    } catch (error) {
-      console.error(`Could not auto-close popup: ${error}`);
-    }
-  }
-
-  private async getUserAuthorizationCodeWithPopup(): Promise<string> {
-    this.validateConfig();
-    
-    const oauthUrl = this.buildAuthUrl();
-    
-    const platform = process.platform;
-    const timeout = 120; // 2 minutes (reduced from 5)
+    const timeout = 120; // 2 minutes
     const startTime = Date.now();
     
     if (platform === 'darwin') {
-      const browserUsed = await this.openChromePopup(oauthUrl);
-      // macOS - automatic URL monitoring
+      // macOS - Monitor using AppleScript
+      console.error(`🔍 Monitoring ${this.detectedBrowser} for authorization code...`);
       let lastUrl = '';
-      let firstCheck = true;
       
       while ((Date.now() - startTime) < timeout * 1000) {
-        const currentUrl = await this.getPopupUrl(browserUsed);
-        
-        if (currentUrl && currentUrl !== lastUrl) {
-          lastUrl = currentUrl;
+        try {
+          // Get URL from browser using AppleScript
+          const script = `
+            tell application "${this.detectedBrowser}"
+              try
+                set currentURL to URL of active tab of front window
+                return currentURL
+              on error
+                return ""
+              end try
+            end tell
+          `;
           
-          if (firstCheck) {
-            console.error(`🔍 Initial URL: ${currentUrl}`);
-            firstCheck = false;
-          } else {
-            console.error(`🔍 URL Changed: ${currentUrl}`);
+          const { stdout } = await execAsync(`osascript -e '${script}'`);
+          const currentUrl = stdout.trim();
+          
+          if (currentUrl && currentUrl !== lastUrl) {
+            lastUrl = currentUrl;
+            console.error(`🔍 Current URL: ${currentUrl}`);
           }
-        } else if (firstCheck) {
-          // No URL detected yet, show debug info
-          firstCheck = false;
-        }
-        
-        // Always check for callback URL (whether URL changed or not)
-        if (currentUrl && currentUrl.includes(this.authConfig.redirectUri!) && currentUrl.includes('code=')) {
-          console.error('✅ Found authorization code in callback URL - closing popup immediately');
-          // Close popup immediately when we detect the callback
-          await this.closePopupWindow(browserUsed);
           
-          // Extract the code from the URL
-          const codeMatch = currentUrl.match(/code=([^&]+)/);
-          if (codeMatch && codeMatch[1]) {
-            console.error(`🔑 Extracted authorization code: ${codeMatch[1].substring(0, 10)}...`);
-            console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
-            return codeMatch[1];
-          } else {
-            console.error('❌ Failed to extract authorization code from URL');
+          // Check if URL contains code= parameter (regardless of domain)
+          if (currentUrl && currentUrl.includes('code=')) {
+            console.error('✅ Found authorization code in URL!');
+            
+            // Extract the code from the URL
+            const codeMatch = currentUrl.match(/[?&]code=([^&]+)/);
+            if (codeMatch && codeMatch[1]) {
+              const code = decodeURIComponent(codeMatch[1]);
+              console.error(`🔑 Extracted authorization code (first 20 chars): ${code.substring(0, 20)}...`);
+              console.error(`   Code length: ${code.length} characters`);
+              
+              // Close the browser window immediately (non-blocking - fire and forget)
+              setImmediate(async () => {
+                try {
+                  await execAsync(`osascript -e 'tell application "${this.detectedBrowser}" to close front window'`);
+                  console.error('✅ Browser window closed');
+                } catch (closeError) {
+                  console.error('⚠️  Could not close browser window:', closeError);
+                }
+              });
+              
+              // Return code immediately without waiting for window close
+              return code;
+            }
           }
-        }
-        
-        // Also check for error parameters
-        if (currentUrl && currentUrl.includes('error=')) {
-          const errorMatch = currentUrl.match(/error=([^&]+)/);
-          const errorDescMatch = currentUrl.match(/error_description=([^&]+)/);
-          const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
-          const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
           
-          await this.closePopupWindow(browserUsed);
-          throw new Error(`OAuth error: ${error} - ${errorDesc}`);
+          // Also check for error parameters
+          if (currentUrl && currentUrl.includes('error=')) {
+            const errorMatch = currentUrl.match(/[?&]error=([^&]+)/);
+            const errorDescMatch = currentUrl.match(/error_description=([^&]+)/);
+            const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
+            const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
+            
+            throw new Error(`OAuth error: ${error} - ${errorDesc}`);
+          }
+          
+        } catch (error) {
+          // Ignore AppleScript errors and continue monitoring
         }
         
-        // Wait 500ms before checking again (faster polling)
+        // Wait 500ms before checking again
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Timeout reached
-      console.error('⏰ Timeout reached waiting for authentication completion.');
-      await this.closePopupWindow(browserUsed);
       throw new Error('Authentication timeout. Please try again.');
       
     } else if (platform === 'win32') {
-      // Windows - support both loopback redirect and non-loopback (e.g., oauth.pstmn.io) via DevTools
-      const redirectUri = this.authConfig.redirectUri!;
-      let parsed: URL;
-      try {
-        parsed = new URL(redirectUri);
-      } catch {
-        throw new Error('Invalid EGAIN_REDIRECT_URI. Expected a valid URL.');
-      }
-
-      const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) && !!parsed.port;
-
-      if (isLoopback) {
-        const host = parsed.hostname;
-        const port = parseInt(parsed.port, 10);
-        const pathname = parsed.pathname || '/';
-        console.error(`🔊 Starting local callback server at ${host}:${port}${pathname} to capture auth code...`);
-
-        const authCodePromise = new Promise<string>((resolve, reject) => {
-          let settled = false;
-          const server = http.createServer((req, res) => {
-            try {
-              if (!req.url) return;
-              const reqUrl = new URL(req.url, `http://${host}:${port}`);
-              if (reqUrl.pathname !== pathname) {
-                res.statusCode = 404;
-                res.end('Not Found');
-                return;
-              }
-
-              const code = reqUrl.searchParams.get('code');
-              const err = reqUrl.searchParams.get('error');
-
-              if (code) {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.end('<html><body><h3>Authentication complete. You can close this window.</h3><script>window.close && window.close();</script></body></html>');
-                if (!settled) {
-                  settled = true;
-                  server.close(() => {});
-                  resolve(code);
-                }
-              } else if (err) {
-                const desc = reqUrl.searchParams.get('error_description') || 'No description';
-                res.statusCode = 400;
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.end(`<html><body><h3>Authentication error: ${err}</h3><p>${desc}</p></body></html>`);
-                if (!settled) {
-                  settled = true;
-                  server.close(() => {});
-                  reject(new Error(`OAuth error: ${err} - ${desc}`));
-                }
-              } else {
-                res.statusCode = 400;
-                res.end('Missing code');
-              }
-          } catch (e) {
-            try { res.statusCode = 500; res.end('Internal Server Error'); } catch (innerErr) { /* ignore */ }
-            }
-          });
-
-          server.listen(port, host, () => {
-            console.error('✅ Local callback server is listening');
-          });
-
-          const to = setTimeout(() => {
-            if (!settled) {
-              settled = true;
-              server.close(() => {});
-              reject(new Error('Authentication timeout. Please try again.'));
-            }
-          }, timeout * 1000);
-
-          server.on('close', () => {
-            clearTimeout(to);
-          });
-        });
-
-        const browserUsed = await this.openChromePopup(oauthUrl);
+      // Windows - Monitor browser window title (contains URL in most browsers)
+      console.error(`🔍 Monitoring ${this.detectedBrowser} for authorization code...`);
+      let lastTitle = '';
+      
+      while ((Date.now() - startTime) < timeout * 1000) {
         try {
-          const code = await authCodePromise;
-          console.error('✅ Found authorization code via loopback redirect - closing popup immediately');
-          await this.closePopupWindow(browserUsed);
-          console.error(`🔑 Extracted authorization code: ${code.substring(0, 10)}...`);
-          console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
-          return code;
-        } catch (e) {
-          await this.closePopupWindow(browserUsed);
-          throw e;
-        }
-      }
-
-      // Non-loopback (e.g., oauth.pstmn.io): Use Chrome DevTools protocol to watch URL changes
-      const debugPort = Math.floor(40000 + Math.random() * 10000);
-      const tempUserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'egain-chrome-'));
-      console.error(`🛠️  Launching Chrome with remote debugging port ${debugPort}`);
-
-      // Launch Chrome directly here to include remote debugging flags
-      await execAsync(`cmd /c start "" chrome --incognito --remote-debugging-port=${debugPort} --user-data-dir="${tempUserDataDir}" --app="${oauthUrl}"`);
-
-      const browserUsed = 'Chrome-app-incognito';
-
-      const redirectBase = `${parsed.origin}${parsed.pathname}`;
-      const deadline = Date.now() + timeout * 1000;
-
-      const pollTargets = async (): Promise<string> => {
-        const endpoints = [
-          `http://127.0.0.1:${debugPort}/json/list`,
-          `http://127.0.0.1:${debugPort}/json`
-        ];
-        while (Date.now() < deadline) {
-          for (const ep of endpoints) {
-            try {
-              const resp = await fetch(ep);
-              if (!resp.ok) throw new Error(String(resp.status));
-              const targets = await resp.json() as Array<{ url?: string }>;
-              for (const t of targets) {
-                const tUrl = t.url || '';
-                if (tUrl.includes(redirectBase)) {
-                  const codeMatch = tUrl.match(/[?&]code=([^&]+)/);
-                  if (codeMatch && codeMatch[1]) {
-                    return codeMatch[1];
+          // PowerShell script to get browser window title
+          // Window titles often contain the URL or page title
+          const browserProcessName = this.detectedBrowser.replace('.exe', '');
+          const psScript = `
+            $process = Get-Process -Name "${browserProcessName}" -ErrorAction SilentlyContinue | 
+              Where-Object { $_.MainWindowHandle -ne 0 } | 
+              Select-Object -First 1
+            if ($process) {
+              $process.MainWindowTitle
+            }
+          `.replace(/\n\s+/g, ' ');
+          
+          const { stdout } = await execAsync(`powershell -Command "${psScript}"`);
+          const windowTitle = stdout.trim();
+          
+          if (windowTitle && windowTitle !== lastTitle) {
+            lastTitle = windowTitle;
+            console.error(`🔍 Browser window: ${windowTitle.substring(0, 100)}...`);
+            
+            // Check if title or URL contains the code parameter
+            // Most browsers show URL in the title or we can detect redirect completion
+            if (windowTitle.includes('code=') || windowTitle.includes('localhost:3333')) {
+              console.error('✅ Detected OAuth callback!');
+              
+              // Try to extract code from title if visible
+              const codeMatch = windowTitle.match(/code=([^&\s]+)/);
+              if (codeMatch && codeMatch[1]) {
+                const code = decodeURIComponent(codeMatch[1]);
+                console.error(`🔑 Extracted authorization code (first 20 chars): ${code.substring(0, 20)}...`);
+                console.error(`   Code length: ${code.length} characters`);
+                
+                // Close browser window immediately (non-blocking - fire and forget)
+                setImmediate(async () => {
+                  try {
+                    await execAsync(`powershell -Command "Stop-Process -Name '${browserProcessName}' -Force"`);
+                    console.error('✅ Browser window closed');
+                  } catch (closeError) {
+                    console.error('⚠️  Could not close browser window:', closeError);
                   }
-                  const errMatch = tUrl.match(/[?&]error=([^&]+)/);
-                  if (errMatch && errMatch[1]) {
-                    const errDescMatch = tUrl.match(/error_description=([^&]+)/);
-                    const errDesc = errDescMatch && errDescMatch[1] ? decodeURIComponent(errDescMatch[1]) : 'No description';
-                    throw new Error(`OAuth error: ${decodeURIComponent(errMatch[1])} - ${errDesc}`);
-                  }
-                }
+                });
+                
+                // Return code immediately without waiting for window close
+                return code;
               }
-            } catch {
-              // Ignore and keep polling
+            }
+            
+            // Check for OAuth error in title
+            if (windowTitle.includes('error=')) {
+              const errorMatch = windowTitle.match(/error=([^&\s]+)/);
+              const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
+              throw new Error(`OAuth error: ${error}`);
             }
           }
-          await new Promise(r => setTimeout(r, 500));
+          
+        } catch (error) {
+          // Ignore errors and continue monitoring
         }
-        throw new Error('Authentication timeout. Please try again.');
-      };
-
-      try {
-        const code = await pollTargets();
-        console.error('✅ Found authorization code via DevTools polling - closing popup immediately');
-        await this.closePopupWindow(browserUsed);
-        console.error(`🔑 Extracted authorization code: ${code.substring(0, 10)}...`);
-        console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
-        return code;
-      } catch (e) {
-        await this.closePopupWindow(browserUsed);
-        throw e;
-      } finally {
-        try {
-          // Best-effort cleanup of temp profile directory
-          fs.rmSync(tempUserDataDir, { recursive: true, force: true });
-        } catch (cleanupErr) { /* ignore */ }
+        
+        // Wait 500ms before checking again
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
+      
+      throw new Error('Authentication timeout. The browser window title did not show the authorization code. Please ensure your redirect URL is http://localhost:3333/callback for automatic detection on Windows.');
+      
     } else {
       throw new Error('Linux is not supported. Use macOS or Windows for automatic authentication.');
     }
@@ -606,9 +710,11 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     const { clientId, clientSecret, redirectUri, accessUrl } = this.authConfig;
     
     console.error('🔄 Starting token exchange...');
-    console.error('   Code length:', code.length);
-    console.error('   Access URL:', accessUrl);
-    console.error('   Client ID:', clientId?.substring(0, 8) + '...');
+    
+    // Warn if Access Token URL doesn't look like a token endpoint
+    if (accessUrl && !accessUrl.toLowerCase().includes('token')) {
+      console.error('⚠️  WARNING: Access Token URL does not contain "token" - verify this is correct!');
+    }
     
     // Temporarily disable SSL verification for development/testing
     // This is a workaround for corporate networks or certificate issues
@@ -621,7 +727,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
 
     try {
       // First attempt: Try without client_secret (for public clients)
-      console.error('🔄 Attempt 1: Trying token exchange without client_secret (public client mode)...');
+      console.error('🔄 Trying public client flow...');
       
       const publicClientBody = new URLSearchParams({
         code: code,
@@ -630,10 +736,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         client_id: clientId!,
         code_verifier: this.codeVerifier
       });
-
-      console.error('🌐 Making token request (public client)...');
-      console.error('   URL:', accessUrl);
-      console.error('   Body preview:', publicClientBody.toString().substring(0, 100) + '...');
       
       const publicResponse = await fetch(accessUrl!, {
         method: 'POST',
@@ -645,53 +747,32 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
 
       if (publicResponse.ok) {
         const data = await publicResponse.json() as { access_token?: string; expires_in?: number };
-        console.error('✅ Token response parsed successfully (public client)');
-        console.error('📋 Token response data:', { 
-          has_access_token: !!data.access_token, 
-          expires_in: data.expires_in 
-        });
         
         if (data.access_token) {
-          console.error('🎉 Access token received successfully using public client mode!');
-          
-          // Store token with expiration metadata
+          console.error('✅ Token received (public client)');
           await this.saveTokenWithExpiration(data.access_token, data.expires_in);
-          
           return data.access_token;
-        } else {
-          console.error('❌ No access_token in public client response:', data);
         }
       } else {
         const errorText = await publicResponse.text();
-        console.error('❌ Public client token request failed:', publicResponse.status, errorText);
+        console.error('❌ Public client failed:', publicResponse.status);
         
-        // Check if this is the specific "public client should not send client_secret" error
-        // If so, we know we're dealing with a public client and shouldn't try with secret
         if (errorText.includes('AADB2C90084') || errorText.includes('Public clients should not send a client_secret')) {
           throw new Error(`Token request failed (public client): ${publicResponse.status} - ${errorText}`);
         }
         
-        // For other errors, we'll try the confidential client approach as fallback
-        console.error('🔄 Public client failed with different error, trying confidential client as fallback...');
+        console.error('🔄 Trying confidential client as fallback...');
       }
       
       // Second attempt: Try with client_secret (for confidential clients)
       if (clientSecret) {
-        console.error('🔄 Attempt 2: Trying token exchange with client_secret (confidential client mode)...');
-        
-        // For Web Applications (confidential clients), parameters go in the body
         const confidentialClientBody = new URLSearchParams({
           code: code,
           grant_type: 'authorization_code',
           redirect_uri: redirectUri!,
           client_id: clientId!,
           client_secret: clientSecret
-          // Note: code_verifier is only for PKCE (SPA/Native), not for Web Applications
         });
-
-        console.error('🌐 Making token request (confidential client)...');
-        console.error('   URL:', accessUrl);
-        console.error('   Body preview:', confidentialClientBody.toString().substring(0, 100) + '...');
         
         const confidentialResponse = await fetch(accessUrl!, {
           method: 'POST',
@@ -699,35 +780,23 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           body: confidentialClientBody
         });
 
-        console.error('📨 Token response received (confidential client):', confidentialResponse.status, confidentialResponse.statusText);
-
         if (confidentialResponse.ok) {
           const data = await confidentialResponse.json() as { access_token?: string; expires_in?: number };
-          console.error('✅ Token response parsed successfully (confidential client)');
-          console.error('📋 Token response data:', { 
-            has_access_token: !!data.access_token, 
-            expires_in: data.expires_in 
-          });
           
           if (data.access_token) {
-            console.error('🎉 Access token received successfully using confidential client mode!');
-            
-            // Store token with expiration metadata
+            console.error('✅ Token received (confidential client)');
             await this.saveTokenWithExpiration(data.access_token, data.expires_in);
-            
             return data.access_token;
           } else {
-            console.error('❌ No access_token in confidential client response:', data);
             throw new Error('No access_token in confidential client response');
           }
         } else {
           const errorText = await confidentialResponse.text();
-          console.error('❌ Confidential client token request failed:', confidentialResponse.status, errorText);
-          throw new Error(`Token request failed (confidential client): ${confidentialResponse.status} - ${errorText}`);
+          console.error('❌ Confidential client failed:', confidentialResponse.status);
+          throw new Error(`Token request failed: ${confidentialResponse.status} - ${errorText}`);
         }
       } else {
-        console.error('❌ No client_secret available for confidential client fallback');
-        throw new Error('Both public and confidential client approaches failed, and no client_secret available for retry');
+        throw new Error('Both public and confidential client approaches failed');
       }
       
     } catch (error) {
@@ -770,9 +839,8 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    */
   private async saveTokenWithExpiration(token: string, expiresIn?: number): Promise<void> {
     try {
-      // Calculate expiration timestamp
       const now = Date.now();
-      const expirationTime = expiresIn ? now + (expiresIn * 1000) : now + (3600 * 1000); // Default 1 hour
+      const expirationTime = expiresIn ? now + (expiresIn * 1000) : now + (3600 * 1000);
       
       const tokenData = {
         token,
@@ -780,27 +848,18 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         createdAt: now
       };
       
-      // Save to the project root directory (not current working directory)
       const projectRoot = getProjectRoot();
       const tokenPath = path.join(projectRoot, '.bearer_token');
       const metadataPath = path.join(projectRoot, '.bearer_token_metadata');
       
       try {
-        // Save token file
         fs.writeFileSync(tokenPath, token);
-        // Save metadata file
         fs.writeFileSync(metadataPath, JSON.stringify(tokenData, null, 2));
-        
-        console.error(`💾 Access token saved to ${tokenPath}`);
-        console.error(`📅 Token expires at: ${new Date(expirationTime).toISOString()}`);
+        console.error(`💾 Token saved (expires: ${new Date(expirationTime).toLocaleString()})`);
       } catch (error) {
-        console.error(`❌ Failed to save token to ${tokenPath}:`, error);
-        // Fallback to old method
         await this.saveToken(token);
       }
     } catch (error) {
-      console.error('Could not save token with expiration:', error);
-      // Fallback to old method
       await this.saveToken(token);
     }
   }
@@ -811,38 +870,25 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    */
   private isTokenValid(): boolean {
     try {
-      // Only check in the current working directory (project root)
       const projectRoot = getProjectRoot();
       const metadataPath = path.join(projectRoot, '.bearer_token_metadata');
       
-      
       if (fs.existsSync(metadataPath)) {
-        console.error(`✅ AUTH: Found metadata file: ${metadataPath}`);
         const metadataContent = fs.readFileSync(metadataPath, 'utf8');
         const tokenData = JSON.parse(metadataContent);
-        
-        const now = Date.now();
-        const timeUntilExpiry = tokenData.expiresAt - now;
-        
-        console.error(`🕐 AUTH: Current time: ${now}, Token expires at: ${tokenData.expiresAt}`);
-        console.error(`⏱️  AUTH: Time until expiry: ${Math.round(timeUntilExpiry / 1000)} seconds`);
+        const timeUntilExpiry = tokenData.expiresAt - Date.now();
         
         if (timeUntilExpiry > 60000) { // Valid if more than 1 minute left
-          console.error(`✅ AUTH: Token valid for ${Math.round(timeUntilExpiry / 1000 / 60)} more minutes`);
           return true;
         } else {
           console.error(`⏰ AUTH: Token expires in ${Math.round(timeUntilExpiry / 1000)} seconds - treating as expired`);
           return false;
         }
-      } else {
-        console.error(`❌ AUTH: Metadata file not found: ${metadataPath}`);
       }
       
-      console.error('📭 AUTH: No token metadata found - cannot determine expiration');
       return false;
     } catch (error) {
-      console.error('⚠️  AUTH: Error checking token validity:', error);
-      return false; // Assume expired if we can't check
+      return false;
     }
   }
 
@@ -867,6 +913,607 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     return null;
   }
 
+  /**
+   * Clear the stored bearer token (for remote clearing)
+   */
+  public clearToken(): void {
+    try {
+      const projectRoot = getProjectRoot();
+      const tokenPath = path.join(projectRoot, '.bearer_token');
+      const metadataPath = path.join(projectRoot, '.bearer_token_metadata');
+      
+      if (fs.existsSync(tokenPath)) {
+        fs.unlinkSync(tokenPath);
+        console.error('🗑️  Deleted bearer token file');
+      }
+      
+      if (fs.existsSync(metadataPath)) {
+        fs.unlinkSync(metadataPath);
+        console.error('🗑️  Deleted bearer token metadata file');
+      }
+      
+      this.token = null;
+      console.error('✅ Token cleared successfully');
+    } catch (error) {
+      console.error('❌ Failed to clear token:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Start the configuration HTTP server
+   */
+  private async startConfigServer(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.configServer) {
+        console.error('⚠️  Config server already running');
+        resolve();
+        return;
+      }
+
+      console.error(`🌐 Starting configuration server on http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}`);
+
+      this.configServer = http.createServer(async (req, res) => {
+        const url = new URL(req.url!, `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}`);
+        
+        // Serve static images
+        if (url.pathname && url.pathname.startsWith('/img/')) {
+          // Images are in the source directory, not the compiled output
+          const projectRoot = getProjectRoot();
+          const imagePath = path.join(projectRoot, 'src', 'hooks', url.pathname);
+          try {
+            const imageData = fs.readFileSync(imagePath);
+            const ext = path.extname(imagePath).toLowerCase();
+            const contentType = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(imageData);
+            return;
+          } catch (error) {
+            console.error(`❌ Image not found: ${imagePath}`, error);
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Image not found');
+            return;
+          }
+        }
+        
+        // Serve config page JavaScript
+        if (url.pathname === '/config-page.js') {
+          res.writeHead(200, { 'Content-Type': 'application/javascript' });
+          res.end(this.getConfigPageJS());
+          return;
+        }
+        
+        // Serve configuration page
+        if (url.pathname === '/' || url.pathname === '/config') {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(this.getConfigPage());
+          return;
+        }
+        
+        // Serve Safari warning page
+        if (url.pathname === '/safari-warning') {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(this.getSafariWarningPage());
+          return;
+        }
+        
+        // Get saved configuration
+        if (url.pathname === '/get-config' && req.method === 'GET') {
+          try {
+            // Check if we have a valid config (at least the required fields)
+            const hasValidConfig = this.authConfig.environmentUrl && 
+                                  this.authConfig.clientId && 
+                                  this.authConfig.authUrl && 
+                                  this.authConfig.accessUrl && 
+                                  this.authConfig.redirectUri;
+            
+            if (!hasValidConfig) {
+              // No config exists
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ config: null }));
+              return;
+            }
+            
+            // Return current authConfig (loaded from file or .env)
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              config: {
+                egainUrl: this.authConfig.environmentUrl,
+                authUrl: this.authConfig.authUrl,
+                accessTokenUrl: this.authConfig.accessUrl,
+                clientId: this.authConfig.clientId,
+                redirectUrl: this.authConfig.redirectUri,
+                clientSecret: this.authConfig.clientSecret,
+                scopePrefix: this.authConfig.scopePrefix
+              }
+            }));
+          } catch (error: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: error.message }));
+          }
+          return;
+        }
+        
+        // Get OAuth URL for saved config (used when signing in with existing config)
+        if (url.pathname === '/get-oauth-url' && req.method === 'POST') {
+          try {
+            const oauthUrl = this.buildAuthUrl();
+            console.error('🔐 Generated OAuth URL for saved configuration');
+            
+            // Mark that OAuth redirect is about to happen (shorter timeout applies)
+            this.oauthRedirectStarted = true;
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: true,
+              oauthUrl: oauthUrl
+            }));
+            
+            // Start monitoring browser in background (for ANY redirect URL)
+            console.error('🔍 Starting browser URL monitoring for authorization code...');
+            setImmediate(async () => {
+              try {
+                const code = await this.monitorBrowserForAuthCode();
+                console.error('✅ Authorization code detected:', code.substring(0, 10) + '...');
+                
+                const accessToken = await this.getUserAccessToken(code);
+                console.error('✅ Access token received');
+                
+                this.token = accessToken;
+                
+                // Trigger cache initialization if available
+                if (this.portalCacheHook) {
+                  try {
+                    const fakeRequest = new Request(this.authConfig.environmentUrl!, {
+                      headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
+                  } catch (error) {
+                    // Cache init failure is non-fatal
+                  }
+                }
+                
+                console.error('🎉 Authentication complete! Stopping config server...');
+                this.stopConfigServer();
+                
+              } catch (authError: any) {
+                console.error('❌ Authentication monitoring error:', authError);
+                this.stopConfigServer();
+              }
+            });
+            
+          } catch (error: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: error.message }));
+          }
+          return;
+        }
+        
+        // Clear saved configuration
+        if (url.pathname === '/clear-config' && req.method === 'POST') {
+          try {
+            const configPath = getConfigPath();
+            if (fs.existsSync(configPath)) {
+              fs.unlinkSync(configPath);
+              console.error(`🗑️  Deleted config file: ${configPath}`);
+            }
+            
+            // Clear in-memory config
+            this.authConfig = {};
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, message: 'Configuration cleared' }));
+          } catch (error: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: error.message }));
+          }
+          return;
+        }
+        
+        // Handle authentication request
+        if (url.pathname === '/authenticate' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk.toString(); });
+          req.on('end', async () => {
+            try {
+              const config = JSON.parse(body);
+              console.error('📝 Received configuration from browser form');
+              
+              // Validate URLs don't contain spaces (common mistake: pasting multiple URLs)
+              const urlFields = [
+                { name: 'eGain Environment URL', value: config.egainUrl },
+                { name: 'Authorization URL', value: config.authUrl },
+                { name: 'Access Token URL', value: config.accessTokenUrl },
+                { name: 'Redirect URL', value: config.redirectUrl }
+              ];
+              
+              for (const field of urlFields) {
+                if (field.value && field.value.includes(' ')) {
+                  const errorMsg = `❌ ${field.name} contains spaces! It looks like multiple URLs were pasted together. Please enter only ONE URL for this field.`;
+                  console.error(errorMsg);
+                  res.writeHead(400, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ 
+                    success: false, 
+                    error: `${field.name} is invalid - contains multiple URLs. Please enter only one URL per field.`
+                  }));
+                  return;
+                }
+              }
+              
+              // Update authConfig from browser form data
+              this.authConfig = {
+                environmentUrl: config.egainUrl,
+                authUrl: config.authUrl,
+                accessUrl: config.accessTokenUrl,
+                clientId: config.clientId,
+                redirectUri: config.redirectUrl,
+                clientSecret: config.clientSecret || undefined,
+                scopePrefix: config.scopePrefix || undefined
+              };
+              
+              // Save config to secure file storage (home directory)
+              try {
+                this.saveConfigToFile(this.authConfig);
+                console.error('✅ Configuration saved to secure file storage');
+              } catch (error) {
+                console.error('⚠️  Failed to save config to file:', error);
+                // Continue with authentication even if file save fails
+              }
+              
+              // Generate OAuth URL and return it to frontend for redirect (single window flow)
+              const oauthUrl = this.buildAuthUrl();
+              console.error('🔐 Generated OAuth URL for browser redirect');
+              
+              // Mark that OAuth redirect is about to happen (shorter timeout applies)
+              this.oauthRedirectStarted = true;
+              
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                success: true, 
+                message: 'Configuration saved. Redirecting to login...',
+                oauthUrl: oauthUrl  // Frontend will redirect to this URL
+              }));
+              
+              // Start monitoring browser in background (for ANY redirect URL)
+              console.error('🔍 Starting browser URL monitoring for authorization code...');
+              setImmediate(async () => {
+                try {
+                  const code = await this.monitorBrowserForAuthCode();
+                  console.error('✅ Authorization code detected:', code.substring(0, 10) + '...');
+                  
+                  const accessToken = await this.getUserAccessToken(code);
+                  console.error('✅ Access token received');
+                  
+                  this.token = accessToken;
+                  
+                  // Trigger cache initialization if available
+                  if (this.portalCacheHook) {
+                    console.error('🔄 Triggering cache initialization...');
+                    try {
+                      const fakeRequest = new Request(this.authConfig.environmentUrl!, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                      });
+                      await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
+                      console.error('✅ Cache initialization completed');
+                    } catch (error) {
+                      console.error('⚠️  Cache initialization failed:', error);
+                    }
+                  }
+                  
+                  console.error('🎉 Authentication complete! Stopping config server...');
+                  this.stopConfigServer();
+                  
+                } catch (authError: any) {
+                  console.error('❌ Authentication monitoring error:', authError);
+                  this.stopConfigServer();
+                }
+              });
+              
+            } catch (error: any) {
+              console.error('❌ Error processing authentication request:', error);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                success: false, 
+                error: error.message 
+              }));
+            }
+          });
+          return;
+        }
+        
+        // Handle OAuth callback (after user completes Azure B2C login)
+        if (url.pathname === '/callback' && req.method === 'GET') {
+          try {
+            const code = url.searchParams.get('code');
+            const error = url.searchParams.get('error');
+            
+            if (error) {
+              const errorDesc = url.searchParams.get('error_description') || 'No description';
+              console.error('❌ OAuth error:', error, errorDesc);
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(`
+                <html>
+                  <head><title>Authentication Error</title></head>
+                  <body style="font-family: sans-serif; padding: 40px; text-align: center;">
+                    <h1>❌ Authentication Error</h1>
+                    <p><strong>${error}</strong></p>
+                    <p>${errorDesc}</p>
+                    <p>You can close this window and try again.</p>
+                    <script>setTimeout(() => window.close(), 3000);</script>
+                  </body>
+                </html>
+              `);
+              return;
+            }
+            
+            if (!code) {
+              res.writeHead(400, { 'Content-Type': 'text/plain' });
+              res.end('Missing authorization code');
+              return;
+            }
+            
+            console.error('✅ Authorization code received from OAuth callback');
+            
+            // Exchange code for token (async in background)
+            setImmediate(async () => {
+              try {
+                const accessToken = await this.getUserAccessToken(code);
+                console.error('✅ Access token received');
+                
+                this.token = accessToken;
+                
+                // Trigger cache initialization if available
+                if (this.portalCacheHook) {
+                  try {
+                    const fakeRequest = new Request(this.authConfig.environmentUrl!, {
+                      headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
+                  } catch (error) {
+                    // Cache init failure is non-fatal
+                  }
+                }
+                
+                console.error('🎉 Authentication complete! Stopping config server...');
+                // Stop server after successful authentication
+                this.stopConfigServer();
+                
+              } catch (authError: any) {
+                console.error('❌ Token exchange error:', authError);
+                this.stopConfigServer();
+              }
+            });
+            
+            // Send success page to browser
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(`
+              <html>
+                <head><title>Authentication Complete</title></head>
+                <body style="font-family: sans-serif; padding: 40px; text-align: center;">
+                  <h1>✅ Authentication Complete!</h1>
+                  <p>You can now close this window.</p>
+                  <p style="color: #666; font-size: 14px;">This window will close automatically in 2 seconds...</p>
+                  <script>setTimeout(() => window.close(), 2000);</script>
+                </body>
+              </html>
+            `);
+            
+          } catch (error: any) {
+            console.error('❌ Error handling OAuth callback:', error);
+            res.writeHead(500, { 'Content-Type': 'text/html' });
+            res.end(`
+              <html>
+                <head><title>Error</title></head>
+                <body style="font-family: sans-serif; padding: 40px; text-align: center;">
+                  <h1>❌ Error</h1>
+                  <p>${error.message}</p>
+                  <script>setTimeout(() => window.close(), 3000);</script>
+                </body>
+              </html>
+            `);
+          }
+          return;
+        }
+        
+        // Handle clear token request
+        if (url.pathname === '/clear-token' && req.method === 'POST') {
+          try {
+            this.clearToken();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, message: 'Token cleared' }));
+          } catch (error: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: error.message }));
+          }
+          return;
+        }
+        
+        // Handle authentication cancellation
+        if (url.pathname === '/cancel' && req.method === 'POST') {
+          console.error('🚫 User cancelled authentication');
+          this.authCancelled = true;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, message: 'Authentication cancelled' }));
+          return;
+        }
+        
+        // 404
+        res.writeHead(404);
+        res.end('Not Found');
+      });
+
+      this.configServer.listen(CONFIG_SERVER_PORT, CONFIG_SERVER_HOST, () => {
+        console.error(`✅ Configuration server started at http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}`);
+        resolve();
+      });
+
+      this.configServer.on('error', (error: any) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`❌ Port ${CONFIG_SERVER_PORT} is already in use`);
+          reject(new Error(`Port ${CONFIG_SERVER_PORT} is already in use. Please close other applications using this port.`));
+        } else {
+          console.error('❌ Server error:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Stop the configuration HTTP server
+   */
+  private stopConfigServer(): void {
+    if (this.configServer) {
+      console.error('🚪 Stopping configuration server...');
+      this.configServer.close(() => {
+        console.error('✅ Configuration server stopped');
+      });
+      // Immediately set to null to prevent double-close
+      this.configServer = null;
+    }
+  }
+
+  /**
+   * Open browser to configuration page
+   */
+  private async openConfigBrowser(): Promise<void> {
+    const platform = process.platform;
+    
+    // Detect browser on macOS or Windows before opening
+    if (platform === 'darwin' || platform === 'win32') {
+      await this.detectDefaultBrowser();
+    }
+    
+    console.error(`🌐 Browser: ${this.detectedBrowser}`);
+    
+    // Safari shows warning page instead of config form (security limitation)
+    const configUrl = this.detectedBrowser === 'Safari' 
+      ? `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/safari-warning`
+      : `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/config`;
+    
+    if (this.detectedBrowser === 'Safari') {
+      console.error('⚠️  Safari detected - showing browser installation guide...');
+    } else {
+      console.error('📋 Opening browser for configuration...');
+    }
+    
+    const windowWidth = 600;
+    const windowHeight = 800;
+    
+    try {
+      if (platform === 'darwin') {
+        // macOS - Open default browser in private mode
+        const incognitoFlag = this.getIncognitoFlag();
+        console.error(`🕵️  Using private mode flag: ${incognitoFlag || '(none - browser limitation)'}`);
+        
+        // Safari doesn't support --args flags well, use AppleScript for private browsing
+        if (this.detectedBrowser === 'Safari') {
+          console.error(`   Opening Safari in Private Browsing mode via AppleScript...`);
+          
+          // AppleScript to open Safari in private browsing mode
+          const appleScript = `
+            tell application "Safari"
+              activate
+              
+              -- Try to open a new private window
+              -- Note: This may not work in newer macOS versions due to security restrictions
+              try
+                make new document
+                delay 0.5
+                set URL of document 1 to "${configUrl}"
+                
+                -- Attempt to enable private browsing (may not work in all macOS versions)
+                tell window 1
+                  try
+                    set private browsing to true
+                  end try
+                end tell
+              on error
+                -- Fallback: just open the URL in a new window
+                open location "${configUrl}"
+              end try
+            end tell
+          `.replace(/\n\s+/g, ' ');
+          
+          try {
+            await execAsync(`osascript -e '${appleScript}'`);
+            console.error(`⚠️  IMPORTANT: If Safari didn't open in Private Browsing mode:`);
+            console.error(`   1. Close the Safari window`);
+            console.error(`   2. Open Safari manually in Private Browsing (File > New Private Window)`);
+            console.error(`   3. Navigate to: ${configUrl}`);
+          } catch (error) {
+            // Fallback to simple open if AppleScript fails
+            console.error(`   AppleScript failed, using fallback method...`);
+            await execAsync(`open -a "Safari" "${configUrl}"`);
+            console.error(`⚠️  IMPORTANT: Please manually enable Private Browsing in Safari!`);
+            console.error(`   (File > New Private Window, then go to: ${configUrl})`);
+          }
+        } else if (this.detectedBrowser === 'Firefox') {
+          // Firefox: Use AppleScript to ensure private window opens even if Firefox is already running
+          console.error(`   Opening Firefox in private browsing mode...`);
+          
+          const firefoxScript = `
+            tell application "Firefox"
+              activate
+              
+              -- Check if Firefox is running
+              set isRunning to true
+              
+              -- Open new private window using Firefox's built-in command
+              try
+                -- Use Firefox's internal private browsing command
+                do shell script "open -a Firefox --args --private-window '${configUrl}'"
+              on error
+                -- Fallback: try to open with just the private flag
+                do shell script "open -na Firefox --args -private-window '${configUrl}'"
+              end try
+            end tell
+          `.replace(/\n\s+/g, ' ');
+          
+          try {
+            await execAsync(`osascript -e '${firefoxScript}'`);
+          } catch (error) {
+            // Ultimate fallback: force new instance with -n flag
+            console.error(`   AppleScript failed, trying fallback...`);
+            await execAsync(`open -na "Firefox" --args -private-window "${configUrl}"`);
+          }
+        } else {
+          // Chrome, Edge, Brave, etc. support --args flags
+          const args = incognitoFlag 
+            ? `--args ${incognitoFlag} --app="${configUrl}" --window-size=${windowWidth},${windowHeight} --window-position=100,100`
+            : `"${configUrl}"`; // Fallback for browsers without good CLI support
+          
+          const command = `open -n -a "${this.detectedBrowser}" ${args}`;
+          console.error(`   Executing: open -n -a "${this.detectedBrowser}" ...`);
+          
+          await execAsync(command);
+        }
+      } else if (platform === 'win32') {
+        // Windows - Open detected browser with private mode
+        const incognitoFlag = this.getIncognitoFlag();
+        console.error(`🕵️  Using private mode flag: ${incognitoFlag}`);
+        
+        if (this.detectedBrowser === 'firefox') {
+          // Firefox on Windows needs special handling
+          console.error(`   Executing: start firefox ${incognitoFlag} ...`);
+          await execAsync(`cmd /c start "" "${this.detectedBrowser}" ${incognitoFlag} "${configUrl}"`);
+        } else {
+          // Chrome, Edge, Brave support --app mode
+          console.error(`   Executing: start ${this.detectedBrowser} ${incognitoFlag} --app ...`);
+          await execAsync(`cmd /c start "" "${this.detectedBrowser}" ${incognitoFlag} --app="${configUrl}" --window-size=${windowWidth},${windowHeight} --window-position=100,100`);
+        }
+      } else {
+        // Linux - Use default browser
+        console.error(`   Executing: xdg-open ...`);
+        await execAsync(`xdg-open "${configUrl}"`);
+      }
+      console.error('✅ Browser opened successfully');
+    } catch (error) {
+      console.error('❌ Failed to open browser:', error instanceof Error ? error.message : error);
+      console.error('⚠️  Please open manually: ' + configUrl);
+    }
+  }
+
   public async authenticate(): Promise<string> {
     try {
       // Try to use existing token first (lazy mode)
@@ -877,21 +1524,17 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         const existingToken = this.loadExistingToken();
         if (existingToken) {
           console.error('🎉 Using existing valid bearer token (lazy mode)');
-          console.error('💡 Run `npm run logout` to clear tokens and force fresh login');
           this.token = existingToken;
           
           // Trigger cache initialization with existing token
           if (this.portalCacheHook) {
-            console.error('🔄 AUTH: Triggering cache initialization with existing token...');
             try {
-              const fakeRequest = new Request('https://api-dev9.knowledge.ai/knowledge', {
+              const fakeRequest = new Request(this.authConfig.environmentUrl || 'https://api-dev9.knowledge.ai/knowledge', {
                 headers: { 'Authorization': `Bearer ${existingToken}` }
               });
               await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-              console.error('✅ AUTH: Cache initialization completed with existing token');
             } catch (error) {
-              console.error('⚠️  AUTH: Cache initialization failed with existing token:', error);
-              // Don't fail authentication if cache init fails
+              // Cache init failure is non-fatal
             }
           }
           
@@ -901,108 +1544,103 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         console.error('⏰ Existing token is expired or not found, proceeding with fresh login...');
       }
       
-      // Use the popup-based authentication flow
-      const authCode = await this.getUserAuthorizationCodeWithPopup();
-      console.error('✅ Authorization code received');
+      // Check if we have configuration (from .env or file)
+      const hasConfig = this.authConfig.environmentUrl && this.authConfig.clientId && 
+                        this.authConfig.redirectUri && this.authConfig.authUrl && this.authConfig.accessUrl;
       
-      // Get the access token using the captured code
-      const accessToken = await this.getUserAccessToken(authCode);
-      console.error('✅ Access token received');
-      
-      // Save the token for future use
-      await this.saveToken(accessToken);
-      
-      this.token = accessToken;
-      
-      // Trigger cache initialization immediately after authentication
-      if (this.portalCacheHook) {
-        console.error('🔄 AUTH: Triggering cache initialization after authentication...');
-        try {
-          // Create a fake request with the bearer token to initialize cache
-          const fakeRequest = new Request('https://api-dev9.knowledge.ai/knowledge', {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-          });
-          await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-          console.error('✅ AUTH: Cache initialization completed after authentication');
-        } catch (error) {
-          console.error('⚠️  AUTH: Cache initialization failed after authentication:', error);
-          // Don't fail authentication if cache init fails
-        }
+      if (!hasConfig) {
+        console.error('📝 No configuration found, starting browser-based configuration...');
+      } else {
+        console.error('✅ Configuration found, opening browser for authentication...');
       }
       
+      console.error('🌐 A browser window will open for you to authenticate');
+      
+      // Start config server and open browser (for both cases)
+      await this.startConfigServer();
+      await this.openConfigBrowser();
+      
+      // Two-phase timeout:
+      // Phase 1: Filling config form (generous time)
+      // Phase 2: After OAuth redirect, logging in (shorter time)
+      const configFormTimeout = 900000; // 15 minutes for filling form
+      const oauthLoginTimeout = 300000; // 5 minutes after OAuth redirect
+      const checkInterval = 1000; // 1 second
+      const startTime = Date.now();
+      
+      while (!this.token && !this.authCancelled) {
+        const elapsed = Date.now() - startTime;
+        
+        // Determine which timeout applies
+        const currentTimeout = this.oauthRedirectStarted ? oauthLoginTimeout : configFormTimeout;
+        const timeoutLabel = this.oauthRedirectStarted ? 'OAuth login' : 'configuration form';
+        
+        if (elapsed >= currentTimeout) {
+          this.stopConfigServer();
+          throw new Error(`Authentication timeout (${timeoutLabel}). Please try again.`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+      }
+      
+      if (this.authCancelled) {
+        this.stopConfigServer();
+        this.authCancelled = false; // Reset for next attempt
+        this.oauthRedirectStarted = false; // Reset flag
+        throw new Error('Authentication cancelled by user. Authentication is required to use eGain MCP tools.');
+      }
+      
+      // Final check: ensure token was actually received
+      if (!this.token) {
+        this.stopConfigServer();
+        throw new Error('Authentication completed but no token received. Please try again.');
+      }
+      
+      console.error('✅ Authentication completed');
       return this.token;
     } catch (error) {
+      this.stopConfigServer();
       console.error('❌ Authentication failed:', error);
       throw error;
     }
   }
 
   async beforeRequest(_hookCtx: HookContext, request: Request): Promise<Request> {
-    console.error('🔒 AUTH: beforeRequest triggered');
-    
-    // Check if request already has Authorization header
+    // Check if request already has valid Authorization header
     const existingAuth = request.headers.get('Authorization');
-    if (existingAuth && existingAuth.startsWith('Bearer ')) {
-      
-      // Even if request has a token, we need to validate it's not expired
-      const isValid = this.isTokenValid();
-      
-      if (isValid) {
-        console.error('✅ AUTH: Existing Bearer token is valid, using as-is');
-        return request;
-      } else {
-        console.error('⏰ AUTH: Existing Bearer token is expired, need to refresh...');
-        // Continue to token refresh logic below
-      }
-    } else {
-      console.error('📭 AUTH: No Bearer token in request headers');
+    if (existingAuth && existingAuth.startsWith('Bearer ') && this.isTokenValid()) {
+      return request;
     }
 
-    // Check if we need a token (new or expired)
+    // Get or refresh token
     if (!this.token || !this.isTokenValid()) {
-      if (!this.token) {
-        console.error('🔐 AUTH: No token available, starting authentication...');
-      } else {
-        console.error('⏰ AUTH: Token expired, starting re-authentication...');
-        this.token = null; // Clear expired token
-      }
       this.token = await this.authenticate();
-    } else {
-      console.error('✅ AUTH: Using existing valid token from memory');
     }
 
     // Clone the request and add the Authorization header
     const headers = new Headers(request.headers);
     headers.set('Authorization', `Bearer ${this.token}`);
     
-    // Create request options with proper duplex handling for Node.js
     const requestOptions: RequestInit = {
       method: request.method,
       headers: headers,
       signal: request.signal,
     };
     
-    // Only add body and duplex if there's a body
     if (request.body) {
       requestOptions.body = request.body;
-      // Set duplex for Node.js fetch compatibility when there's a body
       (requestOptions as any).duplex = 'half';
     }
     
-    const authenticatedRequest = new Request(request.url, requestOptions);
-
-    console.error('✅ AUTH: Request authenticated with Bearer token');
-    return authenticatedRequest;
+    return new Request(request.url, requestOptions);
   }
 
   sdkInit(opts: SDKOptions): SDKOptions {
-    console.error('🔧 AUTH: sdkInit called');
-    
     // Check if bearer token was provided via CLI flag
     if (opts.security && typeof opts.security === 'object' && 'bearerAuth' in opts.security) {
       const providedToken = (opts.security as any).bearerAuth;
       if (providedToken && typeof providedToken === 'string' && providedToken.trim().length > 0) {
-        console.error('🔑 AUTH: Using bearer token provided via --bearer-auth flag');
+        console.error('🔑 Using bearer token from CLI flag');
         this.token = providedToken;
         return opts;
       }
@@ -1011,14 +1649,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     // Load existing token if available  
     if (!this.token) {
       this.token = this.loadExistingToken();
-      if (this.token) {
-        console.error('🔑 AUTH: Loaded existing bearer token during SDK init');
-      }
     }
 
     // If we have a token, set up the security provider
     if (this.token) {
-      console.error('🔒 AUTH: Setting up security provider with existing token');
       return {
         ...opts,
         security: { accessToken: this.token }
@@ -1026,7 +1660,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     }
 
     // No token available - set up async authentication
-    console.error('🔐 AUTH: No token available, setting up async authentication provider');
     const securityProvider = async () => {
       const token = await this.authenticate();
       return { accessToken: token };

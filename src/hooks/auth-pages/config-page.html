@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eGain MCP - Sign In</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Open Sans", "Segoe UI", "SegoeUI", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+      background: #fef1fd;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.12);
+      max-width: 500px;
+      width: 100%;
+      padding: 32px;
+    }
+    h1 { color: #333; margin-bottom: 8px; font-size: 24px; }
+    .subtitle { color: #666; margin-bottom: 20px; font-size: 13px; }
+    .quick-signin { display: none; text-align: center; }
+    .quick-signin .icon { font-size: 64px; }
+    .quick-signin h1 { text-align: center; }
+    .saved-config {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 30px 0;
+      text-align: left;
+    }
+    .saved-config-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e1e4e8;
+      font-size: 13px;
+    }
+    .config-item:last-child { border-bottom: none; }
+    .config-label { color: #666; font-weight: 500; }
+    .config-value {
+      color: #333;
+      font-family: 'Courier New', monospace;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .config-value.masked { color: #999; }
+    .form-view { display: none; }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e1e4e8;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: "Helvetica Neue LT Pro", "Open Sans", 'Courier New', monospace !important;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #b91d8f;
+    }
+    .optional {
+      color: #999;
+      font-weight: normal;
+      font-size: 12px;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      background: #b91d8f;
+      color: white;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .tooltip-content {
+      display: none !important;
+      position: fixed;
+      max-width: 380px;
+      width: max-content;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 10000;
+      overflow: hidden;
+      border: 2px solid #b91d8f;
+      pointer-events: auto;
+    }
+    .tooltip-content.active {
+      display: block !important;
+    }
+    .tooltip-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      z-index: 1;
+    }
+    .tooltip-arrow.left {
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: #b91d8f;
+    }
+    .tooltip-arrow.right {
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: #b91d8f;
+    }
+    .tooltip-arrow.top {
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: #b91d8f;
+    }
+    .tooltip-arrow.bottom {
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: #b91d8f;
+    }
+    .tooltip-header {
+      background: #b91d8f;
+      color: white;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .tooltip-body {
+      padding: 10px 12px;
+    }
+    .tooltip-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      border: 1px solid #e1e4e8;
+      background: #f8f9fa;
+    }
+    .tooltip-text {
+      color: #555;
+      font-size: 12px;
+      line-height: 1.4;
+      font-style: italic;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #b91d8f 0%, #7a1460 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(185, 29, 143, 0.4);
+    }
+    .btn-secondary {
+      background: #f6f8fa;
+      color: #666;
+    }
+    .btn-secondary:hover {
+      background: #e1e4e8;
+    }
+    .btn-danger {
+      background: white;
+      color: #b91d8f;
+      border: 2px solid #b91d8f;
+    }
+    .btn-danger:hover {
+      background: #fef1fd;
+      transform: translateY(-1px);
+    }
+    .btn-link {
+      background: transparent;
+      color: #b91d8f;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .btn-link:hover {
+      background: #f6f8fa;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .modal-message {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .modal-buttons button {
+      padding: 10px 20px;
+      font-size: 14px;
+      flex: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="quickSigninView" class="quick-signin">
+      <div class="icon">🔐</div>
+      <h1>Welcome Back!</h1>
+      <p class="subtitle">Ready to sign in with your saved configuration</p>
+      <div class="saved-config">
+        <div class="saved-config-title">Saved Configuration</div>
+        <div id="savedConfigList"></div>
+      </div>
+      <div class="button-group">
+        <button type="button" class="btn-danger" onclick="clearConfigAndShowForm()">Clear All</button>
+        <button type="button" class="btn-primary" onclick="signInWithSavedConfig()">Sign In</button>
+      </div>
+      <button type="button" class="btn-link" onclick="showForm()" style="width: 100%; margin-top: 10px;">Edit Configuration</button>
+    </div>
+    <div id="formView" class="form-view">
+      <h1>🔐 eGain MCP Configuration</h1>
+      <p class="subtitle">Enter details from your eGain <strong>Admin Console</strong></p>
+      <form id="configForm">
+        <div class="form-group">
+          <label for="egainUrl">
+            <span>eGain Environment URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'egainUrl')" onmouseleave="hideTooltip(event, 'egainUrl')">?</span>
+          </label>
+          <input type="text" id="egainUrl" name="egainUrl" placeholder="https://your-environment.egain.cloud" required>
+        </div>
+        <div class="form-group">
+          <label for="authUrl">
+            <span>Authorization URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'authUrl')" onmouseleave="hideTooltip(event, 'authUrl')">?</span>
+          </label>
+          <input type="text" id="authUrl" name="authUrl" placeholder="https://login.egain.cloud/.../oauth2/authorize" required>
+        </div>
+        <div class="form-group">
+          <label for="accessTokenUrl">
+            <span>Access Token URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'accessTokenUrl')" onmouseleave="hideTooltip(event, 'accessTokenUrl')">?</span>
+          </label>
+          <input type="text" id="accessTokenUrl" name="accessTokenUrl" placeholder="https://login.egain.cloud/.../oauth2/token" required>
+        </div>
+        <div class="form-group">
+          <label for="clientId">
+            <span>Client ID</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'clientId')" onmouseleave="hideTooltip(event, 'clientId')">?</span>
+          </label>
+          <input type="text" id="clientId" name="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+        </div>
+        <div class="form-group">
+          <label for="redirectUrl">
+            <span>Redirect URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'redirectUrl')" onmouseleave="hideTooltip(event, 'redirectUrl')">?</span>
+          </label>
+          <input type="text" id="redirectUrl" name="redirectUrl" placeholder="https://your-redirect-url.com/" required>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <div style="margin: 12px 0;">
+          <button type="button" onclick="toggleAdvancedSettings()" style="padding: 6px 0; font-size: 13px; display: flex; align-items: center; gap: 6px; background: none; border: none; color: #b91d8f; cursor: pointer; font-family: inherit;">
+            <span id="advancedToggleIcon">▶</span>
+            <span>Advanced Settings</span>
+            <span style="color: #999; font-size: 11px;">(optional)</span>
+          </button>
+        </div>
+        
+        <!-- Advanced Settings Section (hidden by default) -->
+        <div id="advancedSettings" style="display: none;">
+          <div class="form-group">
+            <label for="clientSecret">
+              <span>Client Secret</span>
+              <span class="tooltip" onmouseenter="showTooltip(event, 'clientSecret')" onmouseleave="hideTooltip(event, 'clientSecret')">?</span>
+              <span class="optional">(optional)</span>
+            </label>
+            <input type="password" id="clientSecret" name="clientSecret" placeholder="Leave empty for public client (PKCE)">
+          </div>
+          <div class="form-group">
+            <label for="scopePrefix">
+              <span>Scope Prefix</span>
+              <span class="tooltip" onmouseenter="showTooltip(event, 'scopePrefix')" onmouseleave="hideTooltip(event, 'scopePrefix')">?</span>
+              <span class="optional">(optional)</span>
+            </label>
+            <input type="text" id="scopePrefix" name="scopePrefix" placeholder="https://your.scope-prefix.cloud/auth/">
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #999; margin: 12px 0 0 0; line-height: 1.4;">
+          🔒 Your configuration will be securely saved to your <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 10px;">~/.egain-mcp/config.json</code>.
+        </div>
+        <div class="button-group">
+          <button type="button" class="btn-secondary" onclick="cancelForm()">Cancel</button>
+          <button type="submit" class="btn-primary">Save & Authenticate</button>
+        </div>
+      </form>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+  
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" onclick="if(event.target === this) closeModal(false)">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">Confirm Action</div>
+      <div class="modal-message" id="modalMessage">Are you sure?</div>
+      <div class="modal-buttons">
+        <button type="button" class="btn-secondary" onclick="closeModal(false)">Cancel</button>
+        <button type="button" class="btn-danger" id="modalConfirmBtn" onclick="closeModal(true)">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tooltip Popups (outside container for proper fixed positioning) -->
+  <div id="tooltip-egainUrl" class="tooltip-content">
+    <div class="tooltip-header">eGain Environment URL</div>
+    <div class="tooltip-body">
+      <img src="/img/env-tooltip.png" class="tooltip-image" alt="eGain Environment URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">Enter the domain URL displayed in your browser when accessing the eGain application.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-authUrl" class="tooltip-content">
+    <div class="tooltip-header">Authorization URL</div>
+    <div class="tooltip-body">
+      <img src="/img/authurl-tooltip.png" class="tooltip-image" alt="Authorization URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the Authorization URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-accessTokenUrl" class="tooltip-content">
+    <div class="tooltip-header">Access Token URL</div>
+    <div class="tooltip-body">
+      <img src="/img/accesstoken-tooltip.png" class="tooltip-image" alt="Access Token URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the Access Token URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-clientId" class="tooltip-content">
+    <div class="tooltip-header">Client ID</div>
+    <div class="tooltip-body">
+      <img src="/img/clientid-tooltip.png" class="tooltip-image" alt="Client ID" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Client ID.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-redirectUrl" class="tooltip-content">
+    <div class="tooltip-header">Redirect URL</div>
+    <div class="tooltip-body">
+      <img src="/img/redirect-tooltip.png" class="tooltip-image" alt="Redirect URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Redirect URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-clientSecret" class="tooltip-content">
+    <div class="tooltip-header">Client Secret</div>
+    <div class="tooltip-body">
+      <img src="/img/clientsecret-tooltip.png" class="tooltip-image" alt="Client Secret" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Client Secret under Secrets.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-scopePrefix" class="tooltip-content">
+    <div class="tooltip-header">Scope Prefix</div>
+    <div class="tooltip-body">
+      <img src="/img/scopeprefix-tooltip.png" class="tooltip-image" alt="Scope Prefix" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the API Permission Prefix.</div>
+    </div>
+  </div>
+  
+  <script src="/config-page.js"></script>
+</body>
+</html>
+

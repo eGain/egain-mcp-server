@@ -13,7 +13,7 @@ A: Call `getPortals` first; it lists portals accessible to your user.
 A: DO NOT accept code edits. Use a separate window for the chat so it can’t see or modify your repo. If you accept edits and it breaks, we can’t support fixing it as you’ve modified the product.
 
 **Q: Where is the access token stored?**  
-A: At the repository root in `.bearer_token` with metadata in `.bearer_token_metadata` (created by the PKCE login flow or `scripts/login.js`).
+A: At the repository root in `.bearer_token` with metadata in `.bearer_token_metadata` (created by the PKCE login flow or `node ./scripts/login.js`).
 
 **Q: What happens when my token expires?**  
 A: With PKCE, you’ll be prompted to sign in again automatically on the next request. If you use a direct access token, generate a new token and update your config.
@@ -33,14 +33,14 @@ A: Yes. AI Services must be provisioned and content indexed for search/retrieve/
 **Q: Are there rate limits or quotas?**  
 A: Yes. Add retries/backoff and narrow queries if you see throttling.
 
-**Q: I’m having trouble authenticating during chat. What should I try?**  
-A: Verify credentials and `.env` (if used), test a manual login (`node ./scripts/login.js`), then try clearing cached files (`node ./scripts/logout.js`). If you failed to sign in the first time due to username or password mismatch, reattempt with a clean chat.
+**Q: I'm having trouble authenticating during chat. What should I try?**  
+A: Verify your client application configuration, test a manual login (`node ./scripts/login.js`), then try clearing cached files (`node ./scripts/logout.js`). Ensure you're using a supported browser (Chrome, Firefox, Edge, or Brave - Safari is not supported). If you failed to sign in the first time due to username or password mismatch, reattempt with a clean chat.
 
 **Q: Why multiple authentication steps? Can we allow anonymous use?**  
 A: Authentication applies your organizational permissions and ensures secure, role‑aware access. Anonymous access isn’t supported.
 
 **Q: Does the PKCE authentication flow work on Windows?**  
-A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer token via `--access-token`.
+A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer token via `--access-token`. **Note:** Safari browser is not supported - use Chrome, Firefox, Edge, or Brave instead.
 
 ---
 
@@ -49,31 +49,32 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 ### Authentication Issues
 
 **No auth popup appears:**
-- Ensure Chrome is installed and accessible
-- Verify `.env` values are correct (especially `AUTH_URL` and `ACCESS_TOKEN_URL`)
-- Check that you're running from the repository root where `.env` is located
+- Ensure a supported browser (Chrome, Firefox, Edge, or Brave) is installed and accessible
+- **Safari is not supported** - Please use Chrome, Firefox, Edge, or Brave
+- Verify your client application configuration is correct
+- Check that your client app is configured as a PKCE-friendly SPA platform type (recommended)
 - Try running `node ./scripts/login.js` manually to test authentication
 
 **401/403 errors:**
 - Verify token validity: run `node ./scripts/logout.js` then retry
 - Check that your client app has the required API permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`
-- Confirm `AUTH_URL` and `ACCESS_TOKEN_URL` policy names match your tenant configuration
-- For commercial environments, verify `SCOPE_PREFIX` is set correctly (use Metadata value or `api.egain.cloud/auth/` if not present)
+- Confirm Authorization URL and Access Token URL policy names match your tenant configuration
+- For commercial environments, verify Scope Prefix is set correctly (use Metadata value or `api.egain.cloud/auth/` if not present)
 - Make sure your portal has the permissions such as AI Services are turned on, knowledge has been index, and/or allow suggestions.
 
 **"invalid_client" error:**
-- Verify `CLIENT_ID` is correct and matches your client application
+- Verify Client ID is correct and matches your client application
 - Ensure the client app exists and is enabled in your tenant
-- Make sure the client app is a SPA platform for public client
-- Make sure Web confidential clients have their client secret
+- **PKCE-friendly client apps (SPAs) are strongly preferred** - Make sure the client app is configured as a SPA platform type for public client
+- Make sure Web confidential clients have their client secret (confidential clients are not recommended for PKCE flow)
 
 **"redirect_uri" mismatch:**
-- Ensure `REDIRECT_URL` in `.env` exactly matches the redirect URI configured in your client application (including trailing slashes, protocols)
-- Common redirect URIs: `https://oauth.pstmn.io/v1/browser-callback` for local development
+- Ensure the Redirect URL you enter in the browser configuration form exactly matches the redirect URI configured in your client application (including trailing slashes, protocols)
+- The redirect URL must match exactly - check for typos, trailing slashes, and protocol (http vs https)
 
 **Public/Confidential client errors:**
-- If you see "public client" errors: Remove `CLIENT_SECRET` from `.env` for public PKCE apps
-- If you see "no client_secret available": Add `CLIENT_SECRET` for confidential clients, or configure your app as public
+- If you see "public client" errors: Don't enter Client Secret in the browser configuration form for public PKCE apps (SPAs)
+- If you see "no client_secret available": Add Client Secret in the configuration form for confidential clients, or configure your app as a public SPA (recommended)
 
 **Token expired or invalid:**
 - With PKCE: You'll be prompted to sign in again automatically on the next request
@@ -82,11 +83,17 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 
 ### Configuration Issues
 
-**`.env` not being loaded:**
-- Confirm the `.env` file is in the repository root directory
-- Verify you're running commands from the repository root
-- Check that `.env` file has correct format (no spaces around `=` signs, quotes around values)
-- Ensure required variables are set: `EGAIN_URL`, `CLIENT_ID`, `REDIRECT_URL`, `AUTH_URL`, `ACCESS_TOKEN_URL`
+**Browser configuration form not appearing:**
+- Ensure a supported browser (Chrome, Firefox, Edge, or Brave) is installed
+- **Safari is not supported** - Please use Chrome, Firefox, Edge, or Brave
+- Check system permissions for opening browser windows
+- Verify network/VPN/proxy settings allow browser access
+- Try manually running `node ./scripts/login.js` to test
+
+**Configuration not saving:**
+- Check that you have write permissions to `~/.egain-mcp/config.json`
+- Verify all required fields are filled in the configuration form
+- Ensure URLs don't contain spaces (common mistake: pasting multiple URLs)
 
 **MCP server not connecting:**
 - Verify the absolute path in your MCP configuration points to the correct location of `mcp-server.js`
@@ -129,14 +136,22 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 - Reduce request frequency if making many sequential calls
 
 **Browser didn't open for authentication:**
-- Ensure Chrome browser is installed and accessible
+- Ensure a supported browser (Chrome, Firefox, Edge, or Brave) is installed and accessible
+- **Safari is not supported** - Please use Chrome, Firefox, Edge, or Brave
 - Check system permissions for opening browser windows
 - Verify network/VPN/proxy settings allow browser access
 - Try manually running `node ./scripts/login.js` to test
 
+**Safari browser issues:**
+- **Safari is not supported** for authentication due to limited private browsing support via command line, which is required for secure OAuth flows
+- Please install and use Chrome, Firefox, Edge, or Brave browser instead
+- The MCP will detect Safari and show a warning page with installation instructions
+
 **Still stuck after trying troubleshooting steps:**
 - Clear all cached files: `node ./scripts/logout.js`
-- Verify all `.env` values against your Admin Console settings
+- Verify all configuration values against your Admin Console settings
+- Ensure you're using a supported browser (Chrome, Firefox, Edge, or Brave - Safari is not supported)
+- Verify your client app is configured as a PKCE-friendly SPA platform type (recommended)
 - Check the [Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) for detailed setup instructions
 - Contact your eGain PA if you don't have access to required Admin Console settings
 

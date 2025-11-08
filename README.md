@@ -14,7 +14,7 @@
 This server implements MCP for eGain Knowledge, unifying Portal Manager, Search, Retrieve, and Answers into a single endpoint your AI client can call. Use it from Claude Desktop, Cursor, and others to browse portals, read articles, search/retrieve content, submit suggestions, and get AI‑powered answers with your existing portal permissions.
 <!-- No Summary [summary] -->
 
-Learn more in the [eGain MCP guide](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).
+Learn more about the tools and usage of the MCP in the [eGain MCP guide](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).
 
 <!-- No Table of Contents [toc] -->
 
@@ -23,40 +23,21 @@ Learn more in the [eGain MCP guide](https://apidev.egain.com/developer-portal/gu
 - Access mirrors the user's permissions: MCP only sees content that user can see (portal/article visibility).
 - AI Services must be enabled for your tenant and the target portal, or AI tools will not run.
 - Knowledge content! I recommend at least 2 portals and 5 articles to give the MCP a try!
+- A supported browser (Chrome, Firefox, Edge, or Brave) - **Safari is not supported**.
+- A PKCE-friendly client application (SPA platform type recommended) configured in your eGain tenant.
 
 ## Local Configuration
-### Step 1: Clone repository and create a `.env` file.  
+### Step 1: Clone repository and install dependencies
 > ⚠️ Do not modify the repository after cloning. The MCP works as intended
-Clone this repository and create the `.env` file in the *root* of the folder to setup PKCE Authentication Flow. Below is an example of `.env`:
-```
-EGAIN_URL="https://aidev.egain.cloud/q8ml"
-CLIENT_ID="abcdefgh-1234-5678-ijkl-123456789012345"
-REDIRECT_URL="https://oauth.pstmn.io/v1/browser-callback"
-AUTH_URL="https://aidev.egain.cloud/system/auth/TMDEVEB123456-U/oauth2/authorize"
-ACCESS_TOKEN_URL="https://aidev.egain.cloud/system/auth/TMDEVEB123456-U/oauth2/token"
-```
-- Ensure your client app has these API permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`.
 
-Stuck creating this file? Not sure if your application is a special case? Check out this [.env guide](./help/env-guide.md) for more details. For additional authentication details, see [Authentication Deep Dive](./help/authentication.md). Please contact your eGain PA if you do not have access to these values set up the `.env` file.
+Clone this repository and install dependencies in the folder:
 
-### Step 2: Run `npm` commands to install and build the MCP.   
 ```bash
 npm install
 npm run build
 ```
 
-### Step 3 (optional): Run the server manually for standalone debugging  
-Use this if you want to start the server outside of a client to see raw logs, pass extra flags (e.g., `--log-level debug`), or reproduce issues in isolation:
-
-`node ./bin/mcp-server.js start --api-domain "..."`
-
-Avoid running Step 3 and Step 4 at the same time. You don’t need this manual run unless you are debugging. Alternatively, launch with the official MCP Inspector:
-
-```bash
-npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain "..."
-```
-
-### Step 4: Configuring with MCP Clients  
+### Step 2: Configuring with MCP Clients  
 Firstly, to find your API domain, use the eGain Administrator Console to retrieve the correct values:
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
 2. Click `Metadata`. The value `API Domain` is detailed in the window.  
@@ -65,28 +46,58 @@ Please contact your eGain PA if you do not have access to these admin-only detai
 
 To use this local version with **Cursor**, **Claude**, **Windsurf**, **VSC** or other MCP Clients, you'll need to add the following config:
 
+**Note:** Replace `./bin/mcp-server.js` with the absolute path to your project's `bin/mcp-server.js` file, and replace `"..."` with your API domain from the Admin Console.
+
 ```json
 {
   "mcpServers": {
     "EgainMcp": {
       "command": "node",
       "args": [
-        "./bin/mcp-server.js", // Replace with absolute path, if needed
+        "./bin/mcp-server.js",
         "start",
         "--api-domain",
-        "..." // Replace with your API domain
+        "..."
       ]
     }
   }
 }
 ```
 
-See it in action:
-- Watch a quick Claude demo: [Demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385)
+If you're having trouble configuring your MCP client, see these detailed guides:
 - Claude quick-start and example queries: [Claude Guide](./help/claude-example.md)
 - Cursor quick-start and example queries: [Cursor Guide](./help/cursor-example.md)
 
+### Step 3: Authenticate on first query
+
+See it in action: Watch a quick [Claude demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385)
+
+Once you've set up the server on your client, **run your first eGain MCP query** to authenticate. When you make your first MCP request, a browser window will automatically open for authentication.
+
+**Important:**
+- **PKCE-friendly client apps (SPAs) are strongly preferred** for the best authentication experience. Ensure your client app is configured as a Single Page Application (SPA) platform type in the eGain Administrator Console.
+- **Safari browser is not supported** for authentication for security reasons. Please use Chrome, Firefox, Edge, or another supported browser.
+- Ensure your client app has these delegated API permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`.
+
+You'll need to enter your authentication configuration values in the browser form. For detailed setup instructions and where to find these values, see the [Configuration Guide](./help/env-guide.md) and [Authentication Deep Dive](./help/authentication.md). Please contact your eGain PA if you do not have access to client application settings.
+
 <!-- No Installation [installation] -->
+
+## Debugging
+
+Run the server manually for standalone debugging if you want to see raw logs, pass extra flags (e.g., `--log-level debug`), or reproduce issues in isolation:
+
+```bash
+node ./bin/mcp-server.js start --api-domain "..."
+```
+
+Alternatively, launch with the official MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain "..."
+```
+
+**Note:** Avoid running the server manually while also using it with an MCP client.
 
 ## Resources & Support
 ### Help Guides

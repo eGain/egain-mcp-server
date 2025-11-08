@@ -4,93 +4,90 @@
  * Login script for eGain MCP Server
  * Performs Azure B2C OAuth2 authentication and saves the token
  * 
- * Usage: 
- *   node scripts/login.js
- *   OR make executable: chmod +x scripts/login.js && ./scripts/login.js
+ * Usage:
+ *   node scripts/login.js                    # Normal mode (auto-detect browser)
+ *   node scripts/login.js --force-chrome     # Force Chrome
+ *   node scripts/login.js --force-firefox    # Force Firefox
+ *   node scripts/login.js --force-edge       # Force Microsoft Edge
+ *   node scripts/login.js --force-safari     # Force Safari
+ *   node scripts/login.js --force-brave      # Force Brave Browser
+ * 
+ *   npm run login                            # Normal mode
+ *   FORCE_BROWSER="Firefox" npm run login    # Force any browser via env var
  */
 
 import { AuthenticationHook } from '../esm/src/hooks/auth-hook.js';
 
-console.log('🔐 eGain MCP Login');
-console.log('==================');
+// Platform-specific browser name mapping
+const isWindows = process.platform === 'win32';
+const isMac = process.platform === 'darwin';
 
-try {
-  // Create authentication hook instance
-  const authHook = new AuthenticationHook();
-  
-  console.log('🚀 Starting authentication process...');
-  console.log('📋 A popup window will open for you to complete authentication.');
-  console.log('⏳ Please wait while we authenticate...');
-  
-  // Perform authentication
-  const token = await authHook.authenticate();
-  
-  console.log('==================');
-  console.log('🎉 Login successful!');
-  console.log('✅ Authentication token saved');
-  console.log('🔑 Token preview:', token.substring(0, 20) + '...');
-  console.log('💡 You can now use the MCP server with authenticated requests');
-  console.log('🚪 Run `npm run logout` to clear authentication');
-  
-} catch (error) {
-  console.log('==================');
-  console.log('❌ Login failed!');
-  console.log('💥 Error:', error.message);
-  
-  // Optional verbose diagnostics
-  if (process.env.DEBUG === '1' || process.env.DEBUG === 'true') {
-    console.log('\n🧵 Stack (debug):');
-    console.log(error?.stack || '(no stack)');
-  }
-  console.log('');
-  console.log('🔧 Troubleshooting:');
-  console.log('   • Ensure your .env is configured with required OAuth values');
-  console.log('   • Check that Chrome browser is installed and reachable');
-  console.log('   • Verify your network and VPN/proxy settings');
+// Browser name mapping for command-line flags
+const browserMap = {
+  '--force-chrome': isWindows ? 'chrome' : 'Google Chrome',
+  '--force-firefox': isWindows ? 'firefox' : 'Firefox',
+  '--force-edge': isWindows ? 'msedge' : 'Microsoft Edge',
+  '--force-safari': 'Safari', // macOS only
+  '--force-brave': isWindows ? 'brave' : 'Brave Browser',
+  '--force-vivaldi': isWindows ? 'vivaldi' : 'Vivaldi',
+  '--force-opera': isWindows ? 'opera' : 'Opera',
+  // Short flags
+  '-c': isWindows ? 'chrome' : 'Google Chrome',
+  '-f': isWindows ? 'firefox' : 'Firefox',
+  '-e': isWindows ? 'msedge' : 'Microsoft Edge',
+  '-s': 'Safari',
+  '-b': isWindows ? 'brave' : 'Brave Browser'
+};
 
-  // Targeted guidance based on the error content
-  const msg = String(error?.message || '').toLowerCase();
-  if (msg.includes('public client') || msg.includes('aadb2c90084')) {
-    console.log('   • Detected public-client error: remove CLIENT_SECRET for a public PKCE app');
-  } else if (msg.includes('no client_secret available') || msg.includes('confidential')) {
-    console.log('   • Detected confidential-client flow without secret: set CLIENT_SECRET or configure the app as public');
+// Check for command-line flags
+const args = process.argv.slice(2);
+for (const arg of args) {
+  if (browserMap[arg]) {
+    const browser = browserMap[arg];
+    const displayName = isWindows 
+      ? (browser === 'chrome' ? 'Google Chrome' :
+         browser === 'msedge' ? 'Microsoft Edge' :
+         browser === 'firefox' ? 'Firefox' :
+         browser === 'brave' ? 'Brave Browser' : browser)
+      : browser;
+    console.log(`🧪 FORCING ${displayName.toUpperCase()} FOR TESTING\n`);
+    process.env.FORCE_BROWSER = browser;
+    break;
   }
-  if (msg.includes('invalid_client')) {
-    console.log('   • invalid_client: verify CLIENT_ID is correct and app registration exists/enabled');
-  }
-  if (msg.includes('redirect_uri')) {
-    console.log('   • redirect_uri mismatch: ensure REDIRECT_URL exactly matches the app registration');
-  }
-  if (msg.includes('401')) {
-    console.log('   • 401 Unauthorized: check ACCESS_TOKEN_URL, AUTH_URL domain/tenant and credentials');
-  }
-
-  // Quick environment validation summary (mask sensitive values)
-  const requiredVars = ['EGAIN_URL','AUTH_URL','ACCESS_TOKEN_URL','CLIENT_ID','REDIRECT_URL'];
-  const optionalVars = ['CLIENT_SECRET','SCOPE_PREFIX'];
-  const mask = (k, v) => {
-    if (!v) return '(missing)';
-    if (k === 'CLIENT_SECRET') return v.slice(0, 4) + '…';
-    if (k === 'CLIENT_ID') return v.slice(0, 8) + '…';
-    try {
-      if (k.endsWith('_URL')) {
-        const u = new URL(v);
-        return `${u.origin}${u.pathname}`;
-      }
-    } catch {}
-    return v;
-  };
-  console.log('\n🧪 Env check:');
-  for (const k of requiredVars) {
-    console.log(`   - ${k}:`, mask(k, process.env[k]));
-  }
-  for (const k of optionalVars) {
-    console.log(`   - ${k} (optional):`, mask(k, process.env[k]));
-  }
-  console.log('');
-  console.log('📖 Required env keys: EGAIN_URL, AUTH_URL, ACCESS_TOKEN_URL, CLIENT_ID, REDIRECT_URL');
-  console.log('   If the client is confidential, set CLIENT_SECRET. Otherwise, omit it for public PKCE.');
-  console.log('   Run `node scripts/logout.js` then `node scripts/login.js` after updating .env in the root of this repo');
-  
-  process.exit(1);
 }
+
+console.log('🔐 eGain MCP Login');
+console.log('==================\n');
+
+async function login() {
+  try {
+    const authHook = new AuthenticationHook();
+    console.log('🚀 Starting authentication...');
+    console.log('📋 A browser window will open for configuration/authentication\n');
+    
+    const token = await authHook.authenticate();
+    
+    console.log('\n==================');
+    console.log('✅ Login successful!');
+    console.log('🔑 Token:', token.substring(0, 30) + '...');
+    console.log('📏 Length:', token.length, 'characters');
+    console.log('💡 You can now use the MCP server');
+    console.log('🚪 Run `node scripts/logout.js` to clear authentication\n');
+    
+  } catch (error) {
+    console.log('\n==================');
+    console.log('❌ Login failed!');
+    console.log('💥 Error:', error.message);
+    
+    if (process.env.DEBUG) {
+      console.log('\nStack trace:');
+      console.log(error.stack);
+    }
+    
+    console.log('');
+    process.exit(1);
+  }
+}
+
+// Run the login
+login();
