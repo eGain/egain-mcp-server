@@ -7,6 +7,8 @@ const FIELD_LABELS = {
 
 let savedConfigData = null; // Store config in memory only
 let authenticationStarted = false; // Track if user started authentication process
+let lastSubmittedConfig = null; // Track last submitted config to prevent duplicate submissions
+let isSubmitting = false; // Track if form submission is in progress
 
 // Fetch saved config from backend (secure file storage)
 async function loadSavedConfig() {
@@ -143,23 +145,28 @@ function cancelForm() {
 }
 
 async function signInWithSavedConfig() {
-  showStatus('Starting authentication with saved configuration...', 'info');
   authenticationStarted = true; // Mark that auth has started
+  
+  // Show loading overlay
+  showLoadingOverlay('Redirecting to login...');
   
   try {
     const response = await fetch('/get-oauth-url', { method: 'POST' });
     const result = await response.json();
     
     if (response.ok && result.oauthUrl) {
-      showStatus('✅ Redirecting to login...', 'success');
+      console.log('🔗 OAuth URL:', result.oauthUrl);
+      // Redirect after a brief delay to show loading state
       setTimeout(() => {
         window.location.href = result.oauthUrl;
       }, 500);
     } else {
+      hideLoadingOverlay();
       showStatus('❌ ' + (result.error || 'Failed to get OAuth URL'), 'error');
       authenticationStarted = false; // Reset on error
     }
   } catch (error) {
+    hideLoadingOverlay();
     showStatus('❌ Error: ' + error.message, 'error');
     authenticationStarted = false; // Reset on error
   }
@@ -170,14 +177,95 @@ function showStatus(message, type) {
   statusEl.textContent = message;
   statusEl.className = 'status ' + type;
   statusEl.style.display = 'block';
-  if (type === 'success') {
-    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  // Auto-hide info and success messages after a delay
+  if (type === 'info') {
+    setTimeout(() => { 
+      // Only hide if it's still an info message (not changed to success/error)
+      if (statusEl.className === 'status info') {
+        statusEl.style.display = 'none'; 
+      }
+    }, 3000);
+  } else if (type === 'success') {
+    setTimeout(() => { 
+      // Only hide if it's still a success message (not changed to error)
+      if (statusEl.className === 'status success') {
+        statusEl.style.display = 'none'; 
+      }
+    }, 4000);
+  }
+}
+
+function configValuesEqual(config1, config2) {
+  // Compare all fields that matter
+  const fieldsToCompare = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'clientSecret', 'scopePrefix'];
+  for (const field of fieldsToCompare) {
+    const val1 = (config1[field] || '').trim();
+    const val2 = (config2[field] || '').trim();
+    if (val1 !== val2) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function showLoadingOverlay(message) {
+  // Show overlay for form view
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingMessage = document.getElementById('loadingMessage');
+  if (overlay) {
+    overlay.classList.add('active');
+    if (loadingMessage) {
+      loadingMessage.textContent = message || 'Saving configuration...';
+    }
+  }
+  
+  // Show overlay for quick signin view
+  const overlayQuickSignin = document.getElementById('loadingOverlayQuickSignin');
+  const loadingMessageQuickSignin = document.getElementById('loadingMessageQuickSignin');
+  if (overlayQuickSignin) {
+    overlayQuickSignin.classList.add('active');
+    if (loadingMessageQuickSignin) {
+      loadingMessageQuickSignin.textContent = message || 'Redirecting to login...';
+    }
+  }
+}
+
+function hideLoadingOverlay() {
+  // Hide overlay for form view
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+  
+  // Hide overlay for quick signin view
+  const overlayQuickSignin = document.getElementById('loadingOverlayQuickSignin');
+  if (overlayQuickSignin) {
+    overlayQuickSignin.classList.remove('active');
   }
 }
 
 async function authenticateWithConfig(config) {
+  // Prevent duplicate submissions
+  if (isSubmitting) {
+    return; // Already submitting, ignore
+  }
+  
+  // Check if values have changed since last submission
+  if (lastSubmittedConfig && configValuesEqual(config, lastSubmittedConfig)) {
+    showStatus('⚠️ Configuration unchanged. Already saved.', 'info');
+    return; // Values haven't changed, don't submit again
+  }
+  
   try {
-    showStatus('⚡ Saving configuration...', 'info');
+    isSubmitting = true; // Mark as submitting
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Saving...';
+    }
+    
+    // Show loading overlay with spinner
+    showLoadingOverlay('Saving configuration...');
     authenticationStarted = true; // Mark that auth has started
     
     const response = await fetch('/authenticate', {
@@ -188,33 +276,60 @@ async function authenticateWithConfig(config) {
     const result = await response.json();
     
     if (response.ok && result.oauthUrl) {
-      // Config saved! Now redirect THIS window to OAuth login
-      showStatus('✅ Configuration saved. Redirecting to login...', 'success');
+      // Config saved! Store this config as last submitted
+      lastSubmittedConfig = { ...config };
+      
+      console.log('🔗 OAuth URL:', result.oauthUrl);
+      
+      // Update loading message (overlay already shows the status, no need for status message)
+      showLoadingOverlay('Configuration saved! Redirecting to login...');
+      
       setTimeout(() => {
         window.location.href = result.oauthUrl;
       }, 500);
     } else if (response.ok && result.success) {
+      lastSubmittedConfig = { ...config };
+      hideLoadingOverlay();
       showStatus('✅ ' + result.message, 'success');
       setTimeout(() => { window.close(); }, 2000);
     } else {
+      hideLoadingOverlay();
       showStatus('❌ ' + (result.error || 'Authentication failed'), 'error');
       authenticationStarted = false; // Reset on error
+      isSubmitting = false; // Reset submitting flag
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Save & Authenticate';
+      }
     }
   } catch (error) {
+    hideLoadingOverlay();
     showStatus('❌ Error: ' + error.message, 'error');
     authenticationStarted = false; // Reset on error
+    isSubmitting = false; // Reset submitting flag
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save & Authenticate';
+    }
   }
 }
 
 document.getElementById('configForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  // Prevent duplicate submissions
+  if (isSubmitting) {
+    return;
+  }
+  
   const formData = new FormData(e.target);
   const config = {};
   for (let [key, value] of formData.entries()) {
     config[key] = value;
   }
+  
   // Config is now sent to backend for secure file storage (not cookies)
-  showStatus('Saving configuration securely...', 'info');
   await authenticateWithConfig(config);
 });
 

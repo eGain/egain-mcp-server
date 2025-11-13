@@ -14,7 +14,7 @@ npm install
 npm run build
 ```
 
-**Step 3:** Configure Cursor for local  
+**Step 2:** Configure Cursor for local  
 
 **Option A: Using Cursor's UI**
 1. In Cursor, select the Settings icon → `Tools & MCP` → `New MCP Server` to open the configuration file.
@@ -49,7 +49,7 @@ To find your API domain, go to your Admin Console → `Partition` → `Integrati
 
 Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
 
-**Step 4:** Your first Cursor query
+**Step 3:** Your first Cursor query
 Restart Cursor to process the configuration. Open a new chat on an empty window and try:
 - "List the portals I can access." → uses `getPortals`.
 - "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.

@@ -522,29 +522,62 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     
     console.error('🔧 Building OAuth URL...');
     
+    if (!authUrl) {
+      throw new Error('Authorization URL is required');
+    }
+    
+    // Clean and validate redirect_uri (must match exactly what's registered)
+    const cleanRedirectUri = redirectUri?.trim();
+    if (!cleanRedirectUri) {
+      throw new Error('Redirect URI is required');
+    }
+    
+    // Log the redirect URI for debugging
+    console.error('🔗 Redirect URI:', cleanRedirectUri);
+    console.error('⚠️  Make sure this EXACTLY matches the redirect URI in your client application (including trailing slashes)');
+    
+    // Parse the authUrl to remove any existing domain_hint parameter
+    let baseUrl = authUrl;
+    let existingParams = new URLSearchParams();
+    
+    // Check if authUrl already has query parameters
+    const urlParts = authUrl.split('?');
+    if (urlParts.length > 1 && urlParts[0]) {
+      baseUrl = urlParts[0];
+      const queryString = urlParts.slice(1).join('?'); // Handle multiple ? characters
+      existingParams = new URLSearchParams(queryString);
+      
+      // Remove domain_hint if it exists (we'll add our own)
+      if (existingParams.has('domain_hint')) {
+        existingParams.delete('domain_hint');
+        console.error('🔧 Removed existing domain_hint from authorization URL');
+      }
+    }
+    
     const prefix = scopePrefix || '';
     const scope = `${prefix}knowledge.portalmgr.manage ${prefix}knowledge.portalmgr.read ${prefix}core.aiservices.read`;
     
-    let fullUrl = (
-      `${authUrl}` +
-      `?domain_hint=${environmentUrl}` +
-      `&client_id=${clientId}` +
-      `&response_type=code` +
-      `&redirect_uri=${encodeURIComponent(redirectUri!)}` +
-      `&scope=${encodeURIComponent(scope)}` +
-      `&forceLogin=yes`
-    );
+    // Add our parameters
+    existingParams.set('domain_hint', environmentUrl!.trim());
+    existingParams.set('client_id', clientId!.trim());
+    existingParams.set('response_type', 'code');
+    existingParams.set('redirect_uri', cleanRedirectUri);
+    existingParams.set('scope', scope);
+    existingParams.set('forceLogin', 'yes');
+    existingParams.set('prompt', 'login');
     
-    // Add PKCE for public clients only
+    // Add PKCE only for public clients (no client_secret)
+    // SSO/confidential clients use client_secret only (no PKCE)
     if (!this.authConfig.clientSecret) {
-      fullUrl += `&code_challenge=${this.codeChallenge}`;
-      fullUrl += `&code_challenge_method=S256`;
+      existingParams.set('code_challenge', this.codeChallenge);
+      existingParams.set('code_challenge_method', 'S256');
       console.error('🔐 Using PKCE flow (public client)');
     } else {
-      console.error('🔐 Using confidential client flow');
+      console.error('🔐 Using SSO/confidential client flow (no PKCE)');
     }
     
-    fullUrl += `&prompt=login`;
+    // Reconstruct the full URL
+    const fullUrl = `${baseUrl}?${existingParams.toString()}`;
     return fullUrl;
   }
 
@@ -617,10 +650,15 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
             const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
             
+            // Throw OAuth error - this will stop monitoring but window stays open so user can see the error
             throw new Error(`OAuth error: ${error} - ${errorDesc}`);
           }
           
         } catch (error) {
+          // Re-throw OAuth errors (they should stop monitoring but window stays open)
+          if (error instanceof Error && error.message.includes('OAuth error:')) {
+            throw error;
+          }
           // Ignore AppleScript errors and continue monitoring
         }
         
@@ -687,12 +725,17 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             if (windowTitle.includes('error=')) {
               const errorMatch = windowTitle.match(/error=([^&\s]+)/);
               const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
+              // Throw OAuth error - this will stop monitoring but window stays open so user can see the error
               throw new Error(`OAuth error: ${error}`);
             }
           }
           
         } catch (error) {
-          // Ignore errors and continue monitoring
+          // Re-throw OAuth errors (they should stop monitoring but window stays open)
+          if (error instanceof Error && error.message.includes('OAuth error:')) {
+            throw error;
+          }
+          // Ignore other errors and continue monitoring
         }
         
         // Wait 500ms before checking again
@@ -726,46 +769,11 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     };
 
     try {
-      // First attempt: Try without client_secret (for public clients)
-      console.error('🔄 Trying public client flow...');
-      
-      const publicClientBody = new URLSearchParams({
-        code: code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri!,
-        client_id: clientId!,
-        code_verifier: this.codeVerifier
-      });
-      
-      const publicResponse = await fetch(accessUrl!, {
-        method: 'POST',
-        headers,
-        body: publicClientBody
-      });
-
-      console.error('📨 Token response received (public client):', publicResponse.status, publicResponse.statusText);
-
-      if (publicResponse.ok) {
-        const data = await publicResponse.json() as { access_token?: string; expires_in?: number };
-        
-        if (data.access_token) {
-          console.error('✅ Token received (public client)');
-          await this.saveTokenWithExpiration(data.access_token, data.expires_in);
-          return data.access_token;
-        }
-      } else {
-        const errorText = await publicResponse.text();
-        console.error('❌ Public client failed:', publicResponse.status);
-        
-        if (errorText.includes('AADB2C90084') || errorText.includes('Public clients should not send a client_secret')) {
-          throw new Error(`Token request failed (public client): ${publicResponse.status} - ${errorText}`);
-        }
-        
-        console.error('🔄 Trying confidential client as fallback...');
-      }
-      
-      // Second attempt: Try with client_secret (for confidential clients)
+      // SSO/Confidential client flow: Use client_secret only (no PKCE)
+      // Public client flow: Use PKCE with code_verifier (no client_secret)
       if (clientSecret) {
+        console.error('🔄 Using SSO/confidential client flow (client_secret only, no PKCE)...');
+        
         const confidentialClientBody = new URLSearchParams({
           code: code,
           grant_type: 'authorization_code',
@@ -779,6 +787,8 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           headers,
           body: confidentialClientBody
         });
+
+        console.error('📨 Token response received (confidential client):', confidentialResponse.status, confidentialResponse.statusText);
 
         if (confidentialResponse.ok) {
           const data = await confidentialResponse.json() as { access_token?: string; expires_in?: number };
@@ -796,7 +806,40 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           throw new Error(`Token request failed: ${confidentialResponse.status} - ${errorText}`);
         }
       } else {
-        throw new Error('Both public and confidential client approaches failed');
+        // Public client flow: Use PKCE with code_verifier
+        console.error('🔄 Using public client flow (PKCE with code_verifier)...');
+        
+        const publicClientBody = new URLSearchParams({
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri!,
+          client_id: clientId!,
+          code_verifier: this.codeVerifier
+        });
+        
+        const publicResponse = await fetch(accessUrl!, {
+          method: 'POST',
+          headers,
+          body: publicClientBody
+        });
+
+        console.error('📨 Token response received (public client):', publicResponse.status, publicResponse.statusText);
+
+        if (publicResponse.ok) {
+          const data = await publicResponse.json() as { access_token?: string; expires_in?: number };
+          
+          if (data.access_token) {
+            console.error('✅ Token received (public client)');
+            await this.saveTokenWithExpiration(data.access_token, data.expires_in);
+            return data.access_token;
+          } else {
+            throw new Error('No access_token in public client response');
+          }
+        } else {
+          const errorText = await publicResponse.text();
+          console.error('❌ Public client failed:', publicResponse.status);
+          throw new Error(`Token request failed (public client): ${publicResponse.status} - ${errorText}`);
+        }
       }
       
     } catch (error) {
@@ -1039,6 +1082,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           try {
             const oauthUrl = this.buildAuthUrl();
             console.error('🔐 Generated OAuth URL for saved configuration');
+            console.error('🔗 OAuth URL:', oauthUrl);
             
             // Mark that OAuth redirect is about to happen (shorter timeout applies)
             this.oauthRedirectStarted = true;
@@ -1163,6 +1207,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               // Generate OAuth URL and return it to frontend for redirect (single window flow)
               const oauthUrl = this.buildAuthUrl();
               console.error('🔐 Generated OAuth URL for browser redirect');
+              console.error('🔗 OAuth URL:', oauthUrl);
               
               // Mark that OAuth redirect is about to happen (shorter timeout applies)
               this.oauthRedirectStarted = true;

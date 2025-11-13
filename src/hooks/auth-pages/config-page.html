@@ -25,7 +25,11 @@
     }
     h1 { color: #333; margin-bottom: 8px; font-size: 24px; }
     .subtitle { color: #666; margin-bottom: 20px; font-size: 13px; }
-    .quick-signin { display: none; text-align: center; }
+    .quick-signin { 
+      display: none; 
+      text-align: center; 
+      position: relative;
+    }
     .quick-signin .icon { font-size: 64px; }
     .quick-signin h1 { text-align: center; }
     .saved-config {
@@ -248,6 +252,47 @@
       color: #0c5460;
       border: 1px solid #bee5eb;
     }
+    /* Loading overlay and spinner */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      top: -32px;
+      left: -32px;
+      right: -32px;
+      bottom: -32px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 16px;
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e1e4e8;
+      border-top-color: #b91d8f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-message {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      max-width: 300px;
+    }
+    .form-view {
+      position: relative;
+    }
     .modal-overlay {
       display: none;
       position: fixed;
@@ -298,6 +343,10 @@
 <body>
   <div class="container">
     <div id="quickSigninView" class="quick-signin">
+      <div id="loadingOverlayQuickSignin" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loadingMessageQuickSignin" class="loading-message">Redirecting to login...</div>
+      </div>
       <div class="icon">🔐</div>
       <h1>Welcome Back!</h1>
       <p class="subtitle">Ready to sign in with your saved configuration</p>
@@ -312,6 +361,10 @@
       <button type="button" class="btn-link" onclick="showForm()" style="width: 100%; margin-top: 10px;">Edit Configuration</button>
     </div>
     <div id="formView" class="form-view">
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loadingMessage" class="loading-message">Saving configuration...</div>
+      </div>
       <h1>🔐 eGain MCP Configuration</h1>
       <p class="subtitle">Enter details from your eGain <strong>Admin Console</strong></p>
       <form id="configForm">
@@ -368,7 +421,7 @@
               <span class="tooltip" onmouseenter="showTooltip(event, 'clientSecret')" onmouseleave="hideTooltip(event, 'clientSecret')">?</span>
               <span class="optional">(optional)</span>
             </label>
-            <input type="password" id="clientSecret" name="clientSecret" placeholder="Leave empty for public client (PKCE)">
+            <input type="password" id="clientSecret" name="clientSecret" placeholder="Required for normal authentication flow/non-PKCE">
           </div>
           <div class="form-group">
             <label for="scopePrefix">

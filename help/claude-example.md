@@ -45,7 +45,7 @@ To find your API domain, go to your Admin Console → `Partition` → `Integrati
 
 Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
 
-**Step 4:** Your first Claude query
+**Step 3:** Your first Claude query
 Restart Claude to process the configuration. Open a new chat and try:
 - "List the portals I can access." → uses `getPortals`.
 - "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.
