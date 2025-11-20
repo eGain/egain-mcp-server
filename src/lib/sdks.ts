@@ -111,7 +111,7 @@ export class ClientSDK {
     this._options = { ...options, hooks: this.#hooks };
 
     this.#logger = this._options.debugLogger;
-    if (!this.#logger && env().EGAIN_MCP_DEBUG) {
+    if (!this.#logger && env().EGAINMCP_DEBUG) {
       this.#logger = console;
     }
   }

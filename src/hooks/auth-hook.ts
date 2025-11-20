@@ -69,6 +69,1141 @@ interface PKCEValues {
 const CONFIG_SERVER_PORT = 3333;
 const CONFIG_SERVER_HOST = 'localhost';
 
+// Embedded HTML/JS content for auth pages (included in bundle for npm package compatibility)
+const CONFIG_PAGE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eGain MCP - Sign In</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Open Sans", "Segoe UI", "SegoeUI", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+      background: #fef1fd;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.12);
+      max-width: 500px;
+      width: 100%;
+      padding: 32px;
+    }
+    h1 { color: #333; margin-bottom: 8px; font-size: 24px; }
+    .subtitle { color: #666; margin-bottom: 20px; font-size: 13px; }
+    .quick-signin { 
+      display: none; 
+      text-align: center; 
+      position: relative;
+    }
+    .quick-signin .icon { font-size: 64px; }
+    .quick-signin h1 { text-align: center; }
+    .saved-config {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 30px 0;
+      text-align: left;
+    }
+    .saved-config-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e1e4e8;
+      font-size: 13px;
+    }
+    .config-item:last-child { border-bottom: none; }
+    .config-label { color: #666; font-weight: 500; }
+    .config-value {
+      color: #333;
+      font-family: 'Courier New', monospace;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .config-value.masked { color: #999; }
+    .form-view { display: none; }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e1e4e8;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: "Helvetica Neue LT Pro", "Open Sans", 'Courier New', monospace !important;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #b91d8f;
+    }
+    .optional {
+      color: #999;
+      font-weight: normal;
+      font-size: 12px;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      background: #b91d8f;
+      color: white;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .tooltip-content {
+      display: none !important;
+      position: fixed;
+      max-width: 380px;
+      width: max-content;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 10000;
+      overflow: hidden;
+      border: 2px solid #b91d8f;
+      pointer-events: auto;
+    }
+    .tooltip-content.active {
+      display: block !important;
+    }
+    .tooltip-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      z-index: 1;
+    }
+    .tooltip-arrow.left {
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: #b91d8f;
+    }
+    .tooltip-arrow.right {
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: #b91d8f;
+    }
+    .tooltip-arrow.top {
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: #b91d8f;
+    }
+    .tooltip-arrow.bottom {
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: #b91d8f;
+    }
+    .tooltip-header {
+      background: #b91d8f;
+      color: white;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .tooltip-body {
+      padding: 10px 12px;
+    }
+    .tooltip-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      border: 1px solid #e1e4e8;
+      background: #f8f9fa;
+    }
+    .tooltip-text {
+      color: #555;
+      font-size: 12px;
+      line-height: 1.4;
+      font-style: italic;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #b91d8f 0%, #7a1460 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(185, 29, 143, 0.4);
+    }
+    .btn-secondary {
+      background: #f6f8fa;
+      color: #666;
+    }
+    .btn-secondary:hover {
+      background: #e1e4e8;
+    }
+    .btn-danger {
+      background: white;
+      color: #b91d8f;
+      border: 2px solid #b91d8f;
+    }
+    .btn-danger:hover {
+      background: #fef1fd;
+      transform: translateY(-1px);
+    }
+    .btn-link {
+      background: transparent;
+      color: #b91d8f;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .btn-link:hover {
+      background: #f6f8fa;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    /* Loading overlay and spinner */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      top: -32px;
+      left: -32px;
+      right: -32px;
+      bottom: -32px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 16px;
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e1e4e8;
+      border-top-color: #b91d8f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-message {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      max-width: 300px;
+    }
+    .form-view {
+      position: relative;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .modal-message {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .modal-buttons button {
+      padding: 10px 20px;
+      font-size: 14px;
+      flex: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="quickSigninView" class="quick-signin">
+      <div id="loadingOverlayQuickSignin" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loadingMessageQuickSignin" class="loading-message">Redirecting to login...</div>
+      </div>
+      <div class="icon">🔐</div>
+      <h1>Welcome Back!</h1>
+      <p class="subtitle">Ready to sign in with your saved configuration</p>
+      <div class="saved-config">
+        <div class="saved-config-title">Saved Configuration</div>
+        <div id="savedConfigList"></div>
+      </div>
+      <div class="button-group">
+        <button type="button" class="btn-danger" onclick="clearConfigAndShowForm()">Clear All</button>
+        <button type="button" class="btn-primary" onclick="signInWithSavedConfig()">Sign In</button>
+      </div>
+      <button type="button" class="btn-link" onclick="showForm()" style="width: 100%; margin-top: 10px;">Edit Configuration</button>
+    </div>
+    <div id="formView" class="form-view">
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loadingMessage" class="loading-message">Saving configuration...</div>
+      </div>
+      <h1>🔐 eGain MCP Configuration</h1>
+      <p class="subtitle">Enter details from your eGain <strong>Admin Console</strong></p>
+      <form id="configForm">
+        <div class="form-group">
+          <label for="egainUrl">
+            <span>eGain Environment URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'egainUrl')" onmouseleave="hideTooltip(event, 'egainUrl')">?</span>
+          </label>
+          <input type="text" id="egainUrl" name="egainUrl" placeholder="https://your-environment.egain.cloud" required>
+        </div>
+        <div class="form-group">
+          <label for="authUrl">
+            <span>Authorization URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'authUrl')" onmouseleave="hideTooltip(event, 'authUrl')">?</span>
+          </label>
+          <input type="text" id="authUrl" name="authUrl" placeholder="https://login.egain.cloud/.../oauth2/authorize" required>
+        </div>
+        <div class="form-group">
+          <label for="accessTokenUrl">
+            <span>Access Token URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'accessTokenUrl')" onmouseleave="hideTooltip(event, 'accessTokenUrl')">?</span>
+          </label>
+          <input type="text" id="accessTokenUrl" name="accessTokenUrl" placeholder="https://login.egain.cloud/.../oauth2/token" required>
+        </div>
+        <div class="form-group">
+          <label for="clientId">
+            <span>Client ID</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'clientId')" onmouseleave="hideTooltip(event, 'clientId')">?</span>
+          </label>
+          <input type="text" id="clientId" name="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+        </div>
+        <div class="form-group">
+          <label for="redirectUrl">
+            <span>Redirect URL</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'redirectUrl')" onmouseleave="hideTooltip(event, 'redirectUrl')">?</span>
+          </label>
+          <input type="text" id="redirectUrl" name="redirectUrl" placeholder="https://your-redirect-url.com/" required>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <div style="margin: 12px 0;">
+          <button type="button" onclick="toggleAdvancedSettings()" style="padding: 6px 0; font-size: 13px; display: flex; align-items: center; gap: 6px; background: none; border: none; color: #b91d8f; cursor: pointer; font-family: inherit;">
+            <span id="advancedToggleIcon">▶</span>
+            <span>Advanced Settings</span>
+            <span style="color: #999; font-size: 11px;">(optional)</span>
+          </button>
+        </div>
+        
+        <!-- Advanced Settings Section (hidden by default) -->
+        <div id="advancedSettings" style="display: none;">
+          <div class="form-group">
+            <label for="clientSecret">
+              <span>Client Secret</span>
+              <span class="tooltip" onmouseenter="showTooltip(event, 'clientSecret')" onmouseleave="hideTooltip(event, 'clientSecret')">?</span>
+              <span class="optional">(optional)</span>
+            </label>
+            <input type="password" id="clientSecret" name="clientSecret" placeholder="Required for normal authentication flow/non-PKCE">
+          </div>
+          <div class="form-group">
+            <label for="scopePrefix">
+              <span>Scope Prefix</span>
+              <span class="tooltip" onmouseenter="showTooltip(event, 'scopePrefix')" onmouseleave="hideTooltip(event, 'scopePrefix')">?</span>
+              <span class="optional">(optional)</span>
+            </label>
+            <input type="text" id="scopePrefix" name="scopePrefix" placeholder="https://your.scope-prefix.cloud/auth/">
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #999; margin: 12px 0 0 0; line-height: 1.4;">
+          🔒 Your configuration will be securely saved to your <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 10px;">~/.egain-mcp/config.json</code>.
+        </div>
+        <div class="button-group">
+          <button type="button" class="btn-secondary" onclick="cancelForm()">Cancel</button>
+          <button type="submit" class="btn-primary">Save & Authenticate</button>
+        </div>
+      </form>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+  
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" onclick="if(event.target === this) closeModal(false)">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">Confirm Action</div>
+      <div class="modal-message" id="modalMessage">Are you sure?</div>
+      <div class="modal-buttons">
+        <button type="button" class="btn-secondary" onclick="closeModal(false)">Cancel</button>
+        <button type="button" class="btn-danger" id="modalConfirmBtn" onclick="closeModal(true)">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tooltip Popups (outside container for proper fixed positioning) -->
+  <div id="tooltip-egainUrl" class="tooltip-content">
+    <div class="tooltip-header">eGain Environment URL</div>
+    <div class="tooltip-body">
+      <img src="/img/env-tooltip.png" class="tooltip-image" alt="eGain Environment URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">Enter the domain URL displayed in your browser when accessing the eGain application.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-authUrl" class="tooltip-content">
+    <div class="tooltip-header">Authorization URL</div>
+    <div class="tooltip-body">
+      <img src="/img/authurl-tooltip.png" class="tooltip-image" alt="Authorization URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the Authorization URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-accessTokenUrl" class="tooltip-content">
+    <div class="tooltip-header">Access Token URL</div>
+    <div class="tooltip-body">
+      <img src="/img/accesstoken-tooltip.png" class="tooltip-image" alt="Access Token URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the Access Token URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-clientId" class="tooltip-content">
+    <div class="tooltip-header">Client ID</div>
+    <div class="tooltip-body">
+      <img src="/img/clientid-tooltip.png" class="tooltip-image" alt="Client ID" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Client ID.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-redirectUrl" class="tooltip-content">
+    <div class="tooltip-header">Redirect URL</div>
+    <div class="tooltip-body">
+      <img src="/img/redirect-tooltip.png" class="tooltip-image" alt="Redirect URL" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Redirect URL.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-clientSecret" class="tooltip-content">
+    <div class="tooltip-header">Client Secret</div>
+    <div class="tooltip-body">
+      <img src="/img/clientsecret-tooltip.png" class="tooltip-image" alt="Client Secret" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Client Secret under Secrets.</div>
+    </div>
+  </div>
+  
+  <div id="tooltip-scopePrefix" class="tooltip-content">
+    <div class="tooltip-header">Scope Prefix</div>
+    <div class="tooltip-body">
+      <img src="/img/scopeprefix-tooltip.png" class="tooltip-image" alt="Scope Prefix" onerror="this.style.display='none'">
+      <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the API Permission Prefix.</div>
+    </div>
+  </div>
+  
+  <script src="/config-page.js"></script>
+</body>
+</html>`;
+
+const CONFIG_PAGE_JS = `const FIELDS = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'clientSecret', 'scopePrefix'];
+const FIELD_LABELS = {
+  egainUrl: 'eGain URL', authUrl: 'Auth URL', accessTokenUrl: 'Token URL',
+  clientId: 'Client ID', redirectUrl: 'Redirect URL', clientSecret: 'Client Secret',
+  scopePrefix: 'Scope Prefix'
+};
+
+let savedConfigData = null; // Store config in memory only
+let authenticationStarted = false; // Track if user started authentication process
+let lastSubmittedConfig = null; // Track last submitted config to prevent duplicate submissions
+let isSubmitting = false; // Track if form submission is in progress
+
+// Fetch saved config from backend (secure file storage)
+async function loadSavedConfig() {
+  try {
+    const response = await fetch('/get-config');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.config && data.config.egainUrl && data.config.clientId) {
+        // Only set if we have valid required fields
+        savedConfigData = data.config;
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Could not load saved config:', error);
+  }
+  savedConfigData = null;
+  return false;
+}
+
+function hasSavedConfig() {
+  return savedConfigData && 
+         savedConfigData.egainUrl && 
+         savedConfigData.clientId && 
+         savedConfigData.authUrl && 
+         savedConfigData.accessTokenUrl;
+}
+
+function displaySavedConfig() {
+  const listEl = document.getElementById('savedConfigList');
+  listEl.innerHTML = '';
+  if (!savedConfigData) return;
+  
+  FIELDS.forEach(field => {
+    const value = savedConfigData[field];
+    if (value) {
+      const item = document.createElement('div');
+      item.className = 'config-item';
+      const label = document.createElement('span');
+      label.className = 'config-label';
+      label.textContent = FIELD_LABELS[field];
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'config-value';
+      if (field === 'clientSecret') {
+        valueSpan.classList.add('masked');
+        valueSpan.textContent = '••••••••';
+      } else if (field === 'clientId') {
+        valueSpan.textContent = value.substring(0, 8) + '...';
+      } else {
+        valueSpan.textContent = value.length > 40 ? value.substring(0, 40) + '...' : value;
+      }
+      item.appendChild(label);
+      item.appendChild(valueSpan);
+      listEl.appendChild(item);
+    }
+  });
+}
+
+function showQuickSignin() {
+  document.getElementById('quickSigninView').style.display = 'block';
+  document.getElementById('formView').style.display = 'none';
+  displaySavedConfig();
+}
+
+function showForm() {
+  document.getElementById('quickSigninView').style.display = 'none';
+  document.getElementById('formView').style.display = 'block';
+  loadFormValues();
+}
+
+function loadFormValues() {
+  if (!savedConfigData) return;
+  
+  // Load all field values
+  FIELDS.forEach(field => {
+    const value = savedConfigData[field];
+    if (value) document.getElementById(field).value = value;
+  });
+  
+  // Show advanced settings if clientSecret or scopePrefix exist
+  if (savedConfigData.clientSecret || savedConfigData.scopePrefix) {
+    toggleAdvancedSettings();
+  }
+}
+
+async function clearConfigAndShowForm() {
+  showModal(
+    'Clear All Configuration?',
+    'This will delete all saved OAuth settings from your home directory. You will need to re-enter them next time.',
+    async (confirmed) => {
+      if (confirmed) {
+        try {
+          const response = await fetch('/clear-config', { method: 'POST' });
+          if (response.ok) {
+            savedConfigData = null;
+            FIELDS.forEach(field => {
+              document.getElementById(field).value = '';
+            });
+            showStatus('Configuration cleared successfully', 'success');
+            showForm();
+          } else {
+            showStatus('Failed to clear configuration', 'error');
+          }
+        } catch (error) {
+          showStatus('Error clearing configuration: ' + error.message, 'error');
+        }
+      }
+    },
+    'Clear All'
+  );
+}
+
+function cancelForm() {
+  if (hasSavedConfig()) {
+    showQuickSignin();
+  } else {
+    showModal(
+      'Cancel Authentication?',
+      "You haven't saved any configuration yet. This will cancel the authentication process.",
+      async (confirmed) => {
+        if (confirmed) {
+          // Notify server that user cancelled
+          try {
+            await fetch('/cancel', { method: 'POST' });
+          } catch (error) {
+            console.error('Could not notify server of cancellation:', error);
+          }
+          window.close();
+        }
+      },
+      'Cancel'
+    );
+  }
+}
+
+async function signInWithSavedConfig() {
+  authenticationStarted = true; // Mark that auth has started
+  
+  // Show loading overlay
+  showLoadingOverlay('Redirecting to login...');
+  
+  try {
+    const response = await fetch('/get-oauth-url', { method: 'POST' });
+    const result = await response.json();
+    
+    if (response.ok && result.oauthUrl) {
+      console.log('🔗 OAuth URL:', result.oauthUrl);
+      // Redirect after a brief delay to show loading state
+      setTimeout(() => {
+        window.location.href = result.oauthUrl;
+      }, 500);
+    } else {
+      hideLoadingOverlay();
+      showStatus('❌ ' + (result.error || 'Failed to get OAuth URL'), 'error');
+      authenticationStarted = false; // Reset on error
+    }
+  } catch (error) {
+    hideLoadingOverlay();
+    showStatus('❌ Error: ' + error.message, 'error');
+    authenticationStarted = false; // Reset on error
+  }
+}
+
+function showStatus(message, type) {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = message;
+  statusEl.className = 'status ' + type;
+  statusEl.style.display = 'block';
+  // Auto-hide info and success messages after a delay
+  if (type === 'info') {
+    setTimeout(() => { 
+      // Only hide if it's still an info message (not changed to success/error)
+      if (statusEl.className === 'status info') {
+        statusEl.style.display = 'none'; 
+      }
+    }, 3000);
+  } else if (type === 'success') {
+    setTimeout(() => { 
+      // Only hide if it's still a success message (not changed to error)
+      if (statusEl.className === 'status success') {
+        statusEl.style.display = 'none'; 
+      }
+    }, 4000);
+  }
+}
+
+function configValuesEqual(config1, config2) {
+  // Compare all fields that matter
+  const fieldsToCompare = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'clientSecret', 'scopePrefix'];
+  for (const field of fieldsToCompare) {
+    const val1 = (config1[field] || '').trim();
+    const val2 = (config2[field] || '').trim();
+    if (val1 !== val2) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function showLoadingOverlay(message) {
+  // Show overlay for form view
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingMessage = document.getElementById('loadingMessage');
+  if (overlay) {
+    overlay.classList.add('active');
+    if (loadingMessage) {
+      loadingMessage.textContent = message || 'Saving configuration...';
+    }
+  }
+  
+  // Show overlay for quick signin view
+  const overlayQuickSignin = document.getElementById('loadingOverlayQuickSignin');
+  const loadingMessageQuickSignin = document.getElementById('loadingMessageQuickSignin');
+  if (overlayQuickSignin) {
+    overlayQuickSignin.classList.add('active');
+    if (loadingMessageQuickSignin) {
+      loadingMessageQuickSignin.textContent = message || 'Redirecting to login...';
+    }
+  }
+}
+
+function hideLoadingOverlay() {
+  // Hide overlay for form view
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+  
+  // Hide overlay for quick signin view
+  const overlayQuickSignin = document.getElementById('loadingOverlayQuickSignin');
+  if (overlayQuickSignin) {
+    overlayQuickSignin.classList.remove('active');
+  }
+}
+
+async function authenticateWithConfig(config) {
+  // Prevent duplicate submissions
+  if (isSubmitting) {
+    return; // Already submitting, ignore
+  }
+  
+  // Check if values have changed since last submission
+  if (lastSubmittedConfig && configValuesEqual(config, lastSubmittedConfig)) {
+    showStatus('⚠️ Configuration unchanged. Already saved.', 'info');
+    return; // Values haven't changed, don't submit again
+  }
+  
+  try {
+    isSubmitting = true; // Mark as submitting
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Saving...';
+    }
+    
+    // Show loading overlay with spinner
+    showLoadingOverlay('Saving configuration...');
+    authenticationStarted = true; // Mark that auth has started
+    
+    const response = await fetch('/authenticate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    });
+    const result = await response.json();
+    
+    if (response.ok && result.oauthUrl) {
+      // Config saved! Store this config as last submitted
+      lastSubmittedConfig = { ...config };
+      
+      console.log('🔗 OAuth URL:', result.oauthUrl);
+      
+      // Update loading message (overlay already shows the status, no need for status message)
+      showLoadingOverlay('Configuration saved! Redirecting to login...');
+      
+      setTimeout(() => {
+        window.location.href = result.oauthUrl;
+      }, 500);
+    } else if (response.ok && result.success) {
+      lastSubmittedConfig = { ...config };
+      hideLoadingOverlay();
+      showStatus('✅ ' + result.message, 'success');
+      setTimeout(() => { window.close(); }, 2000);
+    } else {
+      hideLoadingOverlay();
+      showStatus('❌ ' + (result.error || 'Authentication failed'), 'error');
+      authenticationStarted = false; // Reset on error
+      isSubmitting = false; // Reset submitting flag
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Save & Authenticate';
+      }
+    }
+  } catch (error) {
+    hideLoadingOverlay();
+    showStatus('❌ Error: ' + error.message, 'error');
+    authenticationStarted = false; // Reset on error
+    isSubmitting = false; // Reset submitting flag
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save & Authenticate';
+    }
+  }
+}
+
+document.getElementById('configForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Prevent duplicate submissions
+  if (isSubmitting) {
+    return;
+  }
+  
+  const formData = new FormData(e.target);
+  const config = {};
+  for (let [key, value] of formData.entries()) {
+    config[key] = value;
+  }
+  
+  // Config is now sent to backend for secure file storage (not cookies)
+  await authenticateWithConfig(config);
+});
+
+// Initialize: Load saved config from backend
+(async () => {
+  const hasConfig = await loadSavedConfig();
+  if (hasConfig) {
+    showQuickSignin();
+  } else {
+    showForm();
+  }
+})();
+
+// Custom modal functions
+let modalCallback = null;
+
+function showModal(title, message, callback, confirmText = 'Confirm') {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMessage').textContent = message;
+  document.getElementById('modalConfirmBtn').textContent = confirmText;
+  modalCallback = callback;
+  document.getElementById('confirmModal').classList.add('active');
+}
+
+function closeModal(confirmed) {
+  document.getElementById('confirmModal').classList.remove('active');
+  if (modalCallback) {
+    modalCallback(confirmed);
+    modalCallback = null;
+  }
+}
+
+// Advanced settings toggle
+function toggleAdvancedSettings() {
+  const advancedSection = document.getElementById('advancedSettings');
+  const toggleIcon = document.getElementById('advancedToggleIcon');
+  
+  if (advancedSection.style.display === 'none') {
+    advancedSection.style.display = 'block';
+    toggleIcon.textContent = '▼';
+  } else {
+    advancedSection.style.display = 'none';
+    toggleIcon.textContent = '▶';
+  }
+}
+
+// Tooltip functions
+function showTooltip(event, fieldName) {
+  event.preventDefault();    // Prevent label from focusing input
+  event.stopPropagation();   // Prevent event from bubbling
+  
+  const tooltipId = 'tooltip-' + fieldName;
+  let tooltipElement = document.getElementById(tooltipId);
+  const button = event.currentTarget;
+  
+  if (tooltipElement) {
+    // Show the tooltip first to get its dimensions
+    tooltipElement.classList.add('active');
+    
+    // Get actual dimensions after showing
+    const buttonRect = button.getBoundingClientRect();
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    const tooltipWidth = tooltipRect.width || 380;
+    const tooltipHeight = tooltipRect.height || 300;
+    
+    const spacing = 16; // Space between button and tooltip
+    const viewportPadding = 10; // Padding from viewport edges
+    const horizontalComfortZone = 50; // Extra space needed to avoid cramped horizontal positioning
+    
+    // Calculate available space on all sides
+    const spaceOnRight = window.innerWidth - buttonRect.right;
+    const spaceOnLeft = buttonRect.left;
+    const spaceBelow = window.innerHeight - buttonRect.bottom;
+    const spaceAbove = buttonRect.top;
+    
+    let left, top;
+    let arrowSide = 'left'; // Default: tooltip on right, arrow on left
+    
+    // Check if horizontal positioning would be too cramped (tooltip might cover the icon)
+    const horizontalSpaceTight = (spaceOnRight < tooltipWidth + horizontalComfortZone) && 
+                                 (spaceOnLeft < tooltipWidth + horizontalComfortZone);
+    
+    if (horizontalSpaceTight) {
+      // Use vertical positioning to avoid covering the icon
+      // Determine if we're in the top or bottom half of the viewport
+      const inTopHalf = buttonRect.top < window.innerHeight / 2;
+      
+      if (inTopHalf && spaceBelow >= tooltipHeight + spacing + viewportPadding) {
+        // Position below
+        left = buttonRect.left + (buttonRect.width / 2) - (tooltipWidth / 2);
+        top = buttonRect.bottom + spacing;
+        arrowSide = 'top';
+      } else if (!inTopHalf && spaceAbove >= tooltipHeight + spacing + viewportPadding) {
+        // Position above
+        left = buttonRect.left + (buttonRect.width / 2) - (tooltipWidth / 2);
+        top = buttonRect.top - tooltipHeight - spacing;
+        arrowSide = 'bottom';
+      } else if (spaceBelow > spaceAbove) {
+        // Not enough vertical space either, prefer below
+        left = buttonRect.left + (buttonRect.width / 2) - (tooltipWidth / 2);
+        top = buttonRect.bottom + spacing;
+        arrowSide = 'top';
+      } else {
+        // Prefer above
+        left = buttonRect.left + (buttonRect.width / 2) - (tooltipWidth / 2);
+        top = buttonRect.top - tooltipHeight - spacing;
+        arrowSide = 'bottom';
+      }
+      
+      // Keep horizontally centered within viewport
+      if (left < viewportPadding) {
+        left = viewportPadding;
+      }
+      if (left + tooltipWidth > window.innerWidth - viewportPadding) {
+        left = window.innerWidth - tooltipWidth - viewportPadding;
+      }
+      
+    } else {
+      // Use horizontal positioning (original logic)
+      // Prefer right side if there's enough space
+      if (spaceOnRight >= tooltipWidth + spacing + viewportPadding) {
+        // Position to the right
+        left = buttonRect.right + spacing;
+        arrowSide = 'left';
+      } else if (spaceOnLeft >= tooltipWidth + spacing + viewportPadding) {
+        // Position to the left
+        left = buttonRect.left - tooltipWidth - spacing;
+        arrowSide = 'right';
+      } else {
+        // Not enough space on either side, use the side with more space
+        if (spaceOnRight > spaceOnLeft) {
+          left = buttonRect.right + spacing;
+          arrowSide = 'left';
+          // Allow tooltip to go to edge of screen
+          if (left + tooltipWidth > window.innerWidth - viewportPadding) {
+            left = window.innerWidth - tooltipWidth - viewportPadding;
+          }
+        } else {
+          left = buttonRect.left - tooltipWidth - spacing;
+          arrowSide = 'right';
+          // Allow tooltip to go to edge of screen
+          if (left < viewportPadding) {
+            left = viewportPadding;
+          }
+        }
+      }
+      
+      // Center vertically relative to button
+      top = buttonRect.top + (buttonRect.height / 2) - (tooltipHeight / 2);
+      
+      // Keep tooltip within viewport vertically
+      if (top < viewportPadding) {
+        top = viewportPadding;
+      }
+      if (top + tooltipHeight > window.innerHeight - viewportPadding) {
+        top = window.innerHeight - tooltipHeight - viewportPadding;
+      }
+    }
+    
+    // Apply positioning
+    tooltipElement.style.left = left + 'px';
+    tooltipElement.style.top = top + 'px';
+    
+    // Update arrow direction
+    const arrow = tooltipElement.querySelector('.tooltip-arrow');
+    if (arrow) {
+      arrow.className = 'tooltip-arrow ' + arrowSide;
+    }
+  }
+}
+
+function hideTooltip(event, fieldName) {
+  const tooltipId = 'tooltip-' + fieldName;
+  let tooltipElement = document.getElementById(tooltipId);
+  
+  if (tooltipElement) {
+    tooltipElement.classList.remove('active');
+  }
+}
+
+// Close tooltip on ESC key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.tooltip-content').forEach(tip => {
+      tip.classList.remove('active');
+    });
+  }
+});
+
+// Notify server if window is closed without starting authentication
+window.addEventListener('beforeunload', function(e) {
+  // Only send cancel if user never started the authentication process
+  // (If they started auth, they either completed it or clicked cancel explicitly)
+  if (!authenticationStarted) {
+    // Use sendBeacon for reliable delivery even as page unloads
+    navigator.sendBeacon('/cancel', '');
+  }
+});`;
+
+const SAFARI_WARNING_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safari Not Supported - eGain MCP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: "Open Sans", "Segoe UI", "SegoeUI", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+      background: #fef1fd;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.12);
+      max-width: 500px;
+      width: 100%;
+      padding: 32px;
+      text-align: center;
+    }
+    
+    .warning-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      color: #e74c3c;
+      font-size: 28px;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+    
+    .reason {
+      background: #fff0f6;
+      border-left: 4px solid #d946a6;
+      padding: 20px;
+      text-align: left;
+      border-radius: 4px;
+    }
+    
+    .reason strong {
+      color: #a21361;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .reason p {
+      color: #a21361;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="warning-icon">⚠️</div>
+    <h1>Safari Not Supported</h1>
+    
+    <div class="reason">
+      <strong>Why?</strong>
+      <p>
+        Safari doesn't support private browsing mode via command line, which is required 
+        to protect your OAuth credentials from being cached or leaked. We prioritize your 
+        security over convenience.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
 export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
   private token: string | null = null;
   private authConfig: AuthConfig;
@@ -477,6 +1612,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Generate Safari warning page (Safari doesn't support private browsing via CLI)
    */
   private getSafariWarningPage(): string {
+    // Use embedded content first (works in npm package)
+    if (SAFARI_WARNING_HTML) {
+      return SAFARI_WARNING_HTML;
+    }
+    
+    // Fallback to file reading for development
     try {
       const projectRoot = getProjectRoot();
       const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'safari-warning.html');
@@ -492,6 +1633,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Load HTML page for browser-based configuration
    */
   private getConfigPage(): string {
+    // Use embedded content first (works in npm package)
+    if (CONFIG_PAGE_HTML) {
+      return CONFIG_PAGE_HTML;
+    }
+    
+    // Fallback to file reading for development
     try {
       const projectRoot = getProjectRoot();
       const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.html');
@@ -507,6 +1654,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Serve JavaScript for config page
    */
   private getConfigPageJS(): string {
+    // Use embedded content first (works in npm package)
+    if (CONFIG_PAGE_JS) {
+      return CONFIG_PAGE_JS;
+    }
+    
+    // Fallback to file reading for development
     try {
       const projectRoot = getProjectRoot();
       const jsPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.js');

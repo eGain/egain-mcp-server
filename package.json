@@ -1,11 +1,11 @@
 {
-  "name": "egain-mcp",
-  "version": "0.3.1",
-  "author": "Speakeasy",
+  "name": "@egain/egain-mcp-server",
+  "version": "1.0.6",
+  "author": "Emily Loh - eGain Corporation",
   "type": "module",
   "sideEffects": false,
   "bin": {
-    "egain-mcp": "bin/mcp-server.js",
+    "@egain/egain-mcp-server": "bin/mcp-server.js",
     "mcp": "bin/mcp-server.js"
   },
   "scripts": {

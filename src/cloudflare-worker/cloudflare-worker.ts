@@ -14,7 +14,7 @@ interface State {}
 
 type Props = Record<string, string>;
 
-export class EgainMcpMCP extends McpAgent<Env, State, Props> {
+export class AtEgainEgainMcpServerMCP extends McpAgent<Env, State, Props> {
   server!: McpServer;
 
   async init() {
@@ -53,7 +53,9 @@ export default {
     ctx.props = headers;
 
     if (url.pathname === "/sse" || url.pathname.startsWith("/sse/")) {
-      return EgainMcpMCP.serveSSE("/sse", { binding: "EGAIN-MCP_MCP" }).fetch(
+      return AtEgainEgainMcpServerMCP.serveSSE("/sse", {
+        binding: "@EGAIN/EGAIN-MCP-SERVER_MCP",
+      }).fetch(
         request,
         env,
         ctx,
@@ -61,7 +63,9 @@ export default {
     }
 
     if (url.pathname === "/mcp") {
-      return EgainMcpMCP.serve("/mcp", { binding: "EGAIN-MCP_MCP" }).fetch(
+      return AtEgainEgainMcpServerMCP.serve("/mcp", {
+        binding: "@EGAIN/EGAIN-MCP-SERVER_MCP",
+      }).fetch(
         request,
         env,
         ctx,

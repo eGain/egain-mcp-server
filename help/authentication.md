@@ -31,7 +31,7 @@ To find your tenant-specific values, use the eGain Administrator Console:
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
 2. Open your client application of choice. Note these values:
    - **Client ID** - Copy this value
-   - **Secrets** - Only if using confidential client (not recommended for PKCE)
+   - **Secrets** - Only if using confidential client
    - **Redirect URL** - Must exactly match what you enter in the config form
 3. Exit to the Client Application menu and click `Metadata`. Note these values:
    - **Auth URL** - OAuth2 authorization endpoint
@@ -48,32 +48,61 @@ Your configuration is securely stored in `~/.egain-mcp/config.json` (user-only r
 ### Authentication Flow
 
 **Want to log in right away? Or test this login/logout flow?**  
-1) Start your MCP client to make a query or run the login helper:
+
+**With npx (recommended):** Authentication happens automatically when you make your first MCP request. Just start using the MCP - a browser window will open for configuration and authentication.
+
+**With cloned repository:** You can manually trigger authentication:
 ```bash
 # Launch a manual login anytime
 node ./scripts/login.js
 ```
-2) Complete the browser configuration form and authentication. The token is saved to `.bearer_token` with metadata in `.bearer_token_metadata` at the repository root.
 
-3) If you do not want to wait until a token expires to login again, manually clear saved token files with:
+Complete the browser configuration form and authentication. The token is saved to `.bearer_token` next to `package.json` (in the project root directory) with metadata in `.bearer_token_metadata`. This works the same whether you cloned the repo or are using npx - tokens are always stored next to `package.json`.
+
+**To clear authentication (cloned repository only):**
 ```bash
 node ./scripts/logout.js
 ```
-This removes: `.bearer_token`, `.bearer_token_metadata`, and `portals_cache.json`.
+This removes: `.bearer_token`, `.bearer_token_metadata`, and `portals_cache.json` from the project root directory.
+
+**Note:** If you're using npx and need to clear authentication, tokens are stored in the npx cache directory (`~/.npm/_npx/...`). To find and delete them:
+- **macOS/Linux:** Run `find ~/.npm/_npx -name ".bearer_token*" 2>/dev/null` to locate the files, then delete them manually
+- **Windows:** Search for `.bearer_token` files in `%USERPROFILE%\.npm\_npx\`
 
 **Notes:** 
 - Tokens auto‑reuse until near expiry; you'll be prompted to sign in again when making your next request.
-- You can clear tokens anytime using the logout script.
+- You can clear tokens anytime.
 - If you have saved configuration, you can sign in again without re-entering all values.
 
 ## Direct Access Token (Alternative)
+> ⚠️ **IMPORTANT:** Direct access tokens expire and need to be regenerated. The browser-based PKCE flow is recommended for automatic token refresh.  
 
 Prefer a one‑time token or bypass the browser popup? Pass a bearer token via `--access-token`. To generate this token, see **Step 3** of [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
 
 Configure your client (Cursor, Claude, etc.) like this:
 
-**Note:** Replace `./bin/mcp-server.js` with the absolute path to your project's `bin/mcp-server.js` file, replace `api.egain.cloud` with your API domain from the Admin Console, and replace `YOUR_ACCESS_TOKEN` with your actual access token.
+**Note:** Replace `api.egain.cloud` with your API domain from the Admin Console, and replace `YOUR_ACCESS_TOKEN` with your actual access token.
 
+**With npx (recommended):**
+```json
+{
+  "mcpServers": {
+    "EgainMcp": {
+      "command": "npx",
+      "args": [
+        "@egain/egain-mcp-server",
+        "start",
+        "--api-domain",
+        "api.egain.cloud",
+        "--access-token",
+        "YOUR_ACCESS_TOKEN"
+      ]
+    }
+  }
+}
+```
+
+**With cloned repository:**
 ```json
 {
   "mcpServers": {
@@ -91,5 +120,3 @@ Configure your client (Cursor, Claude, etc.) like this:
   }
 }
 ```
-
-> ⚠️ **IMPORTANT:** Direct access tokens expire and need to be regenerated. The browser-based PKCE flow is recommended for automatic token refresh.

@@ -11,7 +11,8 @@ export function landingPage(req: Request) {
         "type": "mcp",
         "url": `${o}/mcp`,
         "headers": {
-          "authorization": "$" + "{" + "EGAIN-MCP_ACCESS_TOKEN" + "}",
+          "authorization": "$" + "{" + "@EGAIN/EGAIN-MCP-SERVER_ACCESS_TOKEN"
+            + "}",
         },
       },
     },
@@ -23,7 +24,7 @@ export function landingPage(req: Request) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>egain-mcp MCP</title>
+    <title>@egain/egain-mcp-server MCP</title>
     <style>
         body { 
             font-family: 'Inter', Arial, sans-serif; 
@@ -200,9 +201,9 @@ export function landingPage(req: Request) {
 </head>
 <body>
     <main>
-        <h1>egain-mcp MCP</h1>
+        <h1>@egain/egain-mcp-server MCP</h1>
         <div class="desc">
-            Welcome! This is the MCP server for interacting with the egain-mcp API. Use it with Claude, Cursor, or any other tool that supports MCP.
+            Welcome! This is the MCP server for interacting with the @egain/egain-mcp-server API. Use it with Claude, Cursor, or any other tool that supports MCP.
         </div>
         <h2 style="margin-top: 48px; font-size: 1.5rem; font-weight: 700; margin-bottom: 0;">Getting Started</h2>
         <hr />
@@ -247,7 +248,7 @@ export function landingPage(req: Request) {
             </div>
             <div class="method-content" id="cursor-content">
                 <div class="method-description">One-click installation for Cursor users</div>
-                <a href="https://cursor.com/install-mcp?name=EgainMcp&config=eyJtY3BTZXJ2ZXJzIjp7IkVnYWluTWNwIjp7InR5cGUiOiJtY3AiLCJ1cmwiOiJodHRwczovL2V4YW1wbGUtY2xvdWRmbGFyZS13b3JrZXIuY29tL21jcCIsImhlYWRlcnMiOnsiYXV0aG9yaXphdGlvbiI6IiR7RUdBSU4tTUNQX0FDQ0VTU19UT0tFTn0ifX19fQ==">
+                <a href="https://cursor.com/install-mcp?name=EgainMcp&config=eyJtY3BTZXJ2ZXJzIjp7IkVnYWluTWNwIjp7InR5cGUiOiJtY3AiLCJ1cmwiOiJodHRwczovL2V4YW1wbGUtY2xvdWRmbGFyZS13b3JrZXIuY29tL21jcCIsImhlYWRlcnMiOnsiYXV0aG9yaXphdGlvbiI6IiR7QEVHQUlOL0VHQUlOLU1DUC1TRVJWRVJfQUNDRVNTX1RPS0VOfSJ9fX19">
     <img
         src="https://cursor.com/deeplink/mcp-install-dark.svg"
         alt="Add EgainMcp MCP server to Cursor"
@@ -287,12 +288,12 @@ export function landingPage(req: Request) {
                 <div class="method-description">Start the MCP server manually using npx:</div>
                 <div class="code-container">
                     <button class="copy-button" onclick="copyToClipboard('manual-install', this)">Copy</button>
-                    <pre id="manual-install">npx egain-mcp start --server ... --api-domain ... --access-token ...</pre>
+                    <pre id="manual-install">npx @egain/egain-mcp-server start --server ... --api-domain ... --access-token ...</pre>
                 </div>
                 <div class="method-description" style="margin-top: 12px;">For a full list of server arguments:</div>
                 <div class="code-container">
                     <button class="copy-button" onclick="copyToClipboard('manual-help', this)">Copy</button>
-                    <pre id="manual-help">npx egain-mcp --help</pre>
+                    <pre id="manual-help">npx @egain/egain-mcp-server --help</pre>
                 </div>
             </div>
         </div>

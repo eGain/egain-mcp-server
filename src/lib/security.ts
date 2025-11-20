@@ -243,7 +243,7 @@ export function resolveGlobalSecurity(
       {
         fieldName: "Authorization",
         type: "http:bearer",
-        value: security?.accessToken ?? env().EGAIN_MCP_ACCESS_TOKEN,
+        value: security?.accessToken ?? env().EGAINMCP_ACCESS_TOKEN,
       },
     ],
   );

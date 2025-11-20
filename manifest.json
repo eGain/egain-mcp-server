@@ -1,11 +1,11 @@
 {
   "dxt_version": "0.1",
-  "name": "egain-mcp",
-  "version": "0.3.1",
+  "name": "@egain/egain-mcp-server",
+  "version": "1.0.6",
   "description": "",
   "long_description": "eGain Portal, Retrieve, Search, Answers APIs: Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations.",
   "author": {
-    "name": "Speakeasy"
+    "name": "Emily Loh - eGain Corporation"
   },
   "server": {
     "type": "node",
@@ -24,7 +24,7 @@
       ]
     }
   },
-  "display_name": "Egain Mcp",
+  "display_name": "@egain/egain Mcp Server",
   "tools": [
     {
       "name": "get-article",
@@ -61,8 +61,10 @@
   ],
   "prompts": [],
   "keywords": [
-      "egain",
+      "@egain/egain",
       "mcp",
+      "server",
+      "egain",
       "portal",
       "retrieve",
       "search",
@@ -87,7 +89,7 @@
         "type": "string",
         "title": "accessToken",
         "description": "The accessToken to use for the request",
-        "required": false,
+        "required": true,
         "sensitive": true
       }
     }
