@@ -14,14 +14,55 @@ export const tool$getPortals: ToolDefinition<typeof args> = {
   name: "get-portals",
   description: `Get All Portals Accessible To User
 
+Get All Portals Accessible to User
+
 ## Overview
-  The Get All Portals Accessible to User API allows a user to fetch all portals accessible to user across all department.
-  * If no access tags are specified for a portal, then any user can access the portal.
-  * If access tags are specified for a portal, users with a user profile that allows access have access to the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.
-  * All the global users(partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.
-  * The only articles returned are associated to an Article type when the parameter, “Include in browse on portals” is set to "Yes".
-  * When the "shortUrlTemplate" query parameter is provided, the API filters accessible portals according to the specified language and template name. Portal Short URL specific to to the "shortUrlTemplate" query parameter value is returned in the response.
-  * When there is no short URL available for a specific language, the API returns a portal object with an empty "shortURL" field.
+The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
+- If no access tags are specified for a portal, any user can access the portal.
+- If access tags are specified for a portal, users with a user profile that allows access can access the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.
+- Global users (partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.
+- The only articles returned are associated to an Article type when the parameter “Include in browse on portals” is set to "Yes".
+- When the \`shortUrlTemplate\` query parameter is provided, the API filters accessible portals according to the specified language and template name. A portal short URL specific to the \`shortUrlTemplate\` value is returned in the response when available. If there is no short URL for a language, the portal object returns an empty \`shortURL\` field.
+
+## Pagination behavior (CRITICAL for AI assistants)
+
+**IMPORTANT**: This endpoint is paginated. When searching for a portal by name or listing portals, you MUST automatically fetch ALL pages before concluding that a portal doesn't exist.
+
+### Automatic pagination is REQUIRED when:
+- User asks to find a portal by name (e.g., "business portal", "Master portal")
+- User requests to list or see all portals
+- You need to resolve a natural portal name to its ID
+
+### How to detect more pages exist:
+The response includes \`paginationInfo\` with:
+- \`count\`: Total number of items across all pages
+- \`pagenum\`: Current page number
+- \`pagesize\`: Items per page (default: 25)
+
+**Check for more pages if ANY of these are true:**
+1. The number of portals returned equals \`pagesize\` (e.g., exactly 25 portals returned)
+2. \`paginationInfo.count > (pagenum * pagesize)\` - there are more items beyond this page
+3. The response includes a \`link\` array with a \`next\` relation
+
+### Required pagination workflow:
+1. Start with \`$pagenum=1\` and \`$pagesize=25\` (default)
+2. After receiving the response, check \`paginationInfo\`
+3. **If more pages exist** (using the checks above), automatically call this endpoint again with \`$pagenum=2\`, then \`$pagenum=3\`, etc.
+4. Continue incrementing \`$pagenum\` until:
+   - A page returns fewer portals than \`pagesize\` (indicating the last page)
+   - A page returns zero portals
+   - \`pagenum * pagesize >= paginationInfo.count\` (if count represents total items)
+5. Merge all portals from all pages by unique portal ID
+6. Only then search through the complete merged list or report results to the user
+
+### Example scenario:
+If you search for "business portal" and the first page returns 25 portals but none match:
+- DO NOT immediately tell the user the portal doesn't exist
+- Check \`paginationInfo.count\` - if it's > 25, automatically fetch page 2
+- Continue fetching until all pages are retrieved
+- Search the complete merged list before concluding the portal doesn't exist
+
+This ensures reliable portal name-to-ID resolution and prevents false "not found" errors.
 `,
   annotations: {
     "destructiveHint": false,

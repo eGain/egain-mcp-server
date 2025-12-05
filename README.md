@@ -23,6 +23,7 @@ Learn more about the tools and usage of the MCP in the [eGain MCP guide](https:/
 <!-- No Table of Contents [toc] -->
 
 ### Prerequisites  
+- **Node.js version 20+** - Required for running the MCP server. Download from [nodejs.org](https://nodejs.org/)
 - eGain platform version 21.22 or newer.
 - Access mirrors the user's permissions: MCP only sees content that user can see (portal/article visibility).
 - AI Services must be enabled for your tenant and the target portal, or AI tools will not run.
@@ -115,6 +116,27 @@ You'll need to enter your authentication configuration values in the browser for
 - **Authentication problems?** → [FAQ: Authentication Issues](./help/faq.md#authentication-issues)
 - **Configuration problems?** → [FAQ: Configuration Issues](./help/faq.md#configuration-issues)
 - **Tool/Query problems?** → [FAQ: MCP Tool Issues](./help/faq.md#mcp-tool-issues)
+
+### Token Issues (Expired/Stuck Tokens)
+
+If you're experiencing issues with expired tokens or authentication failures:
+
+When using `npx`, token files (`.bearer_token` and `.bearer_token_metadata`) are stored in the directory where you run `npx` from (or where `package.json` exists). To find them:
+
+```bash
+# Search your home directory
+find ~ -name ".bearer_token" -o -name ".bearer_token_metadata" 2>/dev/null
+
+# Or search from your current directory
+find . -name ".bearer_token" -o -name ".bearer_token_metadata" 2>/dev/null
+```
+
+Once found, delete them:
+```bash
+rm /path/to/.bearer_token
+rm /path/to/.bearer_token_metadata
+```
+This will search common locations and show you exactly where your token files are.
 
 ### Common Setup Hurdles
 - **Can't find API Domain?** → [FAQ: Finding API Domain](./help/faq.md#q-i-cant-find-my-api-domain-or-scope-prefix-where-is-it)

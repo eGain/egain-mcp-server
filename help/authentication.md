@@ -11,6 +11,13 @@ The eGain MCP uses **PKCE Authentication Flow** with a browser-based configurati
 - **Safari browser is not supported** - Safari has limited private browsing support via command line, which is required for secure OAuth flows. Please use Chrome, Firefox, Edge, or Brave browser for authentication.
 - Use user actor protected PKCE flow to only allow users to perform actions through the MCP.
 
+**macOS Users - Browser Automation Permissions:**
+If the authentication UI hangs or stalls after the redirect page (nothing happens past the redirect), and logs show `about:blank`, this is typically a macOS Automation permissions issue preventing browser monitoring from working. To resolve:
+1. Go to **System Settings** → **Privacy & Security** → **Automation**
+2. Find your MCP client application (Claude Desktop, Cursor, Terminal, etc.) and ensure Chrome is enabled for automation
+3. **Workaround:** Fully quit Chrome and your MCP client, then restart both applications
+4. See the [FAQ troubleshooting section](./faq.md#authentication-ui-hangs-after-redirect-page-macos) for detailed steps
+
 ### How It Works
 
 When you first use the MCP or when your token expires during a query, a browser window will automatically open with a configuration form. You'll need to enter:

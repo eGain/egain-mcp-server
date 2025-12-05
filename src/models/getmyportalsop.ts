@@ -27,8 +27,8 @@ export type GetMyPortalsRequest = {
   shortUrlTemplate?: string | undefined;
   Dollar_sort?: SortIdNameDepartment | undefined;
   Dollar_order?: Order | undefined;
-  Dollar_pagenum?: number | undefined;
   Dollar_pagesize?: number | undefined;
+  Dollar_pagenum?: number | undefined;
 };
 
 export const GetMyPortalsRequest$zodSchema: z.ZodType<

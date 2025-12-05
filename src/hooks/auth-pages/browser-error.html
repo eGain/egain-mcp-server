@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Monitoring Issue - eGain MCP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: "Open Sans", "Segoe UI", "SegoeUI", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+      background: #fef1fd;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.12);
+      max-width: 600px;
+      width: 100%;
+      padding: 32px;
+    }
+    
+    .warning-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #e74c3c;
+      font-size: 28px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .error-details {
+      background: #fff0f6;
+      border-left: 4px solid #d946a6;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    
+    .error-details strong {
+      color: #a21361;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .error-details p {
+      color: #a21361;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    .error-details ul {
+      color: #a21361;
+      font-size: 14px;
+      line-height: 1.8;
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+    
+    .solution {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    
+    .solution strong {
+      color: #1e40af;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .solution p {
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    .solution ol {
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.8;
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #b91d8f 0%, #7a1460 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(185, 29, 143, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f6f8fa;
+      color: #666;
+      border: 2px solid #e1e4e8;
+    }
+    
+    .btn-secondary:hover {
+      background: #e1e4e8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="warning-icon">⚠️</div>
+    <h1>Browser Monitoring Issue</h1>
+    
+    <div class="error-details">
+      <strong>What happened?</strong>
+      <p id="errorMessage">We're having trouble reading the current page URL from your browser. This prevents us from detecting when authentication completes.</p>
+    </div>
+    
+    <div class="solution" id="chromeSolution" style="display: none;">
+      <strong>Solution for Chrome:</strong>
+      <ol>
+        <li><strong>Fully quit Chrome</strong> (not just close windows):
+          <ul>
+            <li>macOS: Chrome menu → Quit Chrome, or press <code>Cmd+Q</code></li>
+            <li>Windows: Right-click Chrome in taskbar → Close window, or press <code>Alt+F4</code></li>
+          </ul>
+        </li>
+        <li>Wait a few seconds for Chrome to fully close</li>
+        <li>Reopen Chrome</li>
+        <li>Click "Try Again" below to restart authentication</li>
+      </ol>
+      <p style="margin-top: 12px; font-size: 13px; color: #666;">
+        <strong>Why?</strong> Chrome sometimes enters a state where it reports "about:blank" instead of the actual page URL. Restarting Chrome resolves this.
+      </p>
+    </div>
+    
+    <div class="solution" id="firefoxSolution" style="display: none;">
+      <strong>Firefox Not Supported:</strong>
+      <p style="margin-bottom: 12px;">
+        Firefox does not support AppleScript automation for reading page URLs, which is required to detect when authentication completes. <strong>Firefox cannot be used for authentication with this MCP server.</strong>
+      </p>
+      <ol>
+        <li><strong>Please use Chrome, Edge, or Brave instead</strong></li>
+        <li><strong>Close this Firefox window</strong></li>
+        <li><strong>Restart authentication</strong> - The MCP server will detect a supported browser</li>
+      </ol>
+      <p style="margin-top: 12px; font-size: 13px; color: #666;">
+        <strong>Why?</strong> The OAuth redirect goes to an external URL (not localhost). The MCP server needs to monitor the browser URL to detect when the authorization code appears. Firefox doesn't support this automation, so authentication cannot complete.
+      </p>
+    </div>
+    
+    <div class="button-group">
+      <button class="btn-secondary" onclick="window.close()">Close</button>
+      <button class="btn-primary" onclick="retryAuthentication()">Try Again</button>
+    </div>
+  </div>
+  
+  <script>
+    // Detect browser and show appropriate solution
+    const userAgent = navigator.userAgent.toLowerCase();
+    const errorType = new URLSearchParams(window.location.search).get('type') || 'unknown';
+    const browserName = new URLSearchParams(window.location.search).get('browser') || '';
+    
+    if (errorType === 'aboutblank' || (browserName.toLowerCase().includes('chrome') && errorType !== 'monitoring')) {
+      document.getElementById('chromeSolution').style.display = 'block';
+      document.getElementById('errorMessage').textContent = 
+        'Chrome is reporting "about:blank" instead of the actual page URL. This prevents us from detecting when authentication completes.';
+    } else if (browserName.toLowerCase().includes('firefox') || errorType === 'monitoring') {
+      document.getElementById('firefoxSolution').style.display = 'block';
+      document.getElementById('errorMessage').textContent = 
+        'We cannot read the current page URL from your browser. This is usually due to missing macOS Automation permissions or a browser compatibility issue.';
+    }
+    
+    function retryAuthentication() {
+      // Redirect back to config page to restart authentication
+      window.location.href = '/config';
+    }
+  </script>
+</body>
+</html>
+

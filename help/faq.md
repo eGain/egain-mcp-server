@@ -56,6 +56,33 @@ To access it:
 
 **Note:** If the file doesn't exist, create it with the appropriate JSON structure. See the [Claude Guide](./claude-example.md) or [Cursor Guide](./cursor-example.md) for the exact configuration format.
 
+**Q: I already have Node version 20+ but it doesn't work. Why?**  
+A: If you have multiple Node.js versions installed (e.g., via nvm, Homebrew, or system package managers), your system might be using a different Node version than expected. The `npx` command may resolve to a different Node installation. To fix this, use the full path to `npx` in your MCP configuration:
+
+**macOS/Linux:**
+- Find your Node 20+ installation: `which node` (should show Node 20+ path)
+- Find the corresponding `npx`: Usually in the same directory as `node`, or use `which npx`
+- Use the full path in your MCP config, e.g.:
+  ```json
+  "command": "/usr/local/bin/npx",
+  "args": ["-y", "@egain/egain-mcp-server"]
+  ```
+  Or if using nvm:
+  ```json
+  "command": "/Users/YourUsername/.nvm/versions/node/v20.x.x/bin/npx",
+  "args": ["-y", "@egain/egain-mcp-server"]
+  ```
+
+**Windows:**
+- Find your Node 20+ installation: `where node` in Command Prompt
+- Use the full path to `npx.cmd` or `npx`, e.g.:
+  ```json
+  "command": "C:\\Program Files\\nodejs\\npx.cmd",
+  "args": ["-y", "@egain/egain-mcp-server"]
+  ```
+
+**Alternative:** If you cloned the repository, you can use the absolute path to `mcp-server.js` instead of `npx`, which will use the Node version from your project directory.
+
 **Q: Where is the access token stored?**  
 A: Configuration is stored in `~/.egain-mcp/config.json`. Tokens (`.bearer_token` and `.bearer_token_metadata`) are stored next to `package.json` in the project directory:
 - **If you cloned the repository:** Tokens are in your cloned repo directory (same level as `package.json`)
@@ -163,6 +190,21 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 - Verify network/VPN/proxy settings allow browser access
 - If you cloned the repository, try manually running `node ./scripts/login.js` to test
 
+#### Authentication UI hangs after redirect page (macOS)
+If the authentication UI hangs or stalls after the redirect page (nothing happens past the redirect), and logs show `about:blank`, this is typically a macOS Automation permissions issue preventing browser monitoring from working. Try these steps:
+
+1. **Check macOS Automation permissions:**
+   - Go to **System Settings** (or **System Preferences** on older macOS) → **Privacy & Security** → **Automation**
+   - Find your MCP client application (Claude Desktop, Cursor, Terminal, etc.) in the list
+   - Ensure that **Chrome** (or your browser) is checked/enabled for automation
+   - If Chrome is not listed, you may need to trigger the authentication flow once to prompt macOS to ask for permission
+
+2. **Workaround - Restart applications:**
+   - **Fully quit Chrome** (not just close windows - use Chrome menu → Quit Chrome, or Cmd+Q)
+   - **Fully quit your MCP client** (Claude Desktop, Cursor, etc.) - closing the window is not enough, you must quit the application
+   - Restart both Chrome and your MCP client
+   - Try the authentication flow again
+
 #### Configuration not saving
 - Check that you have write permissions to `~/.egain-mcp/config.json`
 - Verify all required fields are filled in the configuration form
@@ -170,6 +212,7 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 
 #### MCP server not connecting
 - If using npx: Ensure `npx` is available (comes with npm/Node.js)
+- **If you have Node 20+ but it still doesn't work:** You may have multiple Node versions installed. See the FAQ entry [above](#q-i-already-have-node-version-20-but-it-doesnt-work-why) about Node version issues
 - If using cloned repo: Verify the absolute path in your MCP configuration points to the correct location of `mcp-server.js`
 - On Windows: Use forward slashes (`/`) in paths even on Windows for MCP configuration
 - Check that `node` is in your PATH and accessible
@@ -215,6 +258,7 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 - Check system permissions for opening browser windows
 - Verify network/VPN/proxy settings allow browser access
 - If you cloned the repository, try manually running `node ./scripts/login.js` to test
+- **If authentication UI hangs after redirect:** See [Authentication UI hangs after redirect page](#authentication-ui-hangs-after-redirect-page-macos) troubleshooting section
 
 #### Safari browser issues
 - **Safari is not supported** for authentication due to limited private browsing support via command line, which is required for secure OAuth flows
