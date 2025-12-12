@@ -165,16 +165,11 @@ A: Yes. PKCE works on both macOS and Windows. You can also use a direct bearer t
 #### "invalid_client" error
 - Verify Client ID is correct and matches your client application
 - Ensure the client app exists and is enabled in your tenant
-- **PKCE-friendly client apps (SPAs) are strongly preferred** - Make sure the client app is configured as a SPA platform type for public client
-- Make sure Web confidential clients have their client secret (confidential clients are not recommended for PKCE flow)
+- Make sure the client app is configured as a SPA platform type for public client
 
 #### "redirect_uri" mismatch
 - Ensure the Redirect URL you enter in the browser configuration form exactly matches the redirect URI configured in your client application (including trailing slashes, protocols)
 - The redirect URL must match exactly - check for typos, trailing slashes, and protocol (http vs https)
-
-#### Public/Confidential client errors
-- If you see "public client" errors: Don't enter Client Secret in the browser configuration form for public PKCE apps (SPAs)
-- If you see "no client_secret available": Add Client Secret in the configuration form for confidential clients, or configure your app as a public SPA (recommended)
 
 #### Token expired or invalid
 - With PKCE: You'll be prompted to sign in again automatically on the next request

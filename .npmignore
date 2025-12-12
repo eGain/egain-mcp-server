@@ -8,3 +8,8 @@
 
 /eslint.config.mjs
 /__tests__
+
+!src/hooks/img/**
+!src/hooks/auth-pages/**
+!src/hooks/**/*.png
+!src/hooks/**/*.html

@@ -54,7 +54,6 @@ const execAsync = promisify(exec);
 interface AuthConfig {
   environmentUrl?: string;
   clientId?: string;
-  clientSecret?: string;
   redirectUri?: string;
   authUrl?: string;
   accessUrl?: string;
@@ -424,9 +423,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 case 'CLIENT_ID':
                   config.clientId = cleanValue;
                   break;
-                case 'CLIENT_SECRET':
-                  config.clientSecret = cleanValue;
-                  break;
                 case 'REDIRECT_URL':
                   config.redirectUri = cleanValue;
                   break;
@@ -446,9 +442,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                   break;
                 case 'EGAIN_CLIENT_ID':
                   config.clientId = cleanValue;
-                  break;
-                case 'EGAIN_CLIENT_SECRET':
-                  config.clientSecret = cleanValue;
                   break;
                 case 'EGAIN_REDIRECT_URI':
                   config.redirectUri = cleanValue;
@@ -473,20 +466,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     return {};
   }
 
-  /**
-   * Generate Safari warning page (Safari doesn't support private browsing via CLI)
-   */
-  private getSafariWarningPage(): string {
-    try {
-      const projectRoot = getProjectRoot();
-      const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'safari-warning.html');
-      return fs.readFileSync(htmlPath, 'utf8');
-    } catch (error) {
-      console.error('⚠️  Could not load Safari warning page:', error);
-      // Fallback minimal HTML
-      return '<html><body><h1>Safari Not Supported</h1><p>Safari does not support private browsing mode via command line.</p></body></html>';
-    }
-  }
 
   /**
    * Load HTML page for browser-based configuration
@@ -581,15 +560,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     existingParams.set('forceLogin', 'yes');
     existingParams.set('prompt', 'login');
     
-    // Add PKCE only for public clients (no client_secret)
-    // SSO/confidential clients use client_secret only (no PKCE)
-    if (!this.authConfig.clientSecret) {
-      existingParams.set('code_challenge', this.codeChallenge);
-      existingParams.set('code_challenge_method', 'S256');
-      console.error('🔐 Using PKCE flow (public client)');
-    } else {
-      console.error('🔐 Using SSO/confidential client flow (no PKCE)');
-    }
+    // Always use PKCE flow (no client_secret)
+    existingParams.set('code_challenge', this.codeChallenge);
+    existingParams.set('code_challenge_method', 'S256');
+    console.error('🔐 Using PKCE flow (public client)');
     
     // Reconstruct the full URL
     const fullUrl = `${baseUrl}?${existingParams.toString()}`;
@@ -601,9 +575,9 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Works with ANY redirect URL - detects when URL contains code= parameter
    */
   private async getUserAccessToken(code: string): Promise<string> {
-    const { clientId, clientSecret, redirectUri, accessUrl } = this.authConfig;
+    const { clientId, redirectUri, accessUrl } = this.authConfig;
     
-    console.error('🔄 Starting token exchange...');
+    console.error('🔄 Starting token exchange with PKCE...');
     
     // Warn if Access Token URL doesn't look like a token endpoint
     if (accessUrl && !accessUrl.toLowerCase().includes('token')) {
@@ -620,77 +594,39 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     };
 
     try {
-      // SSO/Confidential client flow: Use client_secret only (no PKCE)
-      // Public client flow: Use PKCE with code_verifier (no client_secret)
-      if (clientSecret) {
-        console.error('🔄 Using SSO/confidential client flow (client_secret only, no PKCE)...');
-        
-        const confidentialClientBody = new URLSearchParams({
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri!,
-          client_id: clientId!,
-          client_secret: clientSecret
-        });
-        
-        const confidentialResponse = await fetch(accessUrl!, {
-          method: 'POST',
-          headers,
-          body: confidentialClientBody
-        });
+      // Always use PKCE flow (public client)
+      console.error('🔄 Using PKCE flow (code_verifier)...');
+      
+      const publicClientBody = new URLSearchParams({
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri!,
+        client_id: clientId!,
+        code_verifier: this.codeVerifier
+      });
+      
+      const publicResponse = await fetch(accessUrl!, {
+        method: 'POST',
+        headers,
+        body: publicClientBody
+      });
 
-        console.error('📨 Token response received (confidential client):', confidentialResponse.status, confidentialResponse.statusText);
+      console.error('📨 Token response received:', publicResponse.status, publicResponse.statusText);
 
-        if (confidentialResponse.ok) {
-          const data = await confidentialResponse.json() as { access_token?: string; expires_in?: number };
-          
-          if (data.access_token) {
-            console.error('✅ Token received (confidential client)');
-            await this.saveTokenWithExpiration(data.access_token, data.expires_in);
-            return data.access_token;
-          } else {
-            throw new Error('No access_token in confidential client response');
-          }
+      if (publicResponse.ok) {
+        const data = await publicResponse.json() as { access_token?: string; expires_in?: number };
+        
+        if (data.access_token) {
+          console.error('✅ Token received');
+          await this.saveTokenWithExpiration(data.access_token, data.expires_in);
+          return data.access_token;
         } else {
-          const errorText = await confidentialResponse.text();
-          console.error('❌ Confidential client failed:', confidentialResponse.status);
-          throw new Error(`Token request failed: ${confidentialResponse.status} - ${errorText}`);
+          throw new Error('No access_token in response');
         }
       } else {
-        // Public client flow: Use PKCE with code_verifier
-        console.error('🔄 Using public client flow (PKCE with code_verifier)...');
-        
-        const publicClientBody = new URLSearchParams({
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri!,
-          client_id: clientId!,
-          code_verifier: this.codeVerifier
-        });
-        
-        const publicResponse = await fetch(accessUrl!, {
-          method: 'POST',
-          headers,
-          body: publicClientBody
-        });
-
-        console.error('📨 Token response received (public client):', publicResponse.status, publicResponse.statusText);
-
-        if (publicResponse.ok) {
-          const data = await publicResponse.json() as { access_token?: string; expires_in?: number };
-          
-          if (data.access_token) {
-            console.error('✅ Token received (public client)');
-            await this.saveTokenWithExpiration(data.access_token, data.expires_in);
-            return data.access_token;
-          } else {
-            throw new Error('No access_token in public client response');
-          }
-        } else {
-          const errorText = await publicResponse.text();
-          console.error('❌ Public client failed:', publicResponse.status);
-          throw new Error(`Token request failed (public client): ${publicResponse.status} - ${errorText}`);
-        }
+        const errorText = await publicResponse.text();
+        console.error('❌ Token exchange failed:', publicResponse.status);
+        throw new Error(`Token request failed: ${publicResponse.status} - ${errorText}`);
       }
       
     } catch (error) {
@@ -914,14 +850,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           return;
         }
         
-        // Serve Safari warning page
-        if (url.pathname === '/safari-warning') {
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(this.getSafariWarningPage());
-          return;
-        }
-        
-        // Serve browser error page
+        // Serve browser error page (handles Safari, Firefox, Chrome issues, and other monitoring errors)
         if (url.pathname === '/browser-error') {
           res.writeHead(200, { 'Content-Type': 'text/html' });
           res.end(this.getBrowserErrorPage());
@@ -954,7 +883,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 accessTokenUrl: this.authConfig.accessUrl,
                 clientId: this.authConfig.clientId,
                 redirectUrl: this.authConfig.redirectUri,
-                clientSecret: this.authConfig.clientSecret,
                 scopePrefix: this.authConfig.scopePrefix
               }
             }));
@@ -1065,7 +993,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 accessUrl: config.accessTokenUrl,
                 clientId: config.clientId,
                 redirectUri: config.redirectUrl,
-                clientSecret: config.clientSecret || undefined,
                 scopePrefix: config.scopePrefix || undefined
               };
               
@@ -1183,15 +1110,27 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 this.stopConfigServer();
                 
               } catch (authError: any) {
-                // Check if this is an OAuth error (like wrong username/password)
-                const isOAuthError = authError instanceof Error && authError.message.includes('OAuth error:');
+                const errorMessage = authError.message || String(authError);
+                const isScopeError = errorMessage.includes('invalid_scope') || 
+                                   errorMessage.toLowerCase().includes('scope');
+                const isRetryableError = errorMessage.includes('access_denied') || 
+                                       errorMessage.includes('invalid_grant') ||
+                                       errorMessage.toLowerCase().includes('password') || 
+                                       errorMessage.toLowerCase().includes('username') ||
+                                       errorMessage.toLowerCase().includes('credential');
                 
-                if (isOAuthError) {
-                  // For OAuth errors, don't stop the server - allow user to try again
-                  console.error('❌ OAuth authentication error:', authError.message);
+                if (isScopeError) {
+                  // Scope errors are configuration issues - stop server
+                  console.error('❌ OAuth scope error:', errorMessage);
+                  console.error('💡 This is a configuration error. Please check your scope settings.');
+                  console.error('🛑 Stopping server - please fix the configuration and try again.');
+                  this.stopConfigServer();
+                } else if (isRetryableError) {
+                  // Username/password errors can be retried - keep server running
+                  console.error('❌ OAuth authentication error:', errorMessage);
                   console.error('💡 The configuration server will remain running. Please try again with correct credentials.');
                 } else {
-                  // For other token exchange errors, stop the server
+                  // Other token exchange errors - stop server
                   console.error('❌ Token exchange error:', authError);
                   this.stopConfigServer();
                 }
@@ -1500,14 +1439,39 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
             const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
             
+            // Scope errors are configuration issues - stop monitoring and let user see error
+            // Username/password errors can be retried - continue monitoring
+            const isScopeError = error === 'invalid_scope' || errorDesc.toLowerCase().includes('scope');
+            const isRetryableError = error === 'access_denied' || error === 'invalid_grant' || 
+                                    errorDesc.toLowerCase().includes('password') || 
+                                    errorDesc.toLowerCase().includes('username') ||
+                                    errorDesc.toLowerCase().includes('credential');
+            
             // Log error only once
             if (!oAuthErrorLogged) {
               console.error('❌ OAuth authentication error:', `${error} - ${errorDesc}`);
-              console.error('💡 The configuration server will remain running. Please try again with correct credentials.');
-              console.error('🔍 Continuing to monitor browser for authorization code...');
-              oAuthErrorLogged = true;
+              
+              if (isScopeError) {
+                console.error('💡 This is a configuration error. Please check your scope settings and close this window.');
+                console.error('🛑 Stopping monitoring - please fix the configuration and try again.');
+                oAuthErrorLogged = true;
+                // Stop monitoring for scope errors - user needs to fix config
+                this.stopConfigServer();
+                return; // Exit the monitoring loop
+              } else if (isRetryableError) {
+                console.error('💡 The configuration server will remain running. Please try again with correct credentials.');
+                console.error('🔍 Continuing to monitor browser for authorization code...');
+                oAuthErrorLogged = true;
+              } else {
+                // Unknown error type - be conservative and stop
+                console.error('💡 Please check the error message displayed in your browser and close the window.');
+                console.error('🛑 Stopping monitoring.');
+                oAuthErrorLogged = true;
+                this.stopConfigServer();
+                return; // Exit the monitoring loop
+              }
             }
-            // Continue monitoring silently - don't throw, just keep checking
+            // Continue monitoring silently for retryable errors - don't throw, just keep checking
           }
           // If it's the same error URL, continue monitoring silently
         } else {
@@ -1560,13 +1524,13 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     
     console.error(`🌐 Browser: ${this.detectedBrowser}`);
     
-    // Safari shows warning page instead of config form (security limitation)
+    // Safari shows error page instead of config form (not supported)
     const configUrl = this.detectedBrowser === 'Safari' 
-      ? `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/safari-warning`
+      ? `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/browser-error?type=notsupported&browser=${encodeURIComponent(this.detectedBrowser)}`
       : `http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/config`;
     
     if (this.detectedBrowser === 'Safari') {
-      console.error('⚠️  Safari detected - showing browser installation guide...');
+      console.error('⚠️  Safari detected - Safari is not supported for authentication');
     } else {
       console.error('📋 Opening browser for configuration...');
     }
@@ -1643,8 +1607,30 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               await execAsync(`open -a "Firefox" "${configUrl}"`);
             }
           }
+        } else if (this.detectedBrowser === 'Opera') {
+          // Opera: Use --private flag but pass URL directly (not --app mode)
+          console.error(`   Opening Opera in private mode...`);
+          try {
+            const args = incognitoFlag 
+              ? `--args ${incognitoFlag} "${configUrl}"`
+              : `"${configUrl}"`;
+            await execAsync(`open -n -a "Opera" ${args}`);
+          } catch (error) {
+            // Fallback: try without -n flag
+            console.error(`   First attempt failed, trying with existing instance...`);
+            try {
+              const args = incognitoFlag 
+                ? `--args ${incognitoFlag} "${configUrl}"`
+                : `"${configUrl}"`;
+              await execAsync(`open -a "Opera" ${args}`);
+            } catch (fallbackError) {
+              // Last resort: open normally
+              console.error(`   ⚠️  Could not open Opera in private mode automatically`);
+              await execAsync(`open -a "Opera" "${configUrl}"`);
+            }
+          }
         } else {
-          // Chrome, Edge, Brave, etc. support --args flags
+          // Chrome, Edge, Brave, Vivaldi, etc. support --args flags with --app mode
           const args = incognitoFlag 
             ? `--args ${incognitoFlag} --app="${configUrl}" --window-size=${windowWidth},${windowHeight} --window-position=100,100`
             : `"${configUrl}"`; // Fallback for browsers without good CLI support

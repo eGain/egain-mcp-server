@@ -4,7 +4,7 @@ This is a precise, click-by-click guide to get started with eGain MCP in Claude 
 
 *Prerequisites:* Node 20+, eGain 21.22+, appropriate user access, AI Services enabled, and some KB content.
 
-**Important:** Authentication uses a browser-based configuration flow. When you first use the MCP, a browser window will open for configuration. **PKCE-friendly client apps (SPAs) are strongly preferred**, and **Safari browser is not supported** - use Chrome, Firefox, Edge, or Brave. For detailed setup instructions, see the [Authentication Guide](./authentication.md).
+**Important:** Authentication uses a browser-based configuration flow. When you first use the MCP, a browser window will open for configuration. **PKCE-friendly client apps (SPAs) are required*, and **Safari browser is not supported** - use Chrome, Firefox, Edge, or Brave. For detailed setup instructions, see the [Authentication Guide](./authentication.md).
 
 **Step 1:** Find your API domain
 

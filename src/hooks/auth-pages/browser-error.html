@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browser Monitoring Issue - eGain MCP</title>
+  <title>Browser Compatibility Issue - eGain MCP</title>
   <style>
     * {
       margin: 0;
@@ -66,14 +66,6 @@
       margin-bottom: 12px;
     }
     
-    .error-details ul {
-      color: #a21361;
-      font-size: 14px;
-      line-height: 1.8;
-      margin-left: 20px;
-      margin-top: 8px;
-    }
-    
     .solution {
       background: #f0f9ff;
       border-left: 4px solid #3b82f6;
@@ -102,6 +94,22 @@
       line-height: 1.8;
       margin-left: 20px;
       margin-top: 8px;
+    }
+    
+    .solution ul {
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.8;
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+    
+    .solution code {
+      background: rgba(59, 130, 246, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
     }
     
     .button-group {
@@ -145,13 +153,46 @@
 <body>
   <div class="container">
     <div class="warning-icon">⚠️</div>
-    <h1>Browser Monitoring Issue</h1>
+    <h1 id="pageTitle">Browser Compatibility Issue</h1>
     
     <div class="error-details">
       <strong>What happened?</strong>
-      <p id="errorMessage">We're having trouble reading the current page URL from your browser. This prevents us from detecting when authentication completes.</p>
+      <p id="errorMessage">We're having trouble with browser compatibility. This prevents authentication from completing.</p>
     </div>
     
+    <!-- Safari Not Supported -->
+    <div class="solution" id="safariSolution" style="display: none;">
+      <strong>Safari Not Supported:</strong>
+      <p style="margin-bottom: 12px;">
+        Safari doesn't support private browsing mode via command line, which is required to protect your OAuth credentials from being cached or leaked. <strong>Safari cannot be used for authentication with this MCP server.</strong>
+      </p>
+      <ol>
+        <li><strong>Please use Chrome, Edge, Brave, Opera, or Vivaldi instead</strong></li>
+        <li><strong>Close this Safari window</strong></li>
+        <li><strong>Reattempt query/authentication</strong></li>
+      </ol>
+      <p style="margin-top: 12px; font-size: 13px; color: #666;">
+        <strong>Why?</strong> We prioritize your security over convenience. Private browsing mode is required to protect your OAuth credentials, and Safari doesn't support this via command line.
+      </p>
+    </div>
+    
+    <!-- Firefox Not Supported -->
+    <div class="solution" id="firefoxSolution" style="display: none;">
+      <strong>Firefox Not Supported:</strong>
+      <p style="margin-bottom: 12px;">
+        Firefox does not support AppleScript automation for reading page URLs, which is required to detect when authentication completes. <strong>Firefox cannot be used for authentication with this MCP server.</strong>
+      </p>
+      <ol>
+        <li><strong>Please use Chrome, Edge, Brave, Opera, or Vivaldi instead</strong></li>
+        <li><strong>Close this Firefox window</strong></li>
+        <li><strong>Reattempt query/authentication</strong></li>
+      </ol>
+      <p style="margin-top: 12px; font-size: 13px; color: #666;">
+        <strong>Why?</strong> The OAuth redirect goes to an external URL (not localhost). The MCP server needs to monitor the browser URL to detect when the authorization code appears. Firefox doesn't support this automation, so authentication cannot complete.
+      </p>
+    </div>
+    
+    <!-- Chrome about:blank Issue -->
     <div class="solution" id="chromeSolution" style="display: none;">
       <strong>Solution for Chrome:</strong>
       <ol>
@@ -170,18 +211,25 @@
       </p>
     </div>
     
-    <div class="solution" id="firefoxSolution" style="display: none;">
-      <strong>Firefox Not Supported:</strong>
+    <!-- Other Browser Monitoring Errors -->
+    <div class="solution" id="monitoringSolution" style="display: none;">
+      <strong>Browser Monitoring Issue:</strong>
       <p style="margin-bottom: 12px;">
-        Firefox does not support AppleScript automation for reading page URLs, which is required to detect when authentication completes. <strong>Firefox cannot be used for authentication with this MCP server.</strong>
+        We cannot read the current page URL from your browser. This is usually due to missing macOS Automation permissions.
       </p>
       <ol>
-        <li><strong>Please use Chrome, Edge, or Brave instead</strong></li>
-        <li><strong>Close this Firefox window</strong></li>
-        <li><strong>Restart authentication</strong> - The MCP server will detect a supported browser</li>
+        <li><strong>Check macOS Automation permissions:</strong>
+          <ul>
+            <li>Go to System Settings → Privacy & Security → Automation</li>
+            <li>Find your MCP client (Claude Desktop, Cursor, Terminal, etc.)</li>
+            <li>Ensure your browser is enabled for automation</li>
+          </ul>
+        </li>
+        <li>If your browser is not listed, try triggering authentication once to prompt macOS to ask for permission</li>
+        <li>Click "Try Again" below to restart authentication</li>
       </ol>
       <p style="margin-top: 12px; font-size: 13px; color: #666;">
-        <strong>Why?</strong> The OAuth redirect goes to an external URL (not localhost). The MCP server needs to monitor the browser URL to detect when the authorization code appears. Firefox doesn't support this automation, so authentication cannot complete.
+        <strong>Why?</strong> Browser automation permissions are required to allow scripts to read the current page URL and detect when authentication completes.
       </p>
     </div>
     
@@ -192,17 +240,35 @@
   </div>
   
   <script>
-    // Detect browser and show appropriate solution
+    // Detect browser and error type, show appropriate solution
     const userAgent = navigator.userAgent.toLowerCase();
     const errorType = new URLSearchParams(window.location.search).get('type') || 'unknown';
     const browserName = new URLSearchParams(window.location.search).get('browser') || '';
+    const browserLower = browserName.toLowerCase();
     
-    if (errorType === 'aboutblank' || (browserName.toLowerCase().includes('chrome') && errorType !== 'monitoring')) {
+    // Determine which solution to show
+    if (browserLower.includes('safari') || errorType === 'notsupported') {
+      // Safari not supported
+      document.getElementById('pageTitle').textContent = 'Safari Not Supported';
+      document.getElementById('safariSolution').style.display = 'block';
+      document.getElementById('errorMessage').textContent = 
+        'Safari doesn\'t support private browsing mode via command line, which is required to protect your OAuth credentials. Safari cannot be used for authentication.';
+    } else if (browserLower.includes('firefox') || errorType === 'monitoring') {
+      // Firefox not supported
+      document.getElementById('pageTitle').textContent = 'Firefox Not Supported';
+      document.getElementById('firefoxSolution').style.display = 'block';
+      document.getElementById('errorMessage').textContent = 
+        'Firefox does not support AppleScript automation for reading page URLs, which is required to detect when authentication completes. Firefox cannot be used for authentication.';
+    } else if (errorType === 'aboutblank' || (browserLower.includes('chrome') && errorType !== 'monitoring')) {
+      // Chrome about:blank issue
+      document.getElementById('pageTitle').textContent = 'Chrome Browser Issue';
       document.getElementById('chromeSolution').style.display = 'block';
       document.getElementById('errorMessage').textContent = 
         'Chrome is reporting "about:blank" instead of the actual page URL. This prevents us from detecting when authentication completes.';
-    } else if (browserName.toLowerCase().includes('firefox') || errorType === 'monitoring') {
-      document.getElementById('firefoxSolution').style.display = 'block';
+    } else {
+      // Other monitoring errors (permissions, etc.)
+      document.getElementById('pageTitle').textContent = 'Browser Monitoring Issue';
+      document.getElementById('monitoringSolution').style.display = 'block';
       document.getElementById('errorMessage').textContent = 
         'We cannot read the current page URL from your browser. This is usually due to missing macOS Automation permissions or a browser compatibility issue.';
     }
@@ -214,4 +280,3 @@
   </script>
 </body>
 </html>
-

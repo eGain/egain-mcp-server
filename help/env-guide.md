@@ -12,7 +12,6 @@ When you first use the MCP, a browser window will open with a configuration form
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
 2. Open your client application of choice. Note these values:
    - **Client ID** - Copy this value
-   - **Secrets** - Only if using confidential client (not recommended for PKCE/SPA)
    - **Redirect URL** - Must exactly match what you enter in the config form
 3. Exit to the Client Application menu and click `Metadata`. Note these values:
    - **Auth URL** - OAuth2 authorization endpoint

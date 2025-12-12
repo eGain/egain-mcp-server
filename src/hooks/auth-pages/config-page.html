@@ -403,34 +403,13 @@
           </label>
           <input type="text" id="redirectUrl" name="redirectUrl" placeholder="https://your-redirect-url.com/" required>
         </div>
-        
-        <!-- Advanced Settings Toggle -->
-        <div style="margin: 12px 0;">
-          <button type="button" onclick="toggleAdvancedSettings()" style="padding: 6px 0; font-size: 13px; display: flex; align-items: center; gap: 6px; background: none; border: none; color: #b91d8f; cursor: pointer; font-family: inherit;">
-            <span id="advancedToggleIcon">▶</span>
-            <span>Advanced Settings</span>
-            <span style="color: #999; font-size: 11px;">(optional)</span>
-          </button>
-        </div>
-        
-        <!-- Advanced Settings Section (hidden by default) -->
-        <div id="advancedSettings" style="display: none;">
-          <div class="form-group">
-            <label for="clientSecret">
-              <span>Client Secret</span>
-              <span class="tooltip" onmouseenter="showTooltip(event, 'clientSecret')" onmouseleave="hideTooltip(event, 'clientSecret')">?</span>
-              <span class="optional">(optional)</span>
-            </label>
-            <input type="password" id="clientSecret" name="clientSecret" placeholder="Required for normal authentication flow/non-PKCE">
-          </div>
-          <div class="form-group">
-            <label for="scopePrefix">
-              <span>Scope Prefix</span>
-              <span class="tooltip" onmouseenter="showTooltip(event, 'scopePrefix')" onmouseleave="hideTooltip(event, 'scopePrefix')">?</span>
-              <span class="optional">(optional)</span>
-            </label>
-            <input type="text" id="scopePrefix" name="scopePrefix" placeholder="https://your.scope-prefix.cloud/auth/">
-          </div>
+        <div class="form-group">
+          <label for="scopePrefix">
+            <span>Scope Prefix</span>
+            <span class="tooltip" onmouseenter="showTooltip(event, 'scopePrefix')" onmouseleave="hideTooltip(event, 'scopePrefix')">?</span>
+            <span class="optional">(Fill if in Metadata)</span>
+          </label>
+          <input type="text" id="scopePrefix" name="scopePrefix" placeholder="https://your.scope-prefix.cloud/auth/">
         </div>
         <div style="font-size: 11px; color: #999; margin: 12px 0 0 0; line-height: 1.4;">
           🔒 Your configuration will be securely saved to your <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 10px;">~/.egain-mcp/config.json</code>.
@@ -497,16 +476,8 @@
     </div>
   </div>
   
-  <div id="tooltip-clientSecret" class="tooltip-content">
-    <div class="tooltip-header">Client Secret</div>
-    <div class="tooltip-body">
-      <img src="/img/clientsecret-tooltip.png" class="tooltip-image" alt="Client Secret" onerror="this.style.display='none'">
-      <div class="tooltip-text">In the Partition space, go to Integration → Client Application, select your client app, and copy the Client Secret under Secrets.</div>
-    </div>
-  </div>
-  
   <div id="tooltip-scopePrefix" class="tooltip-content">
-    <div class="tooltip-header">Scope Prefix</div>
+    <div class="tooltip-header">Scope Prefix (Leave empty unless shown in Metadata)</div>
     <div class="tooltip-body">
       <img src="/img/scopeprefix-tooltip.png" class="tooltip-image" alt="Scope Prefix" onerror="this.style.display='none'">
       <div class="tooltip-text">In the Partition space, go to Integration → Client Application → Metadata, and copy the API Permission Prefix.</div>

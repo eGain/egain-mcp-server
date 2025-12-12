@@ -1,7 +1,7 @@
-const FIELDS = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'clientSecret', 'scopePrefix'];
+const FIELDS = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'scopePrefix'];
 const FIELD_LABELS = {
   egainUrl: 'eGain URL', authUrl: 'Auth URL', accessTokenUrl: 'Token URL',
-  clientId: 'Client ID', redirectUrl: 'Redirect URL', clientSecret: 'Client Secret',
+  clientId: 'Client ID', redirectUrl: 'Redirect URL',
   scopePrefix: 'Scope Prefix'
 };
 
@@ -52,10 +52,7 @@ function displaySavedConfig() {
       label.textContent = FIELD_LABELS[field];
       const valueSpan = document.createElement('span');
       valueSpan.className = 'config-value';
-      if (field === 'clientSecret') {
-        valueSpan.classList.add('masked');
-        valueSpan.textContent = '••••••••';
-      } else if (field === 'clientId') {
+      if (field === 'clientId') {
         valueSpan.textContent = value.substring(0, 8) + '...';
       } else {
         valueSpan.textContent = value.length > 40 ? value.substring(0, 40) + '...' : value;
@@ -87,11 +84,6 @@ function loadFormValues() {
     const value = savedConfigData[field];
     if (value) document.getElementById(field).value = value;
   });
-  
-  // Show advanced settings if clientSecret or scopePrefix exist
-  if (savedConfigData.clientSecret || savedConfigData.scopePrefix) {
-    toggleAdvancedSettings();
-  }
 }
 
 async function clearConfigAndShowForm() {
@@ -197,7 +189,7 @@ function showStatus(message, type) {
 
 function configValuesEqual(config1, config2) {
   // Compare all fields that matter
-  const fieldsToCompare = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'clientSecret', 'scopePrefix'];
+  const fieldsToCompare = ['egainUrl', 'authUrl', 'accessTokenUrl', 'clientId', 'redirectUrl', 'scopePrefix'];
   for (const field of fieldsToCompare) {
     const val1 = (config1[field] || '').trim();
     const val2 = (config2[field] || '').trim();
@@ -359,20 +351,6 @@ function closeModal(confirmed) {
   if (modalCallback) {
     modalCallback(confirmed);
     modalCallback = null;
-  }
-}
-
-// Advanced settings toggle
-function toggleAdvancedSettings() {
-  const advancedSection = document.getElementById('advancedSettings');
-  const toggleIcon = document.getElementById('advancedToggleIcon');
-  
-  if (advancedSection.style.display === 'none') {
-    advancedSection.style.display = 'block';
-    toggleIcon.textContent = '▼';
-  } else {
-    advancedSection.style.display = 'none';
-    toggleIcon.textContent = '▶';
   }
 }
 

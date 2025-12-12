@@ -29,7 +29,6 @@ When you first use the MCP or when your token expires during a query, a browser 
 4. **Access Token URL** - OAuth2 token endpoint
 5. **Redirect URL** - Must exactly match the redirect URI configured in your client application
 6. **Scope Prefix** (optional) - Not required for Rigel environments. For commercial environments, use the value from Metadata (API Permission Prefix), or `api.egain.cloud/auth/` if not present.
-7. **Client Secret** (optional) - Not needed for public clients (PKCE/SPA). Only required for confidential clients.
 
 ### Finding Your Configuration Values
 
@@ -38,7 +37,6 @@ To find your tenant-specific values, use the eGain Administrator Console:
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
 2. Open your client application of choice. Note these values:
    - **Client ID** - Copy this value
-   - **Secrets** - Only if using confidential client
    - **Redirect URL** - Must exactly match what you enter in the config form
 3. Exit to the Client Application menu and click `Metadata`. Note these values:
    - **Auth URL** - OAuth2 authorization endpoint
