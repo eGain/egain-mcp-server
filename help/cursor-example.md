@@ -1,20 +1,20 @@
 # Cursor Example: Setup to First Query
 
-This is a precise, click-by-click guide to get started with eGain MCP in Cursor IDE. It uses stdio and the PKCE login flow. Download Cursor IDE to run this example.
+This guide walks you from setup to your first eGain MCP query using **Cursor IDE**, `npx`, and the browser-based PKCE authentication flow.
 
-*Prerequisites:* Node 20+, eGain 21.22+, appropriate user access, AI Services enabled, and some KB content.
+**Prerequisites:** Node.js 20+, eGain 21.22+, AI Services enabled, appropriate user access, and some Knowledge content.
 
-**Important:** Authentication uses a browser-based configuration flow. When you first use the MCP, a browser window will open for configuration. **PKCE-friendly client apps (SPAs) are required**, and **Safari browser is not supported** - use Chrome, Firefox, Edge, or Brave. For detailed setup instructions, see the [Authentication Guide](./authentication.md).
+> **Important:** Authentication uses a browser-based PKCE flow. A browser window will open on first use.
+> - **PKCE-compatible client apps (SPAs) are required**
+> - **Safari is not supported** — use Chrome, Edge, or Brave  
+> See the [Authentication Guide](./authentication.md) for details.
 
-**Step 1:** Find your API domain
+## Step 1: Configure Cursor
 
-Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
-
-**Step 2:** Configure Cursor
-
-**Using Cursor's UI**
 1. In Cursor, select the Settings icon → `Tools & MCP` → `New MCP Server` to open the configuration file.
 2. Add this configuration (replace `...` with your API domain):
+
+Add the following configuration:
 
 ```json
 {
@@ -26,20 +26,22 @@ Go to your Admin Console → `Partition` → `Integration` → `Client Applicati
   }
 }
 ```
+## Step 2: Find your API domain
+
+Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
+
+Replace `...` in the configuration with this value. 
 
 That's it! The MCP server will be automatically downloaded and run when needed. No cloning or building required.
 
-Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
+## Step 3: Run your first Claude query
 
-**Step 3:** Your first Cursor query
-Restart Cursor to process the configuration. Open a new chat on an empty window and try:
+Open a chat and try:
 - "List the portals I can access." → uses `getPortals`.
 - "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.
 - "Create a suggestion for more articles in the Master portal." → uses `makeSuggestion` with `portalID`.
 
 On your first MCP request, a supported browser opens a window for configuration and sign-in.
-
-Tip: Start with "List the portals I can access" to discover valid `portalID` and portal names.
 
 For more background on MCP and workflows, see the eGain MCP guide: [eGain MCP](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).
 

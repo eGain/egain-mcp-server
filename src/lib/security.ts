@@ -3,7 +3,6 @@
  */
 
 import { Security } from "../models/security.js";
-import { env } from "./env.js";
 
 type OAuth2PasswordFlow = {
   username: string;
@@ -243,7 +242,7 @@ export function resolveGlobalSecurity(
       {
         fieldName: "Authorization",
         type: "http:bearer",
-        value: security?.accessToken ?? env().EGAINMCP_ACCESS_TOKEN,
+        value: security?.accessToken,
       },
     ],
   );

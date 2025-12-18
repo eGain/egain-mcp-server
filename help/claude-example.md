@@ -1,23 +1,20 @@
 # Claude Example: Setup to First Query
 
-This is a precise, click-by-click guide to get started with eGain MCP in Claude Desktop. It uses stdio and the PKCE login flow. Download the Claude Desktop app to run this example.
+This guide walks you from setup to your first eGain MCP query using **Claude Desktop**, `npx`, and the browser-based PKCE authentication flow.
 
-*Prerequisites:* Node 20+, eGain 21.22+, appropriate user access, AI Services enabled, and some KB content.
+**Prerequisites:** Node.js 20+, eGain 21.22+, AI Services enabled, appropriate user access, and some Knowledge content.
 
-**Important:** Authentication uses a browser-based configuration flow. When you first use the MCP, a browser window will open for configuration. **PKCE-friendly client apps (SPAs) are required*, and **Safari browser is not supported** - use Chrome, Firefox, Edge, or Brave. For detailed setup instructions, see the [Authentication Guide](./authentication.md).
+> **Important:** Authentication uses a browser-based PKCE flow. A browser window will open on first use.
+> - **PKCE-compatible client apps (SPAs) are required**
+> - **Safari is not supported** — use Chrome, Edge, or Brave  
+> See the [Authentication Guide](./authentication.md) for details.
 
-**Step 1:** Find your API domain
+## Step 1: Configure Claude Desktop
 
-Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
+1. Open **Claude Desktop** and go to **Settings** (gear icon or `File → Settings`)
+2. Select **Developer** → **Edit Config** to open `claude_desktop_config.json`
 
-**Step 2:** Configure Claude Desktop
-
-1. Open Claude Desktop application
-2. Click `Settings` (gear icon) in the bottom left, or go to `File` → `Settings` in the menu bar
-3. Click `Developer` in the left sidebar
-4. Click `Edit Config` button - this will open `claude_desktop_config.json` in your default text editor
-
-Add this configuration to your `claude_desktop_config.json`. Replace `...` with your API domain from the Admin Console:
+Add the following configuration:
 
 ```json
 {
@@ -29,21 +26,22 @@ Add this configuration to your `claude_desktop_config.json`. Replace `...` with 
   }
 }
 ```
+## Step 2: Find your API domain
 
-That's it! The MCP server will be automatically downloaded and run when needed. No cloning or building required.
+Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
 
-Note: `--api-domain` is the eGain API host. If omitted, the default is `api.aidev.egain.cloud`.
+Replace `...` in the configuration with this value.  
 
-**Step 3:** Your first Claude query  
-Restart Claude to process the configuration. Open a new chat and try:
-- "List the portals I can access." → uses `getPortals`.
-- "Show popular articles for the Master portal." → uses `getPopularArticles` with `portalID`.
-- "Create a suggestion for more articles in the Master portal." → uses `makeSuggestion` with `portalID`.
+## Step 3: Run your first Claude query
 
-On your first MCP request, a supported browser opens a window for configuration and sign-in.
+Restart Claude to load the configuration, then open a new chat and try:
 
-Tip: Start with "List the portals I can access" to discover valid `portalID` and portal names.
+- **“List the portals I can access”** → `getPortals`
+- **“Show popular articles for the Master portal”** → `getPopularArticles`
+- **“Create a suggestion for the Master portal”** → `makeSuggestion`
 
-Watch a quick [demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385) to see MCP on Claude in action.
+On your first MCP request, a supported browser will open for configuration and sign-in.
 
-For more background on MCP and workflows, see the eGain MCP guide: [eGain MCP](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).
+Watch a quick [Claude MCP demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385).
+
+For more background, see the [eGain MCP Guide](https://apidev.egain.com/developer-portal/guides/mcp/mcp/).

@@ -1790,13 +1790,26 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
   }
 
   sdkInit(opts: SDKOptions): SDKOptions {
-    // Check if bearer token was provided via CLI flag
-    if (opts.security && typeof opts.security === 'object' && 'bearerAuth' in opts.security) {
-      const providedToken = (opts.security as any).bearerAuth;
-      if (providedToken && typeof providedToken === 'string' && providedToken.trim().length > 0) {
-        console.error('🔑 Using bearer token from CLI flag');
-        this.token = providedToken;
-        return opts;
+    // Check if bearer token was provided via CLI flag or config
+    if (opts.security && typeof opts.security === 'object') {
+      const securityObj = opts.security as any;
+      // Check for accessToken (used by eGain SDK)
+      if ('accessToken' in securityObj) {
+        const providedToken = securityObj.accessToken;
+        if (providedToken && typeof providedToken === 'string' && providedToken.trim().length > 0) {
+          console.error('🔑 Using bearer token from CLI flag/config');
+          this.token = providedToken.trim();
+          return opts;
+        }
+      }
+      // Also check for bearerAuth (generic SDK format)
+      if ('bearerAuth' in securityObj) {
+        const providedToken = securityObj.bearerAuth;
+        if (providedToken && typeof providedToken === 'string' && providedToken.trim().length > 0) {
+          console.error('🔑 Using bearer token from CLI flag/config');
+          this.token = providedToken.trim();
+          return opts;
+        }
       }
     }
 

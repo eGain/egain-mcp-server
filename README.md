@@ -12,9 +12,13 @@ Model Context Protocol (MCP) Server for the *egain-mcp-server*.
 
 ## Overview
 
-This server implements MCP for eGain Knowledge, unifying Portal Manager, Search, Retrieve, and Answers into a single endpoint your AI client can call. Use it from Claude Desktop, Cursor, and others to browse portals, read articles, search/retrieve content, submit suggestions, and get AI‑powered answers with your existing portal permissions.
+This server implements the Model Context Protocol (MCP) for eGain Knowledge, exposing Portal Manager, Search, Retrieve, and Answers as a single MCP endpoint for AI clients.
 
-> ⚠️ This MCP hosts eGain v4 APIs. Please do not attempt tool usage with previous API versions' standards. For more details about the v4 APIs, visit our [developer portal](https://apidev.egain.com/).
+It enables tools like Claude Desktop, Cursor, and VS Code to browse portals, read articles, search knowledge, submit suggestions, and generate AI-powered answers — all using the user’s existing eGain permissions.
+> ⚠️ This MCP server is built exclusively for **eGain v4 APIs**. Earlier API versions are not supported. For more details about the v4 APIs, visit our [developer portal](https://apidev.egain.com/).
+
+
+https://github.com/user-attachments/assets/1b6c8aab-eb50-4f9e-8dfc-2a9ac4fb6518
 
 <!-- No Summary [summary] -->
 
@@ -22,30 +26,23 @@ Learn more about the tools and usage of the MCP in the [eGain MCP guide](https:/
 
 <!-- No Table of Contents [toc] -->
 
-### Prerequisites  
-- **Node.js version 20+** - Required for running the MCP server. Download from [nodejs.org](https://nodejs.org/)
-- eGain platform version 21.22 or newer.
-- Access mirrors the user's permissions: MCP only sees content that user can see (portal/article visibility).
-- AI Services must be enabled for your tenant and the target portal, or AI tools will not run.
-- Knowledge content! I recommend at least 2 portals and 5 articles to give the MCP a try!
-- A supported browser (Chrome, Firefox, Edge, or Brave) - **Safari is not supported**.
-- A PKCE-friendly client application (SPA platform type recommended) configured in your eGain tenant.
+### Prerequisites
+- **Node.js 20+** (required to run the MCP server)
+- eGain platform version **21.22 or newer**
+- AI Services enabled for the tenant and target portal
+- Knowledge portal and article content available
+- Supported browser: Chrome, Edge, or Brave
+- A PKCE-friendly client application in your eGain tenant
+
+> ℹ️ MCP access always mirrors the authenticated user’s permissions (portal and article visibility).
 
 ## Installation
 
-### Quick Start: Install with npx (Recommended)
+https://github.com/user-attachments/assets/2cecc8ff-6a90-4c26-92e1-6720f9124297
 
-The easiest way to get started is to install directly with `npx`. No cloning or building required!
+### Step 1: Configure your MCP client (Cursor, Claude Desktop, Windsurf, VS Code, etc.) with the following:
 
-**Step 1:** Find your API domain using the eGain Administrator Console:
-1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
-2. Click `Metadata`. The value `API Domain` is detailed in the window.  
-
-Please contact your eGain PA if you do not have access to these admin-only details.
-
-**Step 2:** Configure your MCP client (Cursor, Claude Desktop, Windsurf, VS Code, etc.) with the following:
-
-**Note:** Replace `"..."` with your API domain from the Admin Console.
+**Note:** Replace `"..."` with your API domain (instructions in **Step 2**).
 
 ```json
 {
@@ -63,105 +60,61 @@ Please contact your eGain PA if you do not have access to these admin-only detai
 }
 ```
 
+### Step 2: Find your API domain using the eGain Administrator Console
+1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
+2. Click `Metadata`. The value `API Domain` is detailed in the window.  
+
+Please contact your eGain PA if you do not have access to these admin-only details.
+
 That's it! The MCP server will be automatically downloaded and run when needed.
-
-### Advanced: Clone Repository (Not Recommended)
-
-> ⚠️ **Important:** Cloning is **only for contributors** or very specific use cases. **Do not modify the code** - the MCP works as intended. Any modifications are **unsupported** and may cause failures. If you encounter issues after modifying the code, we cannot provide support.
-
-```bash
-git clone https://github.com/eGain/egain-mcp-server
-cd egain-mcp-server
-npm install
-npm run build
-```
-
-Configure with absolute path to `bin/mcp-server.js`:
-```json
-{
-  "mcpServers": {
-    "EgainMcp": {
-      "command": "node",
-      "args": ["./bin/mcp-server.js", "start", "--api-domain", "..."]
-    }
-  }
-}
-```
 
 If you're having trouble configuring your MCP client, see these detailed guides:
 - Claude quick-start and example queries: [Claude Guide](./help/claude-example.md)
 - Cursor quick-start and example queries: [Cursor Guide](./help/cursor-example.md)
 
-### Step 3: Authenticate on first query
+### Step 3: Make a query and authenticate
 
-See it in action: Watch a quick [Claude demo on Vimeo](https://vimeo.com/showcase/11942379?video=1129942385)
+Once you've set up the server on your client, **run your first eGain MCP query** and a browser window will popup for authentication.
 
-Once you've set up the server on your client, **run your first eGain MCP query** to authenticate. When you make your first MCP request, a browser window will automatically open for authentication.
+**Requirements for authentication:**
+- A PKCE-friendly client application (SPA platform type recommended)
+- A supported browser (Chrome, Edge, or Brave — Safari is not supported)
+- Delegated API permissions in your client app:
+  - `knowledge.portalmgr.manage`
+  - `knowledge.portalmgr.read`
+  - `core.aiservices.read`
 
-**Important:**
-- **PKCE-friendly client apps (SPAs) are strongly preferred** for the best authentication experience. Ensure your client app is configured as a Single Page Application (SPA) platform type in the eGain Administrator Console.
-- **Safari browser is not supported** for authentication for security reasons. Please use Chrome, Firefox, Edge, or another supported browser.
-- Ensure your client app has these delegated API permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`.
-
-You'll need to enter your authentication configuration values in the browser form. For detailed setup instructions and where to find these values, see the [Configuration Guide](./help/env-guide.md) and [Authentication Deep Dive](./help/authentication.md). Please contact your eGain PA if you do not have access to client application settings.
+You'll need to enter your authentication configuration values in the browser form. For a tutorial, see the [Authentication Deep Dive](./help/authentication.md). Please contact your eGain PA if you do not have access to client application settings.
 
 <!-- No Installation [installation] -->
 
 ## 🆘 Having Issues?
 
-**Check our troubleshooting guide!** Most problems have quick solutions:
+Start here — most problems are covered in the FAQ:
 
-### Quick Help
-- **[FAQ & Troubleshooting Guide](./help/faq.md)** - Start here! Most issues are covered here
-- **Authentication problems?** → [FAQ: Authentication Issues](./help/faq.md#authentication-issues)
-- **Configuration problems?** → [FAQ: Configuration Issues](./help/faq.md#configuration-issues)
-- **Tool/Query problems?** → [FAQ: MCP Tool Issues](./help/faq.md#mcp-tool-issues)
+- **[FAQ & Troubleshooting](./help/faq.md)**
+- Authentication issues → [Authentication FAQ](./help/faq.md#authentication-issues)
+- Configuration issues → [Configuration FAQ](./help/faq.md#configuration-issues)
+- MCP tool issues → [Tool FAQ](./help/faq.md#mcp-tool-issues)
 
-### Token Issues (Expired/Stuck Tokens)
+### Token issues (expired or stuck)
 
-If you're experiencing issues with expired tokens or authentication failures:
-
-When using `npx`, token files (`.bearer_token` and `.bearer_token_metadata`) are stored in the directory where you run `npx` from (or where `package.json` exists). To find them:
+If authentication fails after it previously worked, delete cached token files and retry:
 
 ```bash
-# Search your home directory
-find ~ -name ".bearer_token" -o -name ".bearer_token_metadata" 2>/dev/null
-
-# Or search from your current directory
-find . -name ".bearer_token" -o -name ".bearer_token_metadata" 2>/dev/null
+# Search your home directory for both token files
+find ~ -name ".bearer_token*" 2>/dev/null
+# Remove both token files
+rm /path/to/.bearer_token*
 ```
-
-Once found, delete them:
-```bash
-rm /path/to/.bearer_token
-rm /path/to/.bearer_token_metadata
-```
-This will search common locations and show you exactly where your token files are.
-
-### Common Setup Hurdles
-- **Can't find API Domain?** → [FAQ: Finding API Domain](./help/faq.md#q-i-cant-find-my-api-domain-or-scope-prefix-where-is-it)
-- **Browser didn't open?** → [FAQ: No auth popup](./help/faq.md#no-auth-popup-appears)
-- **401/403 errors?** → [FAQ: 401/403 errors](./help/faq.md#401403-errors)
-- **Don't have Client Application?** → [Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/)
 
 ## Debugging
 
-For interactive testing and debugging, use the MCP Inspector. It provides a web interface where you can test MCP tools directly:
+Use the MCP Inspector for interactive testing:
 
 ```bash
-# With cloned repository
-npx @modelcontextprotocol/inspector node ./bin/mcp-server.js start --api-domain "..."
-
-# Or with npx (published package)
 npx @modelcontextprotocol/inspector npx @egain/egain-mcp-server start --api-domain "..."
 ```
-
-The inspector opens in your browser where you can:
-- See all available tools
-- Call tools with custom parameters
-- View request/response details
-- Test queries like "get my portals" or "show popular articles"
-
 
 ## Resources & Support
 ### Help Guides
@@ -172,10 +125,11 @@ The inspector opens in your browser where you can:
 - [Cursor Example](./help/cursor-example.md)
 - [BYO MCP Client LLM](./help/byo_llm_demo.ipynb)  
   
-MCP Server Created by [Speakeasy](https://www.speakeasy.com/?utm_source=egain-mcp&utm_campaign=mcp-typescript)
 
 ### Contact
 * Issues: [GitHub Issues](https://github.com/eGain/egain-mcp-server/issues)
-* MCP Support: eloh@egain.com
 * eGain Support: [Support Portal](https://support.egain.com)
+* MCP Support: eloh@egain.com
+
 <!-- Placeholder for Future Speakeasy SDK Sections -->
+MCP Server Created by [Speakeasy](https://www.speakeasy.com/?utm_source=egain-mcp&utm_campaign=mcp-typescript)
