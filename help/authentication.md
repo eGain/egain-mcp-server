@@ -1,6 +1,6 @@
 # Authentication Deep Dive
 
-The eGain MCP uses a **browser-based PKCE OAuth flow**. Authentication requires a client application configured in your eGain tenant. If you don’t already have one, follow the [eGain Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/).
+The eGain MCP uses a **browser-based PKCE OAuth flow**. Authentication requires a client application configured in your eGain tenant. If you are on 21.22.2, a client app under the name **APIs Trial** can be used for the MCP.
 
 > Required delegated permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`.
 
@@ -27,7 +27,7 @@ On your first MCP request (or when a token expires), a browser window opens with
 To find your tenant-specific values, use the eGain Administrator Console:
 
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
-2. Open your client application of choice. Note these values:
+2. Open the client application of choice. Note these values:
    - **Client ID** - Copy this value
    - **Redirect URL** - Must exactly match what you enter in the config form
 3. Exit to the Client Application menu and click `Metadata`. Note these values:

@@ -78,6 +78,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
   private detectedBrowser: string = 'Google Chrome'; // Default fallback
   private authCancelled: boolean = false; // Track if user cancelled authentication
   private oauthRedirectStarted: boolean = false; // Track when OAuth redirect happens
+  private devToolsPort: number | null = null; // DevTools Protocol debug port (Windows, non-loopback)
+  private devToolsTempDir: string | null = null; // Temp directory for DevTools browser instance
+  private configPageHtml: string | null = null; // Cached config page HTML
+  private configPageJs: string | null = null; // Cached config page JavaScript
 
 
   /**
@@ -468,16 +472,44 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
 
 
   /**
+   * Preload config page content for faster serving
+   */
+  private preloadConfigPage(): void {
+    if (this.configPageHtml && this.configPageJs) {
+      return; // Already loaded
+    }
+    
+    try {
+      const projectRoot = getProjectRoot();
+      const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.html');
+      const jsPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.js');
+      
+      this.configPageHtml = fs.readFileSync(htmlPath, 'utf8');
+      this.configPageJs = fs.readFileSync(jsPath, 'utf8');
+      console.error('✅ Config page content preloaded');
+    } catch (error) {
+      console.error('⚠️  Could not preload config page:', error);
+      // Set fallbacks
+      this.configPageHtml = '<html><body><h1>Configuration Error</h1><p>Could not load configuration page.</p></body></html>';
+      this.configPageJs = '';
+    }
+  }
+
+  /**
    * Load HTML page for browser-based configuration
    */
   private getConfigPage(): string {
+    if (this.configPageHtml) {
+      return this.configPageHtml;
+    }
+    
+    // Fallback if not preloaded
     try {
       const projectRoot = getProjectRoot();
       const htmlPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.html');
       return fs.readFileSync(htmlPath, 'utf8');
     } catch (error) {
       console.error('⚠️  Could not load config page:', error);
-      // Fallback minimal HTML
       return '<html><body><h1>Configuration Error</h1><p>Could not load configuration page.</p></body></html>';
     }
   }
@@ -486,13 +518,18 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Serve JavaScript for config page
    */
   private getConfigPageJS(): string {
+    if (this.configPageJs !== null) {
+      return this.configPageJs;
+    }
+    
+    // Fallback if not preloaded
     try {
       const projectRoot = getProjectRoot();
       const jsPath = path.join(projectRoot, 'src', 'hooks', 'auth-pages', 'config-page.js');
       return fs.readFileSync(jsPath, 'utf8');
     } catch (error) {
       console.error('⚠️  Could not load config page JS:', error);
-      return ''; // Return empty string if JS fails to load
+      return '';
     }
   }
 
@@ -804,6 +841,9 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Start the configuration HTTP server
    */
   private async startConfigServer(): Promise<void> {
+    // Preload config page content before starting server for faster response
+    this.preloadConfigPage();
+    
     return new Promise((resolve, reject) => {
       if (this.configServer) {
         console.error('⚠️  Config server already running');
@@ -1106,6 +1146,16 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 }
                 
                 console.error('🎉 Authentication complete! Stopping config server...');
+                
+                // Close browser window on Windows (macOS handles this via AppleScript in monitoring)
+                if (process.platform === 'win32') {
+                  try {
+                    await this.closeConfigBrowserWindow();
+                  } catch (error) {
+                    // Ignore close errors
+                  }
+                }
+                
                 // Stop server after successful authentication
                 this.stopConfigServer();
                 
@@ -1197,7 +1247,38 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
 
       this.configServer.listen(CONFIG_SERVER_PORT, CONFIG_SERVER_HOST, () => {
         console.error(`✅ Configuration server started at http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}`);
-        resolve();
+        
+        // Verify the server is actually responding before resolving
+        // Use a separate async function to properly await
+        (async () => {
+          console.error('⏳ Verifying config server is ready...');
+          let verified = false;
+          const maxAttempts = 15; // Increased attempts
+          for (let i = 0; i < maxAttempts; i++) {
+            try {
+              const resp = await fetch(`http://${CONFIG_SERVER_HOST}:${CONFIG_SERVER_PORT}/config`, {
+                signal: AbortSignal.timeout(500) // Shorter timeout for faster checks
+              });
+              if (resp.ok) {
+                verified = true;
+                console.error(`✅ Config server verified and ready (attempt ${i + 1}/${maxAttempts})`);
+                break;
+              }
+            } catch (error: any) {
+              // Server not ready yet, wait a bit
+              if (i < maxAttempts - 1) {
+                await new Promise(r => setTimeout(r, 100)); // Shorter wait between attempts
+              }
+            }
+          }
+          
+          if (!verified) {
+            console.error('⚠️  Config server verification timed out - server may still be starting');
+            console.error('   Continuing anyway - browser will retry if needed');
+          }
+          
+          resolve();
+        })();
       });
 
       this.configServer.on('error', (error: any) => {
@@ -1210,6 +1291,312 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         }
       });
     });
+  }
+
+  /**
+   * Helper method to close popup window (Windows)
+   */
+  private async closePopupWindow(browserUsed: string): Promise<void> {
+    try {
+      const browserProcessName = browserUsed.replace('-app-incognito', '').replace('-app', '');
+      console.error(`🔄 Attempting to close browser window (${browserProcessName})...`);
+      
+      // More aggressive approach: close all instances of the browser process
+      // This is safe because we launched it in a temp profile directory
+      // Use semicolons to separate PowerShell commands instead of newlines
+      const psScript = `$processes = Get-Process -Name "${browserProcessName}" -ErrorAction SilentlyContinue; if ($processes) { Write-Output "Found $($processes.Count) ${browserProcessName} process(es)"; $processes | Stop-Process -Force; Write-Output "Closed ${browserProcessName} processes" } else { Write-Output "No ${browserProcessName} processes found" }`;
+      
+      const { stdout } = await execAsync(`powershell -Command "${psScript}"`);
+      console.error(`   ${stdout.trim()}`);
+      console.error('✅ Browser window close command executed');
+    } catch (error: any) {
+      console.error(`⚠️  Error closing browser window: ${error.message || error}`);
+      // Try fallback: close config browser window
+      try {
+        await this.closeConfigBrowserWindow();
+      } catch (fallbackError) {
+        console.error('⚠️  Fallback close also failed');
+      }
+    }
+  }
+
+  /**
+   * Close the config browser window (Windows)
+   */
+  private async closeConfigBrowserWindow(): Promise<void> {
+    try {
+      // Determine browser executable name
+      let browserExe = 'chrome';
+      if (this.detectedBrowser === 'msedge') {
+        browserExe = 'msedge';
+      } else if (this.detectedBrowser === 'firefox') {
+        browserExe = 'firefox';
+      } else if (this.detectedBrowser === 'brave') {
+        browserExe = 'brave';
+      }
+      
+      // Close browser windows that might be showing the config page
+      // Look for windows with titles containing our config server URL
+      const psScript = `
+        Get-Process -Name "${browserExe}" -ErrorAction SilentlyContinue | 
+          Where-Object { $_.MainWindowTitle -like '*localhost:3333*' -or $_.MainWindowTitle -like '*127.0.0.1:3333*' } | 
+          Stop-Process -Force
+      `.replace(/\n\s+/g, ' ');
+      await execAsync(`powershell -Command "${psScript}"`);
+    } catch (error) {
+      // Ignore close errors - window might already be closed
+    }
+  }
+
+  /**
+   * Windows-specific monitoring using loopback server or DevTools Protocol
+   */
+  private async monitorBrowserWindows(): Promise<string> {
+    const timeout = 120; // 2 minutes
+    const startTime = Date.now();
+    const redirectUri = this.authConfig.redirectUri!;
+    
+    let parsed: URL;
+    try {
+      parsed = new URL(redirectUri);
+    } catch {
+      throw new Error('Invalid EGAIN_REDIRECT_URI. Expected a valid URL.');
+    }
+
+    const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) && !!parsed.port;
+    const isConfigServerCallback = parsed.hostname === CONFIG_SERVER_HOST && 
+                                   parseInt(parsed.port, 10) === CONFIG_SERVER_PORT &&
+                                   parsed.pathname === '/callback';
+
+    // If redirect URI points to our config server callback, use the existing callback handler
+    // The browser is already navigating there, so we just wait for the token to be set
+    if (isConfigServerCallback) {
+      console.error(`🔍 Waiting for callback via config server at ${redirectUri}...`);
+      const deadline = Date.now() + timeout * 1000;
+      while (Date.now() < deadline) {
+        if (this.token) {
+          // Token was set by the callback handler - close the browser window
+          await this.closeConfigBrowserWindow();
+          console.error('✅ Found authorization code via config server callback');
+          console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
+          return 'code-received'; // Placeholder - token already set
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+      throw new Error('Authentication timeout. Please try again.');
+    }
+
+    if (isLoopback) {
+      // Loopback redirect - start HTTP server on the redirect port
+      const host = parsed.hostname;
+      const port = parseInt(parsed.port, 10);
+      const pathname = parsed.pathname || '/';
+      console.error(`🔊 Starting local callback server at ${host}:${port}${pathname} to capture auth code...`);
+
+      const authCodePromise = new Promise<string>((resolve, reject) => {
+        let settled = false;
+        const server = http.createServer((req, res) => {
+          try {
+            if (!req.url) return;
+            const reqUrl = new URL(req.url, `http://${host}:${port}`);
+            if (reqUrl.pathname !== pathname) {
+              res.statusCode = 404;
+              res.end('Not Found');
+              return;
+            }
+
+            const code = reqUrl.searchParams.get('code');
+            const err = reqUrl.searchParams.get('error');
+
+            if (code) {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              res.end('<html><body><h3>Authentication complete. You can close this window.</h3><script>window.close && window.close();</script></body></html>');
+              if (!settled) {
+                settled = true;
+                server.close(() => {});
+                resolve(code);
+              }
+            } else if (err) {
+              const desc = reqUrl.searchParams.get('error_description') || 'No description';
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              res.end(`<html><body><h3>Authentication error: ${err}</h3><p>${desc}</p></body></html>`);
+              if (!settled) {
+                settled = true;
+                server.close(() => {});
+                reject(new Error(`OAuth error: ${err} - ${desc}`));
+              }
+            } else {
+              res.statusCode = 400;
+              res.end('Missing code');
+            }
+          } catch (e) {
+            try { res.statusCode = 500; res.end('Internal Server Error'); } catch {
+              // Ignore errors if response was already sent or connection closed
+            }
+          }
+        });
+
+        server.listen(port, host, () => {
+          console.error('✅ Local callback server is listening');
+        });
+
+        const to = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            server.close(() => {});
+            reject(new Error('Authentication timeout. Please try again.'));
+          }
+        }, timeout * 1000);
+
+        server.on('close', () => {
+          clearTimeout(to);
+        });
+      });
+
+      // Browser is already open - it will redirect to the OAuth URL and then back to our callback
+      // We just wait for the callback, then close the browser window
+      const code = await authCodePromise;
+      // Close the browser window immediately after getting the code
+      await this.closeConfigBrowserWindow();
+      console.error('✅ Found authorization code via loopback redirect');
+      console.error(`🔑 Extracted authorization code: ${code.substring(0, 10)}...`);
+      console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
+      return code;
+    }
+
+    // Non-loopback (e.g., oauth.pstmn.io): Use Chrome DevTools protocol to watch URL changes
+    // DevTools Protocol should already be enabled from openConfigBrowser()
+    // The config page JavaScript will handle navigation to OAuth URL, we just monitor via DevTools
+    if (!this.devToolsPort || !this.devToolsTempDir) {
+      throw new Error('DevTools Protocol not initialized. This should not happen for non-loopback redirects.');
+    }
+    
+    console.error('🔄 Using existing DevTools connection to monitor OAuth redirect...');
+    console.error(`🛠️  DevTools Protocol port: ${this.devToolsPort}`);
+    console.error('💡 The config page will navigate to OAuth URL automatically');
+    console.error('⏳ Note: Initial page load may take a moment due to DevTools Protocol overhead');
+    console.error('   Please wait for the config page to fully load before proceeding...');
+
+    const redirectBase = `${parsed.origin}${parsed.pathname}`;
+    const deadline = Date.now() + timeout * 1000;
+
+    const pollTargets = async (): Promise<string> => {
+      const endpoints = [
+        `http://127.0.0.1:${this.devToolsPort}/json/list`,
+        `http://127.0.0.1:${this.devToolsPort}/json`
+      ];
+      let pollCount = 0;
+      const logInterval = 10; // Log every 10 polls (every 5 seconds)
+      
+      console.error(`🔍 Starting to poll DevTools for redirect to: ${redirectBase}`);
+      console.error(`   Deadline: ${new Date(deadline).toLocaleTimeString()} (${Math.round((deadline - Date.now()) / 1000)}s remaining)`);
+      
+      while (Date.now() < deadline) {
+        pollCount++;
+        const timeRemaining = Math.round((deadline - Date.now()) / 1000);
+        
+        if (pollCount % logInterval === 0) {
+          console.error(`   Poll ${pollCount}: Checking for redirect... (${timeRemaining}s remaining)`);
+        }
+        
+        for (const ep of endpoints) {
+          try {
+            const resp = await fetch(ep, {
+              signal: AbortSignal.timeout(3000) // 3 second timeout
+            });
+            if (!resp.ok) {
+              if (pollCount % logInterval === 0) {
+                console.error(`   Poll ${pollCount}: DevTools responded with status ${resp.status}`);
+              }
+              continue;
+            }
+            
+            const targets = await resp.json() as Array<{ url?: string; type?: string }>;
+            
+            if (pollCount % logInterval === 0 && targets.length > 0) {
+              const urls = targets.map(t => t.url || '(no URL)').slice(0, 2);
+              console.error(`   Poll ${pollCount}: Checking ${targets.length} target(s), URLs: ${urls.join(', ')}${targets.length > 2 ? '...' : ''}`);
+            }
+            
+            for (const t of targets) {
+              const tUrl = t.url || '';
+              if (tUrl.includes(redirectBase)) {
+                console.error(`   ✅ Found redirect URL matching base: ${tUrl.substring(0, 100)}...`);
+                
+                const codeMatch = tUrl.match(/[?&]code=([^&]+)/);
+                if (codeMatch && codeMatch[1]) {
+                  console.error(`   ✅ Authorization code found in URL!`);
+                  return codeMatch[1];
+                }
+                
+                const errMatch = tUrl.match(/[?&]error=([^&]+)/);
+                if (errMatch && errMatch[1]) {
+                  const errDescMatch = tUrl.match(/error_description=([^&]+)/);
+                  const errDesc = errDescMatch && errDescMatch[1] ? decodeURIComponent(errDescMatch[1]) : 'No description';
+                  throw new Error(`OAuth error: ${decodeURIComponent(errMatch[1])} - ${errDesc}`);
+                }
+              }
+            }
+          } catch (error: any) {
+            if (pollCount % logInterval === 0 && error.name !== 'AbortError') {
+              console.error(`   Poll ${pollCount}: Error checking DevTools: ${error.message || error}`);
+            }
+            // Continue polling
+          }
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+      throw new Error('Authentication timeout. Please try again.');
+    };
+
+    try {
+      const code = await pollTargets();
+      
+      console.error('✅ Found authorization code via DevTools polling');
+      console.error(`🔑 Extracted authorization code: ${code.substring(0, 20)}...`);
+      
+      // Close the browser window immediately after getting the code
+      console.error('🔄 Closing browser window...');
+      let browserExe = 'chrome';
+      if (this.detectedBrowser === 'msedge') {
+        browserExe = 'msedge';
+      } else if (this.detectedBrowser === 'brave') {
+        browserExe = 'brave';
+      }
+      
+      const browserUsed = `${browserExe}-app-incognito`;
+      console.error(`   Browser process: ${browserExe}`);
+      console.error(`   Browser identifier: ${browserUsed}`);
+      
+      await this.closePopupWindow(browserUsed);
+      
+      console.error('⚡ Authentication completed in', ((Date.now() - startTime) / 1000).toFixed(1), 'seconds');
+      return code;
+    } catch (e) {
+      // Close browser on error too
+      let browserExe = 'chrome';
+      if (this.detectedBrowser === 'msedge') {
+        browserExe = 'msedge';
+      } else if (this.detectedBrowser === 'brave') {
+        browserExe = 'brave';
+      }
+      await this.closePopupWindow(`${browserExe}-app-incognito`);
+      throw e;
+    } finally {
+      try {
+        // Best-effort cleanup of temp profile directory
+        if (this.devToolsTempDir) {
+          fs.rmSync(this.devToolsTempDir, { recursive: true, force: true });
+        }
+      } catch {
+        // Ignore cleanup errors - temp directory will be cleaned up by OS eventually
+      }
+      // Reset DevTools state
+      this.devToolsPort = null;
+      this.devToolsTempDir = null;
+    }
   }
 
   /**
@@ -1228,6 +1615,80 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     const ABOUT_BLANK_THRESHOLD = 1; // Show error after 5 consecutive about:blank readings
     let firefoxWarningLogged = false;
     
+    // Windows uses a different monitoring approach
+    if (platform === 'win32') {
+      try {
+        const code = await this.monitorBrowserWindows();
+        
+        // If code is 'code-received', token was already set by callback handler
+        if (code === 'code-received') {
+          // Token already set, just ensure cache is initialized
+          if (this.portalCacheHook && this.token) {
+            try {
+              const fakeRequest = new Request(this.authConfig.environmentUrl!, {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+              });
+              await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
+              console.error('✅ Cache initialization completed');
+            } catch (error) {
+              console.error('⚠️  Cache initialization failed:', error);
+            }
+          }
+          console.error('🎉 Authentication complete! Stopping config server...');
+          this.stopConfigServer();
+          return; // Success - exit
+        }
+        
+        // Otherwise, exchange code for token
+        const accessToken = await this.getUserAccessToken(code);
+        console.error('✅ Access token received');
+        
+        this.token = accessToken;
+        
+        // Trigger cache initialization if available
+        if (this.portalCacheHook) {
+          try {
+            const fakeRequest = new Request(this.authConfig.environmentUrl!, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
+            console.error('✅ Cache initialization completed');
+          } catch (error) {
+            console.error('⚠️  Cache initialization failed:', error);
+          }
+        }
+        
+        console.error('🎉 Authentication complete! Stopping config server...');
+        this.stopConfigServer();
+        return; // Success - exit
+      } catch (error: any) {
+        const errorMessage = error.message || String(error);
+        const isScopeError = errorMessage.includes('invalid_scope') || 
+                           errorMessage.toLowerCase().includes('scope');
+        const isRetryableError = errorMessage.includes('access_denied') || 
+                               errorMessage.includes('invalid_grant') ||
+                               errorMessage.toLowerCase().includes('password') || 
+                               errorMessage.toLowerCase().includes('username') ||
+                               errorMessage.toLowerCase().includes('credential');
+        
+        if (isScopeError) {
+          console.error('❌ OAuth scope error:', errorMessage);
+          console.error('💡 This is a configuration error. Please check your scope settings.');
+          console.error('🛑 Stopping server - please fix the configuration and try again.');
+          this.stopConfigServer();
+        } else if (isRetryableError) {
+          console.error('❌ OAuth authentication error:', errorMessage);
+          console.error('💡 Please try again with correct credentials.');
+          // For retryable errors, we could potentially restart monitoring, but for now we'll stop
+          this.stopConfigServer();
+        } else {
+          console.error('❌ Authentication monitoring error:', error);
+          this.stopConfigServer();
+        }
+        return; // Exit on error
+      }
+    }
+    
     // Log monitoring start only once
     if (platform === 'darwin') {
       if (this.detectedBrowser === 'Firefox') {
@@ -1240,8 +1701,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       } else {
         console.error(`🔍 Monitoring ${this.detectedBrowser} for authorization code...`);
       }
-    } else if (platform === 'win32') {
-      console.error(`🔍 Monitoring ${this.detectedBrowser} for authorization code...`);
     }
     
     while (true) {
@@ -1287,19 +1746,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               currentUrl = '';
             }
           }
-        } else if (platform === 'win32') {
-          // Windows - Get browser window title
-          const browserProcessName = this.detectedBrowser.replace('.exe', '');
-          const psScript = `
-            $process = Get-Process -Name "${browserProcessName}" -ErrorAction SilentlyContinue | 
-              Where-Object { $_.MainWindowHandle -ne 0 } | 
-              Select-Object -First 1
-            if ($process) {
-              $process.MainWindowTitle
-            }
-          `.replace(/\n\s+/g, ' ');
-          const { stdout } = await execAsync(`powershell -Command "${psScript}"`);
-          currentUrl = stdout.trim();
         }
         
         // Detect about:blank issue (Chrome sometimes reports this incorrectly)
@@ -1393,12 +1839,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             // Close browser window (non-blocking)
             setImmediate(async () => {
               try {
-                if (platform === 'darwin') {
+                if (process.platform === 'darwin') {
                   await execAsync(`osascript -e 'tell application "${this.detectedBrowser}" to close front window'`);
-                } else if (platform === 'win32') {
-                  const browserProcessName = this.detectedBrowser.replace('.exe', '');
-                  await execAsync(`powershell -Command "Stop-Process -Name '${browserProcessName}' -Force"`);
                 }
+                // Note: Windows case handled separately in monitorBrowserWindows()
               } catch (closeError) {
                 // Ignore close errors
               }
@@ -1535,6 +1979,28 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       console.error('📋 Opening browser for configuration...');
     }
     
+    // Check if we need DevTools Protocol (Windows + non-loopback redirect)
+    let needsDevTools = false;
+    if (platform === 'win32' && this.authConfig.redirectUri) {
+      try {
+        const parsed = new URL(this.authConfig.redirectUri);
+        const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) && !!parsed.port;
+        const isConfigServerCallback = parsed.hostname === CONFIG_SERVER_HOST && 
+                                       parseInt(parsed.port, 10) === CONFIG_SERVER_PORT &&
+                                       parsed.pathname === '/callback';
+        needsDevTools = !isLoopback && !isConfigServerCallback;
+        
+        if (needsDevTools) {
+          // Set up DevTools Protocol from the start
+          this.devToolsPort = Math.floor(40000 + Math.random() * 10000);
+          this.devToolsTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'egain-chrome-'));
+          console.error(`🛠️  Enabling DevTools Protocol (port ${this.devToolsPort}) for URL monitoring`);
+        }
+      } catch (e) {
+        // Invalid redirect URI, will be handled later
+      }
+    }
+    
     const windowWidth = 600;
     const windowHeight = 800;
     
@@ -1645,21 +2111,93 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         const incognitoFlag = this.getIncognitoFlag();
         console.error(`🕵️  Using private mode flag: ${incognitoFlag}`);
         
-        if (this.detectedBrowser === 'firefox') {
+        if (needsDevTools && this.devToolsPort && this.devToolsTempDir) {
+          // For non-loopback redirects, launch with DevTools Protocol enabled
+          let browserExe = 'chrome';
+          if (this.detectedBrowser === 'msedge') {
+            browserExe = 'msedge';
+          } else if (this.detectedBrowser === 'brave') {
+            browserExe = 'brave';
+          }
+          
+          // Use --app mode for cleaner window (user preference)
+          const command = `cmd /c start "" "${browserExe}" ${incognitoFlag} --remote-debugging-port=${this.devToolsPort} --user-data-dir="${this.devToolsTempDir}" --app="${configUrl}" --window-size=${windowWidth},${windowHeight} --window-position=100,100`;
+          console.error(`   Executing: start ${browserExe} with DevTools Protocol...`);
+          await execAsync(command);
+          
+          // Wait for browser to start - give it a moment before checking DevTools
+          console.error('⏳ Waiting for browser process to start...');
+          await new Promise(r => setTimeout(r, 2000)); // Give browser 2 seconds to start
+          
+          // Now check if DevTools Protocol is accessible (simplified check)
+          console.error(`⏳ Checking DevTools Protocol on port ${this.devToolsPort}...`);
+          let devToolsReady = false;
+          const maxWaitTime = 8000; // 8 seconds max
+          const startWait = Date.now();
+          let checkCount = 0;
+          
+          while (!devToolsReady && (Date.now() - startWait) < maxWaitTime) {
+            checkCount++;
+            try {
+              const resp = await fetch(`http://127.0.0.1:${this.devToolsPort}/json/list`, {
+                signal: AbortSignal.timeout(1500) // 1.5 second timeout per request
+              });
+              if (resp.ok) {
+                const targets = await resp.json() as Array<{ url?: string; type?: string }>;
+                
+                // Check if config page has loaded
+                const configPageLoaded = targets.some(t => t.url && t.url.includes(CONFIG_SERVER_HOST));
+                if (configPageLoaded) {
+                  console.error(`   ✅ Config page loaded in browser (check ${checkCount})`);
+                  devToolsReady = true;
+                  break;
+                } else if (targets.length > 0) {
+                  // DevTools is accessible but page not loaded yet
+                  if (checkCount === 1 || checkCount % 5 === 0) {
+                    console.error(`   Check ${checkCount}: DevTools accessible, waiting for page to load...`);
+                  }
+                }
+              }
+            } catch (error: any) {
+              if (checkCount === 1 || checkCount % 5 === 0) {
+                console.error(`   Check ${checkCount}: DevTools not accessible yet...`);
+              }
+            }
+            await new Promise(r => setTimeout(r, 500));
+          }
+          
+          if (!devToolsReady) {
+            console.error('⚠️  Page may still be loading, but DevTools Protocol is set up');
+            console.error('   The browser window should show the config page shortly');
+          } else {
+            console.error(`✅ Browser and config page ready (${((Date.now() - startWait) / 1000).toFixed(1)}s)`);
+          }
+          console.error('✅ Browser opened successfully');
+        } else if (this.detectedBrowser === 'firefox') {
           // Firefox on Windows needs special handling
           console.error(`   Executing: start firefox ${incognitoFlag} ...`);
           await execAsync(`cmd /c start "" "${this.detectedBrowser}" ${incognitoFlag} "${configUrl}"`);
+          // Wait for browser to actually open
+          console.error('⏳ Waiting for browser to open and page to load...');
+          await new Promise(r => setTimeout(r, 3000));
+          console.error('✅ Browser opened successfully');
         } else {
           // Chrome, Edge, Brave support --app mode
           console.error(`   Executing: start ${this.detectedBrowser} ${incognitoFlag} --app ...`);
           await execAsync(`cmd /c start "" "${this.detectedBrowser}" ${incognitoFlag} --app="${configUrl}" --window-size=${windowWidth},${windowHeight} --window-position=100,100`);
+          // Wait for browser to actually open and page to start loading
+          console.error('⏳ Waiting for browser to open and page to load...');
+          await new Promise(r => setTimeout(r, 3000));
+          console.error('✅ Browser opened successfully');
         }
       } else {
         // Linux - Use default browser
         console.error(`   Executing: xdg-open ...`);
         await execAsync(`xdg-open "${configUrl}"`);
+        // Wait for browser to actually open
+        await new Promise(r => setTimeout(r, 2000));
+        console.error('✅ Browser opened successfully');
       }
-      console.error('✅ Browser opened successfully');
     } catch (error) {
       console.error('❌ Failed to open browser:', error instanceof Error ? error.message : error);
       console.error('⚠️  Please open manually: ' + configUrl);

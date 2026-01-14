@@ -11,3 +11,4 @@
 .wrangler/
 .env
 .env.local
+/dist

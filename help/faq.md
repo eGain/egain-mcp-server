@@ -226,7 +226,7 @@ If the authentication UI hangs or stalls after the redirect page (nothing happen
 - Clear all cached files: Find and delete `.bearer_token` and `.bearer_token_metadata` files in `~/.npm/_npx/` (see [Finding Token Files](#q-how-do-i-find-my-token-files) above). Note: `~/.egain-mcp/` only contains `config.json` - deleting it will remove your saved configuration.
 - Verify all configuration values against your Admin Console settings
 - Ensure you're using a supported browser (Chrome, Edge, or Brave - Safari is not supported)
-- Verify your client app is configured as a PKCE-friendly SPA platform type (recommended)
+- If on 21.22.2+, use the out of the box client app **APIs Trial** (recommended)
 - Check the [Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) for detailed setup instructions
 - Contact your eGain PA if you don't have access to required Admin Console settings
 
