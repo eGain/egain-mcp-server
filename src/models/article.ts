@@ -61,12 +61,12 @@ export type Article = {
   departmentID?: string | undefined;
   description?: string | undefined;
   expirationDate?: string | undefined;
+  imageURL?: string | undefined;
   includeInGenAI?: boolean | undefined;
   isSubscribed?: boolean | undefined;
   modifiedDate?: string | undefined;
   languageCode?: LanguageCode | undefined;
   link?: Link | undefined;
-  imageURL?: string | undefined;
   name: string;
   structuredAuthoringFields?: StructuredAuthoringFields | undefined;
   articleState?: string | undefined;

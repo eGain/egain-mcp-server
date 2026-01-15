@@ -58,10 +58,22 @@ export const Code$zodSchema = z.enum([
   "da-DK",
   "sv-SE",
   "ru-RU",
-  "fr-CA",
   "zh-CN",
   "ja-JP",
   "ko-KR",
+  "de-AT",
+  "th-TH",
+  "vi-VN",
+  "id-ID",
+  "ms-MY",
+  "fil-PH",
+  "fr-CA",
+  "hi-IN",
+  "uk-UA",
+  "bg-BG",
+  "sk-SK",
+  "sl-SI",
+  "sr-RS",
 ]).describe("The code of the language.");
 
 export type Code = z.infer<typeof Code$zodSchema>;

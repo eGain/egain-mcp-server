@@ -11,6 +11,7 @@ export const TypeName$zodSchema = z.enum([
   "General",
   "Guided Help",
   "Data Link",
+  "PDF Content",
   "Topic Home",
   "Suggestion",
   "Virtual Assistant Action",

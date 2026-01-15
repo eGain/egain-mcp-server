@@ -27,7 +27,7 @@ export type AnswersResponseAnswer = {
   answerValue: string;
   references: Array<ReferenceResponse>;
   answerType: AnswersResponseAnswerType;
-  relevanceScore: number;
+  relevanceScore?: number | undefined;
 };
 
 export const AnswersResponseAnswer$zodSchema: z.ZodType<
@@ -38,7 +38,7 @@ export const AnswersResponseAnswer$zodSchema: z.ZodType<
   answerType: AnswersResponseAnswerType$zodSchema,
   answerValue: z.string(),
   references: z.array(ReferenceResponse$zodSchema),
-  relevanceScore: z.number(),
+  relevanceScore: z.number().optional(),
 });
 
 /**
@@ -71,8 +71,9 @@ export type AnswersResponse = {
   answer: AnswersResponseAnswer;
   searchResults: Array<SearchResult>;
   channel?: AnswersResponseChannel | undefined;
-  sessionId: string;
   eventId?: string | undefined;
+  clientSessionId?: string | undefined;
+  sessionId: string;
 };
 
 export const AnswersResponse$zodSchema: z.ZodType<
@@ -82,6 +83,7 @@ export const AnswersResponse$zodSchema: z.ZodType<
 > = z.object({
   answer: z.lazy(() => AnswersResponseAnswer$zodSchema),
   channel: z.lazy(() => AnswersResponseChannel$zodSchema).optional(),
+  clientSessionId: z.string().optional(),
   eventId: z.string().optional(),
   searchResults: z.array(SearchResult$zodSchema),
   sessionId: z.string(),

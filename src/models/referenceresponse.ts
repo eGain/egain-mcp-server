@@ -4,9 +4,9 @@
 
 import * as z from "zod";
 import {
-  TopicBreadcrumb,
-  TopicBreadcrumb$zodSchema,
-} from "./topicbreadcrumb.js";
+  AITopicBreadcrumb,
+  AITopicBreadcrumb$zodSchema,
+} from "./aitopicbreadcrumb.js";
 
 /**
  * Format of the source document (HTML, DOCX, PPTX, or PDF).
@@ -43,7 +43,7 @@ export type ReferenceResponse = {
   docName?: string | undefined;
   docType: ReferenceResponseDocType;
   source: ReferenceResponseSource;
-  topicBreadcrumb?: Array<TopicBreadcrumb> | undefined;
+  topicBreadcrumb?: Array<AITopicBreadcrumb> | undefined;
 };
 
 export const ReferenceResponse$zodSchema: z.ZodType<
@@ -56,5 +56,5 @@ export const ReferenceResponse$zodSchema: z.ZodType<
   id: z.string(),
   name: z.string(),
   source: ReferenceResponseSource$zodSchema,
-  topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema).optional(),
+  topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema).optional(),
 }).describe("One document used in generated response");

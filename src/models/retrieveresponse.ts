@@ -27,7 +27,7 @@ export type RetrieveResponseAnswer = {
   answerValue: string;
   references: Array<ReferenceResponse>;
   answerType: RetrieveResponseAnswerType;
-  relevanceScore: number;
+  relevanceScore?: number | undefined;
 };
 
 export const RetrieveResponseAnswer$zodSchema: z.ZodType<
@@ -38,7 +38,7 @@ export const RetrieveResponseAnswer$zodSchema: z.ZodType<
   answerType: RetrieveResponseAnswerType$zodSchema,
   answerValue: z.string(),
   references: z.array(ReferenceResponse$zodSchema),
-  relevanceScore: z.number(),
+  relevanceScore: z.number().optional(),
 }).describe(
   "If a certified answer is given. The answer object will be present. <br><br> This will be shown only if certified answers are configured and the certified answer meets the configured threshold.",
 );
@@ -76,6 +76,7 @@ export type RetrieveResponse = {
   searchResults: Array<SearchResult>;
   channel?: RetrieveResponseChannel | undefined;
   eventId?: string | undefined;
+  clientSessionId?: string | undefined;
   sessionId: string;
 };
 
@@ -86,6 +87,7 @@ export const RetrieveResponse$zodSchema: z.ZodType<
 > = z.object({
   answer: z.lazy(() => RetrieveResponseAnswer$zodSchema).optional(),
   channel: z.lazy(() => RetrieveResponseChannel$zodSchema).optional(),
+  clientSessionId: z.string().optional(),
   eventId: z.string().optional(),
   searchResults: z.array(SearchResult$zodSchema),
   sessionId: z.string(),

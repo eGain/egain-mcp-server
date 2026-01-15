@@ -34,7 +34,7 @@ export function createMCPServer(deps: {
 }) {
   const server = new McpServer({
     name: "EgainMcp",
-    version: "1.0.21",
+    version: "1.0.22",
   });
 
   const getClient = deps.getSDK || (() =>
@@ -78,14 +78,14 @@ export function createMCPServer(deps: {
   const register = { tool, resource, resourceTemplate, prompt };
   void register; // suppress unused warnings
 
+  tool(tool$queryRetrieve);
+  tool(tool$queryAnswers);
   tool(tool$getArticle);
   tool(tool$getAnnouncements);
   tool(tool$getPopularArticles);
   tool(tool$getPortals);
-  tool(tool$makeSuggestion);
-  tool(tool$queryAnswers);
   tool(tool$querySearch);
-  tool(tool$queryRetrieve);
+  tool(tool$makeSuggestion);
 
   return server;
 }

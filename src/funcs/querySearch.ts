@@ -13,8 +13,8 @@ import { pathToFunc } from "../lib/url.js";
 import {
   AiSearchRequest,
   AiSearchRequest$zodSchema,
-  AiSearchResponse,
-  AiSearchResponse$zodSchema,
+  AiSearchResponseResponse,
+  AiSearchResponseResponse$zodSchema,
 } from "../models/aisearchop.js";
 import { APIError } from "../models/errors/apierror.js";
 import {
@@ -29,7 +29,7 @@ import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Get the best search results for a user query
+ * Hybrid Search
  *
  * @remarks
  * The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores. <br>**This endpoint is only available for Self Service environments.**
@@ -40,7 +40,7 @@ export function querySearch(
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    AiSearchResponse,
+    AiSearchResponseResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -64,7 +64,7 @@ async function $do(
 ): Promise<
   [
     Result<
-      AiSearchResponse,
+      AiSearchResponseResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -101,6 +101,8 @@ async function $do(
     "$filter[topicIds]": payload$.dollarFilterTopicIds,
     "$filter[userProfileID]": payload$.dollarFilterUserProfileID,
     "$lang": payload$.Dollar_lang,
+    "$pagenum": payload$.Dollar_pagenum,
+    "$pagesize": payload$.Dollar_pagesize,
     "articleCustomAdditionalAttributes":
       payload$.articleCustomAdditionalAttributes,
     "q": payload$.q,
@@ -163,7 +165,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    AiSearchResponse,
+    AiSearchResponseResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -172,9 +174,14 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, AiSearchResponse$zodSchema, { key: "SearchResponse" }),
-    M.nil(400, AiSearchResponse$zodSchema),
-    M.nil(500, AiSearchResponse$zodSchema),
+    M.json(200, AiSearchResponseResponse$zodSchema, {
+      key: "AISearchResponse",
+    }),
+    M.nil(204, AiSearchResponseResponse$zodSchema),
+    M.json([400, 401, 403, 404, 406], AiSearchResponseResponse$zodSchema, {
+      key: "WSErrorCommon",
+    }),
+    M.json(500, AiSearchResponseResponse$zodSchema, { key: "WSErrorCommon" }),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

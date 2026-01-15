@@ -9,33 +9,40 @@ import {
   AnswersResponse$zodSchema,
 } from "./answersresponse.js";
 import {
-  LanguageCodeParameter,
-  LanguageCodeParameter$zodSchema,
-} from "./languagecodeparameter.js";
+  RequiredLanguageCode,
+  RequiredLanguageCode$zodSchema,
+} from "./requiredlanguagecode.js";
 
-export type PostPortalIDAnswersRequest = {
+export type GetBestAnswerRequest = {
   q: string;
   portalID: string;
   dollarFilterUserProfileID?: string | undefined;
-  Dollar_lang?: LanguageCodeParameter | undefined;
+  Dollar_lang: RequiredLanguageCode;
   dollarFilterTags?: { [k: string]: Array<string> } | undefined;
   dollarFilterTopicIds?: Array<string> | undefined;
   AnswersRequest?: AnswersRequest | undefined;
 };
 
-export const PostPortalIDAnswersRequest$zodSchema: z.ZodType<
-  PostPortalIDAnswersRequest,
+export const GetBestAnswerRequest$zodSchema: z.ZodType<
+  GetBestAnswerRequest,
   z.ZodTypeDef,
   unknown
 > = z.object({
   AnswersRequest: AnswersRequest$zodSchema.optional(),
-  Dollar_lang: LanguageCodeParameter$zodSchema.default("en-US"),
+  Dollar_lang: RequiredLanguageCode$zodSchema,
   dollarFilterTags: z.record(z.array(z.string())).describe(
     "An object where each key is a **Category Tag ID** (numeric string),  \n"
       + "and each value is an array of **Tag IDs** for that category.\n"
+      + " **Note**:\n"
+      + "  - The '$filter[tags]' query parameter JSON value should be url encoded.\n"
+      + "  - Some developer tools for invoking APIs may not url encode the '$filter[tags]' query parameter JSON value by default. Ensure that only url encoded values are used.\n"
+      + "  - Example of JSON value: {\"BASE-40845\":[\"BASE-40849\",\"BASE-40853\"]}\n"
+      + "  - Example of URL encoded value: %7B%22BASE-40845%22%3A%5B%22BASE-40849%22%2C%22BASE-40853%22%5D%7D\n"
       + "",
   ).optional(),
-  dollarFilterTopicIds: z.array(z.string()).optional(),
+  dollarFilterTopicIds: z.array(z.string()).describe(
+    "An array of topic IDs. It is used to restrict search results to specific topics.",
+  ).optional(),
   dollarFilterUserProfileID: z.string().optional(),
   portalID: z.string().describe(
     "The ID of the portal being accessed.<br><br>A portal ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.",
@@ -43,15 +50,15 @@ export const PostPortalIDAnswersRequest$zodSchema: z.ZodType<
   q: z.string().describe("The search query string."),
 });
 
-export type PostPortalIDAnswersResponse = {
+export type GetBestAnswerResponse = {
   ContentType: string;
   StatusCode: number;
   RawResponse: Response;
   AnswersResponse?: AnswersResponse | undefined;
 };
 
-export const PostPortalIDAnswersResponse$zodSchema: z.ZodType<
-  PostPortalIDAnswersResponse,
+export const GetBestAnswerResponse$zodSchema: z.ZodType<
+  GetBestAnswerResponse,
   z.ZodTypeDef,
   unknown
 > = z.object({

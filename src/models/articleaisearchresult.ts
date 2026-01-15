@@ -7,65 +7,65 @@ import {
   AdditionalSnippets,
   AdditionalSnippets$zodSchema,
 } from "./additionalsnippets.js";
-import { Tags, Tags$zodSchema } from "./tags.js";
 import {
-  TopicBreadcrumb,
-  TopicBreadcrumb$zodSchema,
-} from "./topicbreadcrumb.js";
+  AITopicBreadcrumb,
+  AITopicBreadcrumb$zodSchema,
+} from "./aitopicbreadcrumb.js";
+import { SchemasTags, SchemasTags$zodSchema } from "./schemastags.js";
 
 /**
  * Format of the source document (HTML, DOCX, PPTX or PDF).
  */
-export const ArticleSearchResultDocType$zodSchema = z.enum([
+export const ArticleAISearchResultDocType$zodSchema = z.enum([
   "HTML",
   "DOCX",
   "PDF",
   "PPTX",
 ]).describe("Format of the source document (HTML, DOCX, PPTX or PDF).");
 
-export type ArticleSearchResultDocType = z.infer<
-  typeof ArticleSearchResultDocType$zodSchema
+export type ArticleAISearchResultDocType = z.infer<
+  typeof ArticleAISearchResultDocType$zodSchema
 >;
 
 /**
  * The source type.
  */
-export const ArticleSearchResultSource$zodSchema = z.enum([
+export const ArticleAISearchResultSource$zodSchema = z.enum([
   "eGain Article",
   "eGain Attachment",
 ]).describe("The source type.");
 
-export type ArticleSearchResultSource = z.infer<
-  typeof ArticleSearchResultSource$zodSchema
+export type ArticleAISearchResultSource = z.infer<
+  typeof ArticleAISearchResultSource$zodSchema
 >;
 
 /**
  * The custom attribute's type.
  */
-export const ArticleSearchResultType$zodSchema = z.enum([
+export const ArticleAISearchResultType$zodSchema = z.enum([
   "STRING",
   "INTEGER",
   "BOOLEAN",
   "DATETIME",
 ]).describe("The custom attribute's type.");
 
-export type ArticleSearchResultType = z.infer<
-  typeof ArticleSearchResultType$zodSchema
+export type ArticleAISearchResultType = z.infer<
+  typeof ArticleAISearchResultType$zodSchema
 >;
 
-export type ArticleSearchResultCustomAttribute = {
+export type ArticleAISearchResultCustomAttribute = {
   name?: string | undefined;
   value?: Array<string> | undefined;
-  type?: ArticleSearchResultType | undefined;
+  type?: ArticleAISearchResultType | undefined;
 };
 
-export const ArticleSearchResultCustomAttribute$zodSchema: z.ZodType<
-  ArticleSearchResultCustomAttribute,
+export const ArticleAISearchResultCustomAttribute$zodSchema: z.ZodType<
+  ArticleAISearchResultCustomAttribute,
   z.ZodTypeDef,
   unknown
 > = z.object({
   name: z.string().optional(),
-  type: ArticleSearchResultType$zodSchema.optional(),
+  type: ArticleAISearchResultType$zodSchema.optional(),
   value: z.array(z.string()).optional(),
 });
 
@@ -74,7 +74,7 @@ export const ArticleSearchResultCustomAttribute$zodSchema: z.ZodType<
  */
 export type ArticleTypeAttributes = {
   typeName?: string | undefined;
-  articleTypeId?: string | undefined;
+  articleTypeId?: any | undefined;
 };
 
 export const ArticleTypeAttributes$zodSchema: z.ZodType<
@@ -82,35 +82,36 @@ export const ArticleTypeAttributes$zodSchema: z.ZodType<
   z.ZodTypeDef,
   unknown
 > = z.object({
-  articleTypeId: z.string().optional(),
+  articleTypeId: z.any().optional(),
   typeName: z.string().optional(),
 }).describe("The type of the Article and its attributes.");
 
 /**
  * Represents a single document or snippet returned by search, along with its metadata and relevance score.
  */
-export type ArticleSearchResult = {
+export type ArticleAISearchResult = {
   id: string;
   name: string;
-  docType: ArticleSearchResultDocType;
+  docType: ArticleAISearchResultDocType;
   docName?: string | undefined;
-  source: ArticleSearchResultSource;
-  customAttributes?: Array<ArticleSearchResultCustomAttribute> | undefined;
-  snippet?: string | undefined;
+  source: ArticleAISearchResultSource;
+  customAttributes?: Array<ArticleAISearchResultCustomAttribute> | undefined;
+  snippet: string;
   keywordSnippet?: string | undefined;
   additionalSnippets?: Array<AdditionalSnippets> | undefined;
   additionalSnippetCount?: number | undefined;
   contextualSummary?: string | undefined;
   modifiedDate?: string | undefined;
   headerPath?: string | undefined;
-  topicBreadcrumb: Array<TopicBreadcrumb>;
-  tagCategories?: Array<Tags> | undefined;
+  topicBreadcrumb: Array<AITopicBreadcrumb>;
+  tagCategories?: Array<SchemasTags> | undefined;
   articleTypeAttributes?: ArticleTypeAttributes | undefined;
-  relevanceScore: number;
+  relevanceScore?: number | undefined;
+  normalizedScore?: number | undefined;
 };
 
-export const ArticleSearchResult$zodSchema: z.ZodType<
-  ArticleSearchResult,
+export const ArticleAISearchResult$zodSchema: z.ZodType<
+  ArticleAISearchResult,
   z.ZodTypeDef,
   unknown
 > = z.object({
@@ -120,20 +121,21 @@ export const ArticleSearchResult$zodSchema: z.ZodType<
     .optional(),
   contextualSummary: z.string().optional(),
   customAttributes: z.array(
-    z.lazy(() => ArticleSearchResultCustomAttribute$zodSchema),
+    z.lazy(() => ArticleAISearchResultCustomAttribute$zodSchema),
   ).optional(),
   docName: z.string().optional(),
-  docType: ArticleSearchResultDocType$zodSchema,
+  docType: ArticleAISearchResultDocType$zodSchema,
   headerPath: z.string().optional(),
   id: z.string(),
   keywordSnippet: z.string().optional(),
   modifiedDate: z.string().optional(),
   name: z.string(),
-  relevanceScore: z.number(),
-  snippet: z.string().optional(),
-  source: ArticleSearchResultSource$zodSchema,
-  tagCategories: z.array(Tags$zodSchema).optional(),
-  topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema),
+  normalizedScore: z.number().optional(),
+  relevanceScore: z.number().optional(),
+  snippet: z.string(),
+  source: ArticleAISearchResultSource$zodSchema,
+  tagCategories: z.array(SchemasTags$zodSchema).optional(),
+  topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema),
 }).describe(
   "Represents a single document or snippet returned by search, along with its metadata and relevance score.",
 );

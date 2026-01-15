@@ -3,11 +3,11 @@
  */
 
 import { queryRetrieve } from "../../funcs/queryRetrieve.js";
-import { PostPortalIDRetrieveRequest$zodSchema } from "../../models/postportalidretrieveop.js";
+import { RetrieveChunksRequest$zodSchema } from "../../models/retrievechunksop.js";
 import { formatResult, ToolDefinition } from "../tools.js";
 
 const args = {
-  request: PostPortalIDRetrieveRequest$zodSchema,
+  request: RetrieveChunksRequest$zodSchema,
 };
 
 export const tool$queryRetrieve: ToolDefinition<typeof args> = {

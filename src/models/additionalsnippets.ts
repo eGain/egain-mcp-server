@@ -25,7 +25,8 @@ export type AdditionalSnippets = {
   docName?: string | undefined;
   snippet: string;
   keywordSnippet?: string | undefined;
-  relevanceScore: number;
+  relevanceScore?: number | undefined;
+  normalizedScore?: number | undefined;
 };
 
 export const AdditionalSnippets$zodSchema: z.ZodType<
@@ -38,6 +39,7 @@ export const AdditionalSnippets$zodSchema: z.ZodType<
   id: z.string(),
   keywordSnippet: z.string().optional(),
   name: z.string(),
-  relevanceScore: z.number(),
+  normalizedScore: z.number().optional(),
+  relevanceScore: z.number().optional(),
   snippet: z.string(),
 });

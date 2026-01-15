@@ -20,11 +20,11 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  PostPortalIDRetrieveRequest,
-  PostPortalIDRetrieveRequest$zodSchema,
-  PostPortalIDRetrieveResponse,
-  PostPortalIDRetrieveResponse$zodSchema,
-} from "../models/postportalidretrieveop.js";
+  RetrieveChunksRequest,
+  RetrieveChunksRequest$zodSchema,
+  RetrieveChunksResponse,
+  RetrieveChunksResponse$zodSchema,
+} from "../models/retrievechunksop.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
@@ -47,11 +47,11 @@ import { Result } from "../types/fp.js";
  */
 export function queryRetrieve(
   client$: EgainMcpCore,
-  request: PostPortalIDRetrieveRequest,
+  request: RetrieveChunksRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    PostPortalIDRetrieveResponse,
+    RetrieveChunksResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -70,12 +70,12 @@ export function queryRetrieve(
 
 async function $do(
   client$: EgainMcpCore,
-  request: PostPortalIDRetrieveRequest,
+  request: RetrieveChunksRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      PostPortalIDRetrieveResponse,
+      RetrieveChunksResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -89,7 +89,7 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => PostPortalIDRetrieveRequest$zodSchema.parse(value$),
+    (value$) => RetrieveChunksRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
@@ -125,7 +125,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "post_/{portalID}/retrieve",
+    operationID: "retrieveChunks",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -173,7 +173,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    PostPortalIDRetrieveResponse,
+    RetrieveChunksResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -182,15 +182,9 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, PostPortalIDRetrieveResponse$zodSchema, {
-      key: "RetrieveResponse",
-    }),
-    M.json(400, PostPortalIDRetrieveResponse$zodSchema, {
-      key: "WSErrorCommon",
-    }),
-    M.json(500, PostPortalIDRetrieveResponse$zodSchema, {
-      key: "WSErrorCommon",
-    }),
+    M.json(200, RetrieveChunksResponse$zodSchema, { key: "RetrieveResponse" }),
+    M.nil(400, RetrieveChunksResponse$zodSchema),
+    M.nil(500, RetrieveChunksResponse$zodSchema),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

@@ -16,8 +16,8 @@ import { RequestInput } from "../lib/http.js";
 export class ServerRoutingHook implements BeforeCreateRequestHook {
   // Operations that need AI Services API
   private readonly aiServicesOperations = new Set([
-    "post_/{portalID}/answers",
-    "post_/{portalID}/retrieve",
+    "getBestAnswer",
+    "retrieveChunks",
   ]);
 
   beforeCreateRequest(

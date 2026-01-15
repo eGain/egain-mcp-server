@@ -20,16 +20,16 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  PostPortalIDAnswersRequest,
-  PostPortalIDAnswersRequest$zodSchema,
-  PostPortalIDAnswersResponse,
-  PostPortalIDAnswersResponse$zodSchema,
-} from "../models/postportalidanswersop.js";
+  GetBestAnswerRequest,
+  GetBestAnswerRequest$zodSchema,
+  GetBestAnswerResponse,
+  GetBestAnswerResponse$zodSchema,
+} from "../models/getbestanswerop.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Get the best answer for a user query
+ * Generate an Answer
  *
  * @remarks
  * Get Answers
@@ -42,14 +42,18 @@ import { Result } from "../types/fp.js";
  * The Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.
  *
  * The API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.
+ *
+ * ## Request Body Notes
+ * - **channel field**: Optional. **Recommended to omit** unless specifically needed. The API works reliably without it. If you receive a 400 Bad Request error when including channel, retry the request without the channel field.
+ * - **Required fields**: eventId and sessionId are required in the request body.
  */
 export function queryAnswers(
   client$: EgainMcpCore,
-  request: PostPortalIDAnswersRequest,
+  request: GetBestAnswerRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    PostPortalIDAnswersResponse,
+    GetBestAnswerResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -68,12 +72,12 @@ export function queryAnswers(
 
 async function $do(
   client$: EgainMcpCore,
-  request: PostPortalIDAnswersRequest,
+  request: GetBestAnswerRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      PostPortalIDAnswersResponse,
+      GetBestAnswerResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -87,7 +91,7 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => PostPortalIDAnswersRequest$zodSchema.parse(value$),
+    (value$) => GetBestAnswerRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
@@ -123,7 +127,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "post_/{portalID}/answers",
+    operationID: "getBestAnswer",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -171,7 +175,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    PostPortalIDAnswersResponse,
+    GetBestAnswerResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -180,11 +184,9 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, PostPortalIDAnswersResponse$zodSchema, {
-      key: "AnswersResponse",
-    }),
-    M.nil(400, PostPortalIDAnswersResponse$zodSchema),
-    M.nil(500, PostPortalIDAnswersResponse$zodSchema),
+    M.json(200, GetBestAnswerResponse$zodSchema, { key: "AnswersResponse" }),
+    M.nil(400, GetBestAnswerResponse$zodSchema),
+    M.nil(500, GetBestAnswerResponse$zodSchema),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

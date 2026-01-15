@@ -5,17 +5,39 @@
 import * as z from "zod";
 
 /**
- * The channel where the query originated, e.g., directly from the portal or via a custom integration.
+ * Optional channel type. Defaults to "portal" if omitted.
+ *
+ * @remarks
+ * Accepts "portal" or "custom". Only include if channel object is provided.
  */
 export const AnswersRequestType$zodSchema = z.enum([
   "portal",
   "custom",
 ]).describe(
-  "The channel where the query originated, e.g., directly from the portal or via a custom integration.",
+  "Optional channel type. Defaults to \"portal\" if omitted. \n"
+    + "Accepts \"portal\" or \"custom\". Only include if channel object is provided.\n"
+    + "",
 );
 
 export type AnswersRequestType = z.infer<typeof AnswersRequestType$zodSchema>;
 
+/**
+ * **Optional** channel information. **Recommended: Omit this field** unless specifically needed.
+ *
+ * @remarks
+ *
+ * **Important Notes:**
+ * - The API works reliably without this field (defaults are applied automatically)
+ * - Including channel may cause validation errors (400 Bad Request) in some cases
+ * - If you receive a 400 error when including channel, retry the request without it
+ * - When channel is provided, both type and name are optional, but name should be non-empty if provided
+ *
+ * **Working examples:**
+ * - Omit channel entirely (recommended)
+ * - channel: {type: "portal", name: "portal"}
+ * - channel: {type: "custom", name: "test"}
+ * - channel: {name: "portal"} (type defaults to "portal")
+ */
 export type AnswersRequestChannel = {
   type?: AnswersRequestType | undefined;
   name?: string | undefined;
@@ -28,30 +50,27 @@ export const AnswersRequestChannel$zodSchema: z.ZodType<
 > = z.object({
   name: z.string().default("portal"),
   type: AnswersRequestType$zodSchema.default("portal"),
-});
-
-/**
- * Additional contextual metadata that enriches the query, providing the LLM with relevant details for tailoring the response.
- */
-export type Context = {
-  userContext?: string | undefined;
-  pageContext?: string | undefined;
-  companyContext?: string | undefined;
-};
-
-export const Context$zodSchema: z.ZodType<Context, z.ZodTypeDef, unknown> = z
-  .object({
-    companyContext: z.string().optional(),
-    pageContext: z.string().optional(),
-    userContext: z.string().optional(),
-  }).describe(
-    "Additional contextual metadata that enriches the query, providing the LLM with relevant details for tailoring the response.",
-  );
+}).describe(
+  "**Optional** channel information. **Recommended: Omit this field** unless specifically needed.\n"
+    + "\n"
+    + "**Important Notes:**\n"
+    + "- The API works reliably without this field (defaults are applied automatically)\n"
+    + "- Including channel may cause validation errors (400 Bad Request) in some cases\n"
+    + "- If you receive a 400 error when including channel, retry the request without it\n"
+    + "- When channel is provided, both type and name are optional, but name should be non-empty if provided\n"
+    + "\n"
+    + "**Working examples:**\n"
+    + "- Omit channel entirely (recommended)\n"
+    + "- channel: {type: \"portal\", name: \"portal\"}\n"
+    + "- channel: {type: \"custom\", name: \"test\"}\n"
+    + "- channel: {name: \"portal\"} (type defaults to \"portal\")\n"
+    + "",
+);
 
 export type AnswersRequest = {
   channel?: AnswersRequestChannel | undefined;
-  context?: Context | undefined;
   eventId: string;
+  clientSessionId?: string | undefined;
   sessionId: string;
 };
 
@@ -61,7 +80,7 @@ export const AnswersRequest$zodSchema: z.ZodType<
   unknown
 > = z.object({
   channel: z.lazy(() => AnswersRequestChannel$zodSchema).optional(),
-  context: z.lazy(() => Context$zodSchema).optional(),
+  clientSessionId: z.string().optional(),
   eventId: z.string(),
   sessionId: z.string(),
 });

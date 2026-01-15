@@ -33,6 +33,7 @@ export const RetrieveRequestChannel$zodSchema: z.ZodType<
 export type RetrieveRequest = {
   channel?: RetrieveRequestChannel | undefined;
   eventId?: string | undefined;
+  clientSessionId?: string | undefined;
   sessionId?: string | undefined;
 };
 
@@ -42,6 +43,7 @@ export const RetrieveRequest$zodSchema: z.ZodType<
   unknown
 > = z.object({
   channel: z.lazy(() => RetrieveRequestChannel$zodSchema).optional(),
+  clientSessionId: z.string().optional(),
   eventId: z.string().optional(),
   sessionId: z.string().optional(),
 });

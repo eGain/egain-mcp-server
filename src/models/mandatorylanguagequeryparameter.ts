@@ -38,6 +38,18 @@ export const MandatoryLanguageQueryParameter$zodSchema = z.enum([
   "hr-HR",
   "ro-RO",
   "th-TH",
+  "de-AT",
+  "vi-VN",
+  "id-ID",
+  "ms-MY",
+  "fil-PH",
+  "fr-CA",
+  "hi-IN",
+  "uk-UA",
+  "bg-BG",
+  "sl-SI",
+  "sr-RS",
+  "xx-XX",
 ]).describe(
   "The language used for fetching the details of a resource. Resources available in different languages may differ from each other. **Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.",
 );

@@ -4,9 +4,9 @@
 
 import * as z from "zod";
 import {
-  TopicBreadcrumb,
-  TopicBreadcrumb$zodSchema,
-} from "./topicbreadcrumb.js";
+  AITopicBreadcrumb,
+  AITopicBreadcrumb$zodSchema,
+} from "./aitopicbreadcrumb.js";
 
 /**
  * Format of the source document (HTML, DOCX, PPTX, or PDF).
@@ -21,13 +21,13 @@ export const SearchResultDocType$zodSchema = z.enum([
 export type SearchResultDocType = z.infer<typeof SearchResultDocType$zodSchema>;
 
 /**
- * The repository or system where the content originated (e.g., eGain, SharePoint).
+ * The repository or system where the content originated (e.g., eGain Article, eGain Attachment).
  */
 export const SearchResultSource$zodSchema = z.enum([
   "eGain Article",
   "eGain Attachment",
 ]).describe(
-  "The repository or system where the content originated (e.g., eGain, SharePoint).",
+  "The repository or system where the content originated (e.g., eGain Article, eGain Attachment).",
 );
 
 export type SearchResultSource = z.infer<typeof SearchResultSource$zodSchema>;
@@ -42,8 +42,10 @@ export type SearchResult = {
   docType: SearchResultDocType;
   source: SearchResultSource;
   snippet: string;
-  relevanceScore: number;
-  topicBreadcrumb?: Array<TopicBreadcrumb> | undefined;
+  contextualSummary?: string | undefined;
+  relevanceScore?: number | undefined;
+  normalizedScore?: number | undefined;
+  topicBreadcrumb?: Array<AITopicBreadcrumb> | undefined;
 };
 
 export const SearchResult$zodSchema: z.ZodType<
@@ -51,14 +53,16 @@ export const SearchResult$zodSchema: z.ZodType<
   z.ZodTypeDef,
   unknown
 > = z.object({
+  contextualSummary: z.string().optional(),
   docName: z.string().optional(),
   docType: SearchResultDocType$zodSchema,
   id: z.string(),
   name: z.string(),
-  relevanceScore: z.number(),
+  normalizedScore: z.number().optional(),
+  relevanceScore: z.number().optional(),
   snippet: z.string(),
   source: SearchResultSource$zodSchema,
-  topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema).optional(),
+  topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema).optional(),
 }).describe(
   "Represents a single document or snippet returned by search, along with its metadata and relevance score.",
 );

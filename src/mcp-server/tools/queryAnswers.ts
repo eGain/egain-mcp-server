@@ -3,16 +3,16 @@
  */
 
 import { queryAnswers } from "../../funcs/queryAnswers.js";
-import { PostPortalIDAnswersRequest$zodSchema } from "../../models/postportalidanswersop.js";
+import { GetBestAnswerRequest$zodSchema } from "../../models/getbestanswerop.js";
 import { formatResult, ToolDefinition } from "../tools.js";
 
 const args = {
-  request: PostPortalIDAnswersRequest$zodSchema,
+  request: GetBestAnswerRequest$zodSchema,
 };
 
 export const tool$queryAnswers: ToolDefinition<typeof args> = {
   name: "query-answers",
-  description: `Get the best answer for a user query
+  description: `Generate an Answer
 
 Get Answers
 
@@ -24,6 +24,10 @@ Get Answers
 The Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.
 
 The API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.
+
+## Request Body Notes
+- **channel field**: Optional. **Recommended to omit** unless specifically needed. The API works reliably without it. If you receive a 400 Bad Request error when including channel, retry the request without the channel field.
+- **Required fields**: eventId and sessionId are required in the request body.
 `,
   annotations: {
     "destructiveHint": false,
