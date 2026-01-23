@@ -32,7 +32,7 @@ Learn more about the tools and usage of the MCP in the [eGain MCP guide](https:/
 - AI Services enabled for the tenant and target portal
 - Knowledge portal and article content available
 - Supported browser: Chrome, Edge, or Brave
-- A PKCE-friendly client application in your eGain tenant
+- A client application configured in your eGain tenant
 
 > ℹ️ MCP access always mirrors the authenticated user’s permissions (portal and article visibility).
 
@@ -77,14 +77,14 @@ If you're having trouble configuring your MCP client, see these detailed guides:
 Once you've set up the server on your client, **run your first eGain MCP query** and a browser window will popup for authentication.
 
 **Requirements for authentication:**
-- A PKCE-friendly client application (SPA platform type recommended)
+- A client application configured in your eGain tenant (some environments may have a pre-configured **APIs Trial** client app)
 - A supported browser (Chrome, Edge, or Brave — Safari is not supported)
 - Delegated API permissions in your client app:
   - `knowledge.portalmgr.manage`
   - `knowledge.portalmgr.read`
   - `core.aiservices.read`
 
-You'll need to enter your authentication configuration values in the browser form. For a tutorial, see the [Authentication Deep Dive](./help/authentication.md). Please contact your eGain PA if you do not have access to client application settings.
+You'll need to enter your authentication configuration values in the browser form. For a tutorial, see the [Authentication Deep Dive](./help/authentication.md). If you need to create a client application, see the [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) — **be sure to select SPA (Single Page Application) as the platform type**. Please contact your eGain PA if you do not have access to client application settings.
 
 <!-- No Installation [installation] -->
 

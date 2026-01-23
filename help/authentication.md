@@ -1,15 +1,17 @@
 # Authentication Deep Dive
 
-The eGain MCP uses a **browser-based PKCE OAuth flow**. Authentication requires a client application configured in your eGain tenant. If you are on 21.22.2, a client app under the name **APIs Trial** can be used for the MCP.
+The eGain MCP uses a **browser-based PKCE OAuth flow**. Authentication requires a client application configured in your eGain tenant. Some environments may have a pre-configured client app named **APIs Trial** that you can use.
 
 > Required delegated permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`.
 
 ## Browser-Based PKCE Authentication (Recommended)
 
 **Requirements**
-- **PKCE-compatible client app** (SPA platform type strongly recommended)
+- **Client application** configured in your eGain tenant (SPA platform recommended)
 - **Supported browser:** Chrome, Edge, or Brave (**Safari is not supported**)
 - User-actor PKCE flow (ensures actions run as the authenticated user)
+
+> **Need to create a client application?** See the [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) for step-by-step instructions. **Important:** When creating a client application, select **SPA** (Single Page Application) as the platform type for PKCE support.
 
 ### How It Works
 
@@ -22,23 +24,23 @@ On your first MCP request (or when a token expires), a browser window opens with
 - **Authorization URL**
 - **Access Token URL**
 - **Redirect URL** (must exactly match your client app)
-- **Scope Prefix** (commercial tenants only)
+- **Scope Prefix** (if required by your environment)
 
 To find your tenant-specific values, use the eGain Administrator Console:
 
 1. Sign in as a Partition Admin → go to `Partition` → `Integration` → `Client Application`.
-2. Open the client application of choice. Note these values:
+2. Open the client application of choice (if available, you may see **APIs Trial** which is pre-configured for MCP use). Note these values:
    - **Client ID** - Copy this value
    - **Redirect URL** - Must exactly match what you enter in the config form
 3. Exit to the Client Application menu and click `Metadata`. Note these values:
    - **Auth URL** - OAuth2 authorization endpoint
    - **Access Token URL** - OAuth2 token endpoint
-   - **API Permission Prefix** - Use as Scope Prefix for commercial environments
+   - **API Permission Prefix** - Use as Scope Prefix (if present in Metadata)
    - **API Domain** - Used for the `--api-domain` flag in MCP configuration
 
-Reference: [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/)
-
 Your configuration is stored locally in `~/.egain-mcp/config.json`. This configuration persists across sessions, so you only need to enter it once.
+
+> **Need to create a client application?** See the [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) for detailed instructions on setting up a client application in your eGain tenant. **Important:** When creating a client application, select **SPA** (Single Page Application) as the platform type for PKCE support.
 
 ### Token Storage & Clearing
 

@@ -114,19 +114,21 @@ Then make any MCP request - authentication will happen automatically.
 - Ensure a supported browser (Chrome, Edge, or Brave) is installed and accessible
 - **Safari is not supported** - Please use Chrome, Edge, or Brave
 - Verify your client application configuration is correct
-- Check that your client app is configured as a PKCE-friendly SPA platform type (recommended)
+- Check if your environment has a pre-configured **APIs Trial** client app available
+- If you need to create a client application, see the [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) — **be sure to select SPA (Single Page Application) as the platform type** (Web requires a client secret and is not PKCE-compatible)
 
 **401/403 errors**
 - Verify token validity: Find and delete `.bearer_token` files in `~/.npm/_npx/` (see [Finding Token Files](#q-how-do-i-find-my-token-files) above) then retry
 - Check that your client app has the required API permissions: `knowledge.portalmgr.manage`, `knowledge.portalmgr.read`, `core.aiservices.read`
 - Confirm Authorization URL and Access Token URL policy names match your tenant configuration
-- For commercial environments, verify Scope Prefix is set correctly (use Metadata value or `api.egain.cloud/auth/` if not present)
+- Verify Scope Prefix is set correctly (use Metadata value if present)
 - Ensure portal permissions: AI Services are turned on, knowledge has been indexed, and/or allow suggestions
 
 **"invalid_client" error**
 - Verify Client ID is correct and matches your client application
 - Ensure the client app exists and is enabled in your tenant
-- Make sure the client app is configured as a SPA platform type for public client
+- Check if your environment has a pre-configured **APIs Trial** client app available
+- If you need to create a client application, see the [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) — **be sure to select SPA (Single Page Application) as the platform type**
 
 **"redirect_uri" mismatch**
 - Ensure the Redirect URL you enter in the browser configuration form exactly matches the redirect URI configured in your client application (including trailing slashes, protocols)
@@ -171,6 +173,8 @@ If the authentication UI hangs or stalls after the redirect page (nothing happen
 - **Safari is not supported** - Please use Chrome, Edge, or Brave
 - Check system permissions for opening browser windows
 - Verify network/VPN/proxy settings allow browser access
+- Check if your environment has a pre-configured **APIs Trial** client app available
+- Ensure you have a client application configured in your eGain tenant (see [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) if needed — **be sure to select SPA platform type**)
 
 **Configuration not saving**
 - Check that you have write permissions to `~/.egain-mcp/config.json`
@@ -188,9 +192,8 @@ If the authentication UI hangs or stalls after the redirect page (nothing happen
 
 **Missing API Domain or Scope Prefix**
 - Find API Domain: Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` → "API Domain"
-- Find Scope Prefix: Same Metadata section → "API Permission Prefix"
-- For commercial environments without Scope Prefix in Metadata, use `api.egain.cloud/auth/`
-- Not required for Rigel environments
+- Find Scope Prefix: Same Metadata section → "API Permission Prefix" (if present)
+- If Scope Prefix is not present in Metadata, you may not need it for your environment
 
 ### MCP Tool Issues
 
@@ -226,7 +229,8 @@ If the authentication UI hangs or stalls after the redirect page (nothing happen
 - Clear all cached files: Find and delete `.bearer_token` and `.bearer_token_metadata` files in `~/.npm/_npx/` (see [Finding Token Files](#q-how-do-i-find-my-token-files) above). Note: `~/.egain-mcp/` only contains `config.json` - deleting it will remove your saved configuration.
 - Verify all configuration values against your Admin Console settings
 - Ensure you're using a supported browser (Chrome, Edge, or Brave - Safari is not supported)
-- If on 21.22.2+, use the out of the box client app **APIs Trial** (recommended)
+- Check if your environment has a pre-configured **APIs Trial** client app available
+- Ensure you have a client application configured in your eGain tenant (see [API Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) if needed — **be sure to select SPA platform type, not Web**)
 - Check the [Authentication Guide](https://apidev.egain.com/developer-portal/get-started/authentication_guide/) for detailed setup instructions
 - Contact your eGain PA if you don't have access to required Admin Console settings
 

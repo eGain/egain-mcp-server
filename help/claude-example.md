@@ -5,7 +5,7 @@ This guide walks you from setup to your first eGain MCP query using **Claude Des
 **Prerequisites:** Node.js 20+, eGain 21.22+, AI Services enabled, appropriate user access, and some Knowledge content.
 
 > **Important:** Authentication uses a browser-based PKCE flow. A browser window will open on first use.
-> - **PKCE-compatible client apps (SPAs) are required**
+> - **Client application required** — you'll need a SPA client application configured in your eGain tenant (some environments may have a pre-configured **APIs Trial** client app)
 > - **Safari is not supported** — use Chrome, Edge, or Brave  
 > See the [Authentication Guide](./authentication.md) for details.
 
@@ -28,7 +28,7 @@ Add the following configuration:
 ```
 ## Step 2: Find your API domain
 
-Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). No access? Contact your eGain PA.
+Go to your Admin Console → `Partition` → `Integration` → `Client Application` → `Metadata` (see "API Domain"). If you see **APIs Trial** in your client applications list, you can use that. No access? Contact your eGain PA.
 
 Replace `...` in the configuration with this value.  
 
