@@ -44,20 +44,25 @@ Your configuration is stored locally in `~/.egain-mcp/config.json`. This configu
 
 ### Token Storage & Clearing
 
-Authentication tokens are cached locally and reused until they expire.
+Authentication tokens are cached locally and reused until they expire. Tokens are stored in the npx cache directory: `~/.npm/_npx/[hash]/node_modules/@egain/egain-mcp-server/`
 
-To reset authentication, delete any cached token files:
+To reset authentication, delete the cached token files **only from the eGain MCP directory**:
 
 **macOS / Linux / WSL / Git Bash**
 ```bash
-find ~ -name ".bearer_token*" -exec rm {} \; 2>/dev/null
-```
-**Windows (PowerShell)**
-```bash
-Get-ChildItem -Path $env:USERPROFILE -Recurse -Filter ".bearer_token*" -ErrorAction SilentlyContinue | Remove-Item -Force
+# Find eGain MCP token files (only in npx cache)
+find ~/.npm/_npx -path "*/@egain/egain-mcp-server/.bearer_token*" -delete 2>/dev/null
 ```
 
-You’ll be prompted to sign in again on your next MCP request.
+**Windows (PowerShell)**
+```powershell
+# Find eGain MCP token files (only in npx cache)
+Get-ChildItem -Path "$env:USERPROFILE\.npm\_npx" -Recurse -Filter ".bearer_token*" -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*@egain\egain-mcp-server*" } | Remove-Item -Force
+```
+
+**Safety note:** These commands only delete token files from the eGain MCP package directory in the npx cache, not from other locations on your system. If you want to verify which files will be deleted first, remove the `-delete` flag (macOS/Linux) or `Remove-Item` (Windows) to see the file paths.
+
+You'll be prompted to sign in again on your next MCP request.
 
 
 ## Direct Access Token (Alternative)
