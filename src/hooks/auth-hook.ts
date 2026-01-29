@@ -1874,50 +1874,61 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           }
         }
         
-        // Check for error parameters - only throw if this is a new error URL
+        // Check for error parameters
         if (currentUrl && currentUrl.includes('error=')) {
-          if (currentUrl !== lastErrorUrl) {
+          const errorMatch = currentUrl.match(/[?&]error=([^&]+)/);
+          const errorDescMatch = currentUrl.match(/error_description=([^&]+)/);
+          const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
+          const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
+          
+          // Scope errors are configuration issues - stop monitoring and let user see error
+          // Username/password errors can be retried - continue monitoring
+          const errorLower = error.toLowerCase();
+          const errorDescLower = errorDesc.toLowerCase();
+          const isScopeError = error === 'invalid_scope' || errorDescLower.includes('scope') || errorLower.includes('scope');
+          const isRetryableError = error === 'access_denied' || error === 'invalid_grant' || 
+                                  errorDescLower.includes('password') || errorLower.includes('password') ||
+                                  errorDescLower.includes('username') || errorLower.includes('username') ||
+                                  errorDescLower.includes('credential') || errorLower.includes('credential') ||
+                                  errorLower.includes('user not found') || errorDescLower.includes('user not found');
+          
+          // Check if this is a new error URL (different error message)
+          const isNewError = currentUrl !== lastErrorUrl;
+          if (isNewError) {
             lastErrorUrl = currentUrl;
-            const errorMatch = currentUrl.match(/[?&]error=([^&]+)/);
-            const errorDescMatch = currentUrl.match(/error_description=([^&]+)/);
-            const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
-            const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
-            
-            // Scope errors are configuration issues - stop monitoring and let user see error
-            // Username/password errors can be retried - continue monitoring
-            const isScopeError = error === 'invalid_scope' || errorDesc.toLowerCase().includes('scope');
-            const isRetryableError = error === 'access_denied' || error === 'invalid_grant' || 
-                                    errorDesc.toLowerCase().includes('password') || 
-                                    errorDesc.toLowerCase().includes('username') ||
-                                    errorDesc.toLowerCase().includes('credential');
-            
-            // Log error only once
-            if (!oAuthErrorLogged) {
-              console.error('❌ OAuth authentication error:', `${error} - ${errorDesc}`);
-              
-              if (isScopeError) {
-                console.error('💡 This is a configuration error. Please check your scope settings and close this window.');
-                console.error('🛑 Stopping monitoring - please fix the configuration and try again.');
-                oAuthErrorLogged = true;
-                // Stop monitoring for scope errors - user needs to fix config
-                this.stopConfigServer();
-                return; // Exit the monitoring loop
-              } else if (isRetryableError) {
-                console.error('💡 The configuration server will remain running. Please try again with correct credentials.');
-                console.error('🔍 Continuing to monitor browser for authorization code...');
-                oAuthErrorLogged = true;
-              } else {
-                // Unknown error type - be conservative and stop
-                console.error('💡 Please check the error message displayed in your browser and close the window.');
-                console.error('🛑 Stopping monitoring.');
-                oAuthErrorLogged = true;
-                this.stopConfigServer();
-                return; // Exit the monitoring loop
-              }
-            }
-            // Continue monitoring silently for retryable errors - don't throw, just keep checking
           }
-          // If it's the same error URL, continue monitoring silently
+          
+          // Always check error type - stop immediately if non-retryable, continue if retryable
+          if (isScopeError) {
+            // Scope errors are configuration issues - stop monitoring
+            if (!oAuthErrorLogged || isNewError) {
+              console.error('❌ OAuth authentication error:', `${error} - ${errorDesc}`);
+              console.error('💡 This is a configuration error. Please check your scope settings and close this window.');
+              console.error('🛑 Stopping monitoring - please fix the configuration and try again.');
+              oAuthErrorLogged = true;
+            }
+            this.stopConfigServer();
+            return; // Exit the monitoring loop
+          } else if (!isRetryableError) {
+            // Unknown/non-retryable error type - stop monitoring
+            if (!oAuthErrorLogged || isNewError) {
+              console.error('❌ OAuth authentication error:', `${error} - ${errorDesc}`);
+              console.error('💡 Please check the error message displayed in your browser and close the window.');
+              console.error('🛑 Stopping monitoring.');
+              oAuthErrorLogged = true;
+            }
+            this.stopConfigServer();
+            return; // Exit the monitoring loop
+          }
+          
+          // Retryable error - log each new error attempt so user knows what happened
+          if (isNewError) {
+            console.error('❌ OAuth authentication error:', `${error} - ${errorDesc}`);
+            console.error('💡 The configuration server will remain running. Please try again with correct credentials.');
+            console.error('🔍 Continuing to monitor browser for authorization code...');
+            oAuthErrorLogged = true;
+          }
+          // Continue monitoring silently for retryable errors - don't throw, just keep checking
         } else {
           // Reset error tracking if URL no longer contains error
           if (lastErrorUrl !== null) {
