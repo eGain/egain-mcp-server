@@ -347,6 +347,26 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
 
 
   /**
+   * Clean environment URL by removing protocol (https://, http://) and trailing slashes
+   * This ensures the domain_hint parameter works correctly
+   */
+  private cleanEnvironmentUrl(url: string | undefined): string | undefined {
+    if (!url) {
+      return url;
+    }
+    
+    let cleaned = url.trim();
+    
+    // Remove protocol (https:// or http://)
+    cleaned = cleaned.replace(/^https?:\/\//i, '');
+    
+    // Remove trailing slashes
+    cleaned = cleaned.replace(/\/+$/, '');
+    
+    return cleaned;
+  }
+
+  /**
    * Save OAuth config to user's home directory (secure file storage)
    */
   private saveConfigToFile(config: AuthConfig): void {
@@ -376,6 +396,15 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       if (fs.existsSync(configPath)) {
         const configContent = fs.readFileSync(configPath, 'utf8');
         const config = JSON.parse(configContent) as AuthConfig;
+        // Clean environmentUrl if present
+        if (config.environmentUrl) {
+          const cleaned = this.cleanEnvironmentUrl(config.environmentUrl);
+          if (cleaned) {
+            config.environmentUrl = cleaned;
+          } else {
+            delete config.environmentUrl;
+          }
+        }
         console.error(`✅ Loaded config from: ${configPath}`);
         return config;
       }
@@ -421,9 +450,13 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             
               switch (cleanKey) {
                 // New variable names (preferred)
-                case 'EGAIN_URL':
-                  config.environmentUrl = cleanValue;
+                case 'EGAIN_URL': {
+                  const cleaned = this.cleanEnvironmentUrl(cleanValue);
+                  if (cleaned) {
+                    config.environmentUrl = cleaned;
+                  }
                   break;
+                }
                 case 'CLIENT_ID':
                   config.clientId = cleanValue;
                   break;
@@ -441,9 +474,13 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                   break;
                 
                 // Backward compatibility with old names
-                case 'EGAIN_ENVIRONMENT_URL':
-                  config.environmentUrl = cleanValue;
+                case 'EGAIN_ENVIRONMENT_URL': {
+                  const cleaned = this.cleanEnvironmentUrl(cleanValue);
+                  if (cleaned) {
+                    config.environmentUrl = cleaned;
+                  }
                   break;
+                }
                 case 'EGAIN_CLIENT_ID':
                   config.clientId = cleanValue;
                   break;
@@ -578,7 +615,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       const queryString = urlParts.slice(1).join('?'); // Handle multiple ? characters
       existingParams = new URLSearchParams(queryString);
       
-      // Remove domain_hint if it exists (we'll add our own)
+      // Remove domain_hint if it exists (we'll add our own cleaned version)
       if (existingParams.has('domain_hint')) {
         existingParams.delete('domain_hint');
         console.error('🔧 Removed existing domain_hint from authorization URL');
@@ -588,8 +625,14 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     const prefix = scopePrefix || '';
     const scope = `${prefix}knowledge.portalmgr.manage ${prefix}knowledge.portalmgr.read ${prefix}core.aiservices.read`;
     
-    // Add our parameters
-    existingParams.set('domain_hint', environmentUrl!.trim());
+    // Clean and validate environmentUrl before using it as domain_hint
+    const cleanedEnvironmentUrl = this.cleanEnvironmentUrl(environmentUrl);
+    if (!cleanedEnvironmentUrl) {
+      throw new Error('Environment URL is required');
+    }
+    
+    // Add our parameters (ensure domain_hint is clean and not duplicated)
+    existingParams.set('domain_hint', cleanedEnvironmentUrl);
     existingParams.set('client_id', clientId!.trim());
     existingParams.set('response_type', 'code');
     existingParams.set('redirect_uri', cleanRedirectUri);
@@ -1027,14 +1070,17 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               }
               
               // Update authConfig from browser form data
+              const cleanedEnvUrl = this.cleanEnvironmentUrl(config.egainUrl);
               this.authConfig = {
-                environmentUrl: config.egainUrl,
                 authUrl: config.authUrl,
                 accessUrl: config.accessTokenUrl,
                 clientId: config.clientId,
                 redirectUri: config.redirectUrl,
                 scopePrefix: config.scopePrefix || undefined
               };
+              if (cleanedEnvUrl) {
+                this.authConfig.environmentUrl = cleanedEnvUrl;
+              }
               
               // Save config to secure file storage (home directory)
               try {
