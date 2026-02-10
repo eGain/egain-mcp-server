@@ -5,28 +5,11 @@
 import * as z from "zod";
 
 /**
- * Indicates the article category name.
- */
-export const TypeName$zodSchema = z.enum([
-  "General",
-  "Guided Help",
-  "Data Link",
-  "PDF Content",
-  "Topic Home",
-  "Suggestion",
-  "Virtual Assistant Action",
-  "Rich Message",
-  "Library Content",
-]).describe("Indicates the article category name.");
-
-export type TypeName = z.infer<typeof TypeName$zodSchema>;
-
-/**
  * The type of the Article and its attributes.
  */
 export type ArticleType = {
   articleCategoryId?: number | undefined;
-  typeName?: TypeName | undefined;
+  typeName?: string | undefined;
   useStructuredAuthoring?: boolean | undefined;
   articleTypeId?: string | undefined;
 };
@@ -38,6 +21,6 @@ export const ArticleType$zodSchema: z.ZodType<
 > = z.object({
   articleCategoryId: z.number().int().optional(),
   articleTypeId: z.string().optional(),
-  typeName: TypeName$zodSchema.optional(),
+  typeName: z.string().optional(),
   useStructuredAuthoring: z.boolean().optional(),
 }).describe("The type of the Article and its attributes.");

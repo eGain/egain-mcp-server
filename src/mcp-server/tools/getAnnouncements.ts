@@ -16,9 +16,47 @@ export const tool$getAnnouncements: ToolDefinition<typeof args> = {
 
 Get Announcements
 
+## How to Use This Tool
+
+**CRITICAL**: This tool requires a \`request\` parameter containing the request object. All parameters must be passed inside a \`request\` object.
+
+**Parameter Format**: 
+- Always wrap parameters in a \`request\` object: \`{"request": {"portalID": "PZ-9999"}}\`
+- Required parameter: \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+- Optional parameters:
+  - \`Dollar_lang\` (string, default: "en-US") - Language code
+  - \`acceptLanguage\` (string, default: "en-US") - Accept-Language header value
+  - \`dollarFilterTags\` (string) - Comma-separated list of Tag/Tag Group IDs
+  - \`workflowMilestone\` (string) - Workflow milestone filter ("authoring", "staging", "publish")
+  - \`Dollar_pagenum\` (number, default: 1) - Page number for pagination
+  - \`Dollar_pagesize\` (number, default: 10) - Number of results per page
+
+**Example**: To get announcements from portal "PZ-9999", call with:
+\`\`\`json
+{"request": {"portalID": "PZ-9999"}}
+\`\`\`
+
+**Example with optional parameters**:
+\`\`\`json
+{"request": {"portalID": "PZ-9999", "Dollar_lang": "en-US", "Dollar_pagesize": 20}}
+\`\`\`
+
+## Displaying Results (MCP-Specific)
+**CRITICAL**: When this tool returns data successfully, you MUST display the announcement articles to the user in your response. Do not silently process the data - always show the user what was returned.
+
+**What to display:**
+- Display all announcement articles with their names and IDs
+- Show the article content (\`content\` or \`contentText\`) for each announcement
+- Display metadata such as \`createdDate\`, \`modifiedDate\`, \`articleSummary\`
+- Show \`attachments\` if present
+- Include \`paginationInfo\` if pagination is used
+- Format announcements in a clear list format
+
+**Example**: "Here are the announcements for this portal: 1) [Announcement Name] (ID: PROD-123) - [content]..."
+
 ## Prerequisites
 - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
+- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
 
 ## Overview
 The Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.

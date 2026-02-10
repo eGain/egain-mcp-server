@@ -34,6 +34,15 @@ import { Result } from "../types/fp.js";
  * @remarks
  * Get All Portals Accessible to User
  *
+ * ## How to Use This Tool
+ *
+ * **Parameter Format**: This tool requires a `request` parameter containing the request object.
+ * - **CRITICAL**: All parameters in this tool are optional. You may pass an empty request object: `{"request": {}}`
+ * - If you want to specify a language, pass: `{"request": {"Dollar_lang": "en-US"}}`
+ * - The `Dollar_lang` parameter is **optional** - if omitted, the API defaults to "en-US"
+ * - **Example with empty request** (recommended if you don't need to specify language): `{"request": {}}`
+ * - **Example with language**: `{"request": {"Dollar_lang": "en-US"}}`
+ *
  * ## Overview
  * The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
  * - If no access tags are specified for a portal, any user can access the portal.
@@ -81,10 +90,26 @@ import { Result } from "../types/fp.js";
  * - Search the complete merged list before concluding the portal doesn't exist
  *
  * This ensures reliable portal name-to-ID resolution and prevents false "not found" errors.
+ *
+ * ## Displaying Results (MCP-Specific)
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the portal information to the user in your response. Do not silently process the data - always show the user what was returned.
+ *
+ * **What to display:**
+ * - Display all portals with their names and IDs
+ * - Show portal `id` (the portal ID needed for other API calls)
+ * - Display portal `name` (the human-readable portal name)
+ * - Show `departmentName` if available
+ * - Include `shortURL` if available
+ * - Display `paginationInfo` to show total count and current page
+ * - Format portals in a clear list format (e.g., "Portal Name (ID: PORTAL-123)")
+ *
+ * **Example**: "Here are the available portals: 1) Business Portal (ID: PORTAL-123), 2) Customer Portal (ID: PORTAL-456)..."
+ *
+ * **Important**: Always display portal IDs clearly, as users will need these IDs to call other tools.
  */
 export function getPortals(
   client$: EgainMcpCore,
-  request: GetMyPortalsRequest,
+  request?: GetMyPortalsRequest | undefined,
   options?: RequestOptions,
 ): APIPromise<
   Result<
@@ -107,7 +132,7 @@ export function getPortals(
 
 async function $do(
   client$: EgainMcpCore,
-  request: GetMyPortalsRequest,
+  request?: GetMyPortalsRequest | undefined,
   options?: RequestOptions,
 ): Promise<
   [
@@ -126,7 +151,7 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => GetMyPortalsRequest$zodSchema.parse(value$),
+    (value$) => GetMyPortalsRequest$zodSchema.optional().parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
@@ -136,21 +161,21 @@ async function $do(
   const body$ = null;
   const path$ = pathToFunc("/myportals")();
   const query$ = encodeFormQuery({
-    "$lang": payload$.Dollar_lang,
-    "$order": payload$.Dollar_order,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "$sort": payload$.Dollar_sort,
-    "department": payload$.department,
-    "filterText": payload$.filterText,
-    "shortUrlTemplate": payload$.shortUrlTemplate,
+    "$lang": payload$?.Dollar_lang,
+    "$order": payload$?.Dollar_order,
+    "$pagenum": payload$?.Dollar_pagenum,
+    "$pagesize": payload$?.Dollar_pagesize,
+    "$sort": payload$?.Dollar_sort,
+    "department": payload$?.department,
+    "filterText": payload$?.filterText,
+    "shortUrlTemplate": payload$?.shortUrlTemplate,
   });
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
     "Accept-Language": encodeSimple(
       "Accept-Language",
-      payload$.acceptLanguage,
+      payload$?.acceptLanguage,
       { explode: false, charEncoding: "none" },
     ),
   }));

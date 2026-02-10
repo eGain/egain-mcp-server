@@ -16,18 +16,54 @@ export const tool$queryAnswers: ToolDefinition<typeof args> = {
 
 Get Answers
 
+## How to Use This Tool
+
+**CRITICAL**: This tool requires a \`request\` parameter containing the request object. All parameters must be passed inside a \`request\` object.
+
+**Parameter Format**: 
+- Always wrap parameters in a \`request\` object: \`{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}\`
+- Required parameters:
+  - \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+  - \`q\` (string) - The search query string
+  - \`Dollar_lang\` (string) - Language code (e.g., "en-US")
+- Optional parameters:
+  - \`dollarFilterUserProfileID\` (string) - User profile ID filter
+  - \`dollarFilterTags\` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
+  - \`dollarFilterTopicIds\` (array) - Array of topic IDs to filter by
+  - \`AnswersRequest\` (object) - Request body parameters:
+    - \`eventId\` (string, **required**) - Event ID
+    - \`sessionId\` (string, **required**) - Session ID
+    - \`channel\` (object, **optional**, recommended to omit) - Channel information. Omit unless specifically needed. If you receive a 400 error with channel, retry without it.
+    - \`context\` (object) - Additional context (companyContext, pageContext, userContext)
+
+**Example**: To get answers for query "loan information" from portal "PZ-9999", call with:
+\`\`\`json
+{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "AnswersRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
+\`\`\`
+
+**Note**: The \`channel\` field in \`AnswersRequest\` is optional and recommended to omit unless specifically needed. The API works reliably without it.
+
+## Displaying Results (MCP-Specific)
+**CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
+
+**What to display:**
+- Display the \`answer.answerValue\` text prominently as the main answer to the user's query
+- Indicate the answer type (\`answerType\`: "certified" or "generative")
+- If \`relevanceScore\` is present, you may mention the confidence level
+- List all \`references\` (article IDs and names) that were used to generate the answer
+- Display \`searchResults\` showing related articles with their names, IDs, snippets, and relevance scores
+- Format the answer in a clear, readable way - this is the primary response the user is seeking
+
+**Example**: "Based on the knowledge base, here's the answer: [answerValue]. This answer was generated using information from: [list references]. Related articles: [list search results]..."
+
 ## Prerequisites
 - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
+- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
 
 ## Overview
 The Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.
 
 The API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.
-
-## Request Body Notes
-- **channel field**: Optional. **Recommended to omit** unless specifically needed. The API works reliably without it. If you receive a 400 Bad Request error when including channel, retry the request without the channel field.
-- **Required fields**: eventId and sessionId are required in the request body.
 `,
   annotations: {
     "destructiveHint": false,

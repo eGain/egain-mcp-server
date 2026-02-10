@@ -34,9 +34,49 @@ import { Result } from "../types/fp.js";
  * @remarks
  * Retrieve Chunks
  *
+ * ## How to Use This Tool
+ *
+ * **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
+ *
+ * **Parameter Format**:
+ * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}`
+ * - Required parameters:
+ *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ *   - `q` (string) - The search query string
+ *   - `Dollar_lang` (string) - Language code (e.g., "en-US")
+ * - Optional parameters:
+ *   - `dollarFilterUserProfileID` (string) - User profile ID filter
+ *   - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
+ *   - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
+ *   - `RetrieveRequest` (object) - Additional request body parameters:
+ *     - `channel` (object) - Channel information (optional, recommended to omit)
+ *     - `eventId` (string) - Event ID
+ *     - `sessionId` (string) - Session ID
+ *
+ * **Example**: To retrieve chunks for query "loan information" from portal "PZ-9999", call with:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}
+ * ```
+ *
+ * **Example with RetrieveRequest body**:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "RetrieveRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
+ * ```
+ *
+ * ## Displaying Results (MCP-Specific)
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
+ *
+ * **What to display:**
+ * - If a certified answer is returned (`answer` object), display the `answerValue` text and list the `references` (article IDs and names)
+ * - Display all `searchResults` with their article names, IDs, snippets, and relevance scores (`normalizedScore`)
+ * - Show article metadata such as `docType`, `source`, and `topicBreadcrumb` when available
+ * - Format the results in a user-friendly way (e.g., numbered list, formatted text)
+ *
+ * **Example**: "I found 5 relevant articles about loan information: 1) [Article Name] (ID: PROD-123) - [snippet]..."
+ *
  * ## Prerequisites
  * - **Requires a valid portal ID** (required parameter). If you don't have the portal ID, first call 'get-portals' to get available portals.
- * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
+ * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
  *
  * ## Overview
  * The Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.

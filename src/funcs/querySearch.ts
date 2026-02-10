@@ -32,7 +32,54 @@ import { Result } from "../types/fp.js";
  * Hybrid Search
  *
  * @remarks
- * The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores. <br>**This endpoint is only available for Self Service environments.**
+ * Hybrid Search
+ *
+ * ## How to Use This Tool
+ *
+ * **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
+ *
+ * **Parameter Format**:
+ * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information"}}`
+ * - Required parameters:
+ *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ *   - `q` (string) - The search query string (must be URL-escaped)
+ * - Optional parameters:
+ *   - `Dollar_lang` (string, default: "en-US") - Language code
+ *   - `dollarFilterUserProfileID` (string) - User profile ID filter
+ *   - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
+ *   - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
+ *   - `articleCustomAdditionalAttributes` (string) - Comma-separated custom attribute names
+ *   - `Dollar_pagenum` (number, default: 1) - Page number for pagination
+ *   - `Dollar_pagesize` (number, default: 20) - Number of results per page
+ *
+ * **Example**: To search for "loan information" in portal "PZ-9999", call with:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information"}}
+ * ```
+ *
+ * **Example with optional parameters**:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "Dollar_pagesize": 25}}
+ * ```
+ *
+ * **Note**: This endpoint is only available for Self Service environments.
+ *
+ * ## Displaying Results (MCP-Specific)
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the search results to the user in your response. Do not silently process the data - always show the user what was returned.
+ *
+ * **What to display:**
+ * - Display all search results with article names and IDs
+ * - Show article `snippet` or `keywordSnippet` (the relevant text excerpt)
+ * - Display `normalizedScore` or `relevanceScore` to indicate relevance
+ * - Show `docType`, `source`, and `topicBreadcrumb` metadata
+ * - Display `contextualSummary` if available
+ * - Include `paginationInfo` if pagination is used
+ * - Format results in a numbered list with clear relevance indicators
+ *
+ * **Example**: "I found 10 articles matching 'loan information': 1) [Article Name] (ID: PROD-123) - [snippet] (Relevance: 0.89)..."
+ *
+ * ## Overview
+ * The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores.
  */
 export function querySearch(
   client$: EgainMcpCore,

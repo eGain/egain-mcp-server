@@ -34,6 +34,48 @@ import { Result } from "../types/fp.js";
  * @remarks
  * Get Article by ID
  *
+ * ## How to Use This Tool
+ *
+ * **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
+ *
+ * **Parameter Format**:
+ * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "articleID": "PROD-2996"}}`
+ * - Required parameters:
+ *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ *   - `articleID` (string) - The article ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PROD-2996")
+ * - Optional parameters:
+ *   - `Dollar_lang` (string, default: "en-US") - Language code
+ *   - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
+ *   - `articleAdditionalAttributes` (array) - Additional article attributes to return
+ *   - `Dollar_customAdditionalAttributes` (string) - Custom additional attributes
+ *   - `accessSource` (string, default: "article_view") - How the article was accessed
+ *   - `publishViewId` (string) - Publish view ID
+ *   - `workflowMilestone` (string) - Workflow milestone filter
+ *
+ * **Example**: To get article "PROD-2996" from portal "PZ-9999", call with:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "articleID": "PROD-2996"}}
+ * ```
+ *
+ * **Example with optional parameters**:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "articleID": "PROD-2996", "Dollar_lang": "en-US", "accessSource": "article_view"}}
+ * ```
+ *
+ * ## Displaying Results (MCP-Specific)
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the article content to the user in your response. Do not silently process the data - always show the user what was returned.
+ *
+ * **What to display:**
+ * - Display the article `name` as the title
+ * - Show the article `content` or `contentText` (the full article body)
+ * - Display article metadata: `id`, `articleType`, `createdDate`, `modifiedDate`
+ * - Show `attachments` if present
+ * - Display `topicBreadcrumb` to show where the article is categorized
+ * - Include any other relevant metadata like `articleSummary`, `description`, `articleKeywords`
+ * - Format the article content in a readable way for the user
+ *
+ * **Example**: "Here's the article '[Article Name]' (ID: PROD-2996): [article content]. This article is categorized under: [topic breadcrumb]..."
+ *
  * ## Prerequisites
  * - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
  * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")

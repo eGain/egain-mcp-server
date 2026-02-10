@@ -16,6 +16,48 @@ export const tool$makeSuggestion: ToolDefinition<typeof args> = {
 
 Make a Suggestion
 
+## How to Use This Tool
+
+**CRITICAL**: This tool requires a \`request\` parameter containing the request object. All parameters must be passed inside a \`request\` object.
+
+**Parameter Format**: 
+- Always wrap parameters in a \`request\` object: \`{"request": {"portalID": "PZ-9999", "CreateSuggestion": {...}}}\`
+- Required parameters:
+  - \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+  - \`CreateSuggestion\` (object) - The suggestion object with:
+    - \`name\` (string, **required**) - Name/title of the suggestion
+    - \`content\` (string, **required**) - Content/description of the suggestion
+    - \`language\` (object, **required**) - Language object with \`code\` property (e.g., {"code": "en-US"})
+- Optional parameters:
+  - \`acceptLanguage\` (string, default: "en-US") - Accept-Language header value
+  - \`CreateSuggestion\` additional optional fields:
+    - \`description\` (string) - Additional description
+    - \`feedbackArticle\` (object) - Article ID object if providing feedback on existing article: \`{"id": "PROD-2996"}\`
+    - \`attachments\` (object) - Attachments object
+    - \`customAttributes\` (array) - Custom attributes array
+
+**Example**: To create a suggestion in portal "PZ-9999", call with:
+\`\`\`json
+{"request": {"portalID": "PZ-9999", "CreateSuggestion": {"name": "New Article Request", "content": "Please add information about loan rates", "language": {"code": "en-US"}}}}
+\`\`\`
+
+**Example with feedback on existing article**:
+\`\`\`json
+{"request": {"portalID": "PZ-9999", "CreateSuggestion": {"name": "Article Feedback", "content": "This article needs updating", "language": {"code": "en-US"}, "feedbackArticle": {"id": "PROD-2996"}}}}
+\`\`\`
+
+## Displaying Results (MCP-Specific)
+**CRITICAL**: When this tool returns data successfully, you MUST display the suggestion creation result to the user in your response. Do not silently process the data - always show the user what was returned.
+
+**What to display:**
+- Confirm that the suggestion was successfully created
+- Display the suggestion \`id\` if returned in the response
+- Show the suggestion \`name\` and \`content\` that was submitted
+- If an error occurs, display the error message clearly
+- Provide confirmation message to the user
+
+**Example**: "Your suggestion '[Suggestion Name]' has been successfully submitted. Suggestion ID: [id]..."
+
 ## Prerequisites
 - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
 - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")

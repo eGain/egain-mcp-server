@@ -7,7 +7,7 @@ import { GetMyPortalsRequest$zodSchema } from "../../models/getmyportalsop.js";
 import { formatResult, ToolDefinition } from "../tools.js";
 
 const args = {
-  request: GetMyPortalsRequest$zodSchema,
+  request: GetMyPortalsRequest$zodSchema.optional(),
 };
 
 export const tool$getPortals: ToolDefinition<typeof args> = {
@@ -15,6 +15,15 @@ export const tool$getPortals: ToolDefinition<typeof args> = {
   description: `Get All Portals Accessible To User
 
 Get All Portals Accessible to User
+
+## How to Use This Tool
+
+**Parameter Format**: This tool requires a \`request\` parameter containing the request object.
+- **CRITICAL**: All parameters in this tool are optional. You may pass an empty request object: \`{"request": {}}\`
+- If you want to specify a language, pass: \`{"request": {"Dollar_lang": "en-US"}}\`
+- The \`Dollar_lang\` parameter is **optional** - if omitted, the API defaults to "en-US"
+- **Example with empty request** (recommended if you don't need to specify language): \`{"request": {}}\`
+- **Example with language**: \`{"request": {"Dollar_lang": "en-US"}}\`
 
 ## Overview
 The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
@@ -63,6 +72,22 @@ If you search for "business portal" and the first page returns 25 portals but no
 - Search the complete merged list before concluding the portal doesn't exist
 
 This ensures reliable portal name-to-ID resolution and prevents false "not found" errors.
+
+## Displaying Results (MCP-Specific)
+**CRITICAL**: When this tool returns data successfully, you MUST display the portal information to the user in your response. Do not silently process the data - always show the user what was returned.
+
+**What to display:**
+- Display all portals with their names and IDs
+- Show portal \`id\` (the portal ID needed for other API calls)
+- Display portal \`name\` (the human-readable portal name)
+- Show \`departmentName\` if available
+- Include \`shortURL\` if available
+- Display \`paginationInfo\` to show total count and current page
+- Format portals in a clear list format (e.g., "Portal Name (ID: PORTAL-123)")
+
+**Example**: "Here are the available portals: 1) Business Portal (ID: PORTAL-123), 2) Customer Portal (ID: PORTAL-456)..."
+
+**Important**: Always display portal IDs clearly, as users will need these IDs to call other tools.
 `,
   annotations: {
     "destructiveHint": false,

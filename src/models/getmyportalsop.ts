@@ -9,9 +9,9 @@ import {
   AllAccessiblePortals$zodSchema,
 } from "./allaccessibleportals.js";
 import {
-  MandatoryLanguageQueryParameter,
-  MandatoryLanguageQueryParameter$zodSchema,
-} from "./mandatorylanguagequeryparameter.js";
+  LanguageQueryParameter,
+  LanguageQueryParameter$zodSchema,
+} from "./languagequeryparameter.js";
 import { Order, Order$zodSchema } from "./order.js";
 import {
   SortIdNameDepartment,
@@ -21,7 +21,7 @@ import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
 export type GetMyPortalsRequest = {
   acceptLanguage?: AcceptLanguage | undefined;
-  Dollar_lang: MandatoryLanguageQueryParameter;
+  Dollar_lang?: LanguageQueryParameter | undefined;
   department?: string | undefined;
   filterText?: string | undefined;
   shortUrlTemplate?: string | undefined;
@@ -36,7 +36,7 @@ export const GetMyPortalsRequest$zodSchema: z.ZodType<
   z.ZodTypeDef,
   unknown
 > = z.object({
-  Dollar_lang: MandatoryLanguageQueryParameter$zodSchema,
+  Dollar_lang: LanguageQueryParameter$zodSchema.default("en-US"),
   Dollar_order: Order$zodSchema.optional(),
   Dollar_pagenum: z.number().int().default(1).describe(
     "Pagination parameter that specifies the page number of results to be returned. Used in conjunction with $pagesize.",

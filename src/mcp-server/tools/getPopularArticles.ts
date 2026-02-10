@@ -16,6 +16,43 @@ export const tool$getPopularArticles: ToolDefinition<typeof args> = {
 
 Get Popular Articles
 
+## How to Use This Tool
+
+**CRITICAL**: This tool requires a \`request\` parameter containing the request object. All parameters must be passed inside a \`request\` object.
+
+**Parameter Format**: 
+- Always wrap parameters in a \`request\` object: \`{"request": {"portalID": "PZ-9999"}}\`
+- Required parameter: \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+- Optional parameters:
+  - \`Dollar_lang\` (string, default: "en-US") - Language code
+  - \`Dollar_pagenum\` (number, default: 1) - Page number for pagination
+  - \`Dollar_pagesize\` (number, default: 10) - Number of results per page
+  - \`dollarFilterTopicId\` (string) - Filter by topic ID
+  - \`dollarFilterTags\` (string) - Comma-separated list of Tag/Tag Group IDs
+
+**Example**: To get popular articles from portal "PZ-9999", call with:
+\`\`\`json
+{"request": {"portalID": "PZ-9999"}}
+\`\`\`
+
+**Example with optional parameters**:
+\`\`\`json
+{"request": {"portalID": "PZ-9999", "Dollar_lang": "en-US", "Dollar_pagesize": 20}}
+\`\`\`
+
+## Displaying Results (MCP-Specific)
+**CRITICAL**: When this tool returns data successfully, you MUST display the popular articles to the user in your response. Do not silently process the data - always show the user what was returned.
+
+**What to display:**
+- Display all popular articles with their names and IDs
+- Show article summaries or descriptions when available
+- Display metadata such as \`articleType\`, \`createdDate\`, \`modifiedDate\`
+- Show \`imageURL\` if available (mention thumbnail availability)
+- Include \`paginationInfo\` if pagination is used
+- Format articles in a numbered or bulleted list
+
+**Example**: "Here are the most popular articles: 1) [Article Name] (ID: PROD-123) - [summary]..."
+
 ## Prerequisites
 - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
 - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
