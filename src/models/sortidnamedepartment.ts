@@ -3,13 +3,17 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
+
+export const SortIdNameDepartment = {
+  Id: "id",
+  Name: "name",
+  DepartmentName: "departmentName",
+} as const;
+export type SortIdNameDepartment = ClosedEnum<typeof SortIdNameDepartment>;
 
 export const SortIdNameDepartment$zodSchema = z.enum([
   "id",
   "name",
   "departmentName",
 ]);
-
-export type SortIdNameDepartment = z.infer<
-  typeof SortIdNameDepartment$zodSchema
->;

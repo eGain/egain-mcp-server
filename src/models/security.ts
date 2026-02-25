@@ -4,11 +4,18 @@
 
 import * as z from "zod";
 
-export type Security = { accessToken: string };
+export type Security = {
+  oAuthUser?: string | undefined;
+  oAuthCustomer?: string | undefined;
+  oAuthAnonymousCustomer?: string | undefined;
+  accessToken?: string | undefined;
+};
 
-export const Security$zodSchema: z.ZodType<Security, z.ZodTypeDef, unknown> = z
-  .object({
-    accessToken: z.string().describe(
-      "JWT Bearer Token authentication for API access",
-    ),
-  });
+export const Security$zodSchema: z.ZodType<Security> = z.object({
+  accessToken: z.string().describe(
+    "JWT Bearer Token authentication for API access",
+  ).optional(),
+  oAuthAnonymousCustomer: z.string().describe("API Key").optional(),
+  oAuthCustomer: z.string().describe("API Key").optional(),
+  oAuthUser: z.string().describe("API Key").optional(),
+});

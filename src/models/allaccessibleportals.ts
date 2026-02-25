@@ -17,11 +17,8 @@ export type AllAccessiblePortals = {
   paginationInfo?: PaginationInfo | undefined;
 };
 
-export const AllAccessiblePortals$zodSchema: z.ZodType<
-  AllAccessiblePortals,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  paginationInfo: PaginationInfo$zodSchema.optional(),
-  portal: z.array(AccessiblePortal$zodSchema).optional(),
-}).describe("Success");
+export const AllAccessiblePortals$zodSchema: z.ZodType<AllAccessiblePortals> = z
+  .object({
+    paginationInfo: PaginationInfo$zodSchema.optional(),
+    portal: z.array(AccessiblePortal$zodSchema).optional(),
+  }).describe("Success");

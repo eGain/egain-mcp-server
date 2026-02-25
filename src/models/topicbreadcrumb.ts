@@ -12,10 +12,6 @@ export type TopicBreadcrumb = {
   topicSummary?: Array<TopicSummary> | undefined;
 };
 
-export const TopicBreadcrumb$zodSchema: z.ZodType<
-  TopicBreadcrumb,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const TopicBreadcrumb$zodSchema: z.ZodType<TopicBreadcrumb> = z.object({
   topicSummary: z.array(TopicSummary$zodSchema).optional(),
 }).describe("This schema contains one or more TopicSummary instances.");

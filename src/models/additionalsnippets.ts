@@ -3,20 +3,30 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
 /**
  * Format of the source document (HTML, DOCX, PPTX or PDF).
  */
+export const AdditionalSnippetsDocType = {
+  Html: "HTML",
+  Docx: "DOCX",
+  Pdf: "PDF",
+  Pptx: "PPTX",
+} as const;
+/**
+ * Format of the source document (HTML, DOCX, PPTX or PDF).
+ */
+export type AdditionalSnippetsDocType = ClosedEnum<
+  typeof AdditionalSnippetsDocType
+>;
+
 export const AdditionalSnippetsDocType$zodSchema = z.enum([
   "HTML",
   "DOCX",
   "PDF",
   "PPTX",
 ]).describe("Format of the source document (HTML, DOCX, PPTX or PDF).");
-
-export type AdditionalSnippetsDocType = z.infer<
-  typeof AdditionalSnippetsDocType$zodSchema
->;
 
 export type AdditionalSnippets = {
   id: string;
@@ -29,17 +39,14 @@ export type AdditionalSnippets = {
   normalizedScore?: number | undefined;
 };
 
-export const AdditionalSnippets$zodSchema: z.ZodType<
-  AdditionalSnippets,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  docName: z.string().optional(),
-  docType: AdditionalSnippetsDocType$zodSchema,
-  id: z.string(),
-  keywordSnippet: z.string().optional(),
-  name: z.string(),
-  normalizedScore: z.number().optional(),
-  relevanceScore: z.number().optional(),
-  snippet: z.string(),
-});
+export const AdditionalSnippets$zodSchema: z.ZodType<AdditionalSnippets> = z
+  .object({
+    docName: z.string().optional(),
+    docType: AdditionalSnippetsDocType$zodSchema,
+    id: z.string(),
+    keywordSnippet: z.string().optional(),
+    name: z.string(),
+    normalizedScore: z.number().optional(),
+    relevanceScore: z.number().optional(),
+    snippet: z.string(),
+  });

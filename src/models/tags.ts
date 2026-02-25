@@ -7,6 +7,6 @@ import { Tag, Tag$zodSchema } from "./tag.js";
 
 export type Tags = { tag?: Array<Tag> | undefined };
 
-export const Tags$zodSchema: z.ZodType<Tags, z.ZodTypeDef, unknown> = z.object({
+export const Tags$zodSchema: z.ZodType<Tags> = z.object({
   tag: z.array(Tag$zodSchema).optional(),
 });

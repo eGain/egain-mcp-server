@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import {
   AdditionalSnippets,
   AdditionalSnippets$zodSchema,
@@ -16,6 +17,19 @@ import { SchemasTags, SchemasTags$zodSchema } from "./schemastags.js";
 /**
  * Format of the source document (HTML, DOCX, PPTX or PDF).
  */
+export const ArticleAISearchResultDocType = {
+  Html: "HTML",
+  Docx: "DOCX",
+  Pdf: "PDF",
+  Pptx: "PPTX",
+} as const;
+/**
+ * Format of the source document (HTML, DOCX, PPTX or PDF).
+ */
+export type ArticleAISearchResultDocType = ClosedEnum<
+  typeof ArticleAISearchResultDocType
+>;
+
 export const ArticleAISearchResultDocType$zodSchema = z.enum([
   "HTML",
   "DOCX",
@@ -23,35 +37,47 @@ export const ArticleAISearchResultDocType$zodSchema = z.enum([
   "PPTX",
 ]).describe("Format of the source document (HTML, DOCX, PPTX or PDF).");
 
-export type ArticleAISearchResultDocType = z.infer<
-  typeof ArticleAISearchResultDocType$zodSchema
->;
-
 /**
  * The source type.
  */
+export const ArticleAISearchResultSource = {
+  EGainArticle: "eGain Article",
+  EGainAttachment: "eGain Attachment",
+} as const;
+/**
+ * The source type.
+ */
+export type ArticleAISearchResultSource = ClosedEnum<
+  typeof ArticleAISearchResultSource
+>;
+
 export const ArticleAISearchResultSource$zodSchema = z.enum([
   "eGain Article",
   "eGain Attachment",
 ]).describe("The source type.");
 
-export type ArticleAISearchResultSource = z.infer<
-  typeof ArticleAISearchResultSource$zodSchema
->;
-
 /**
  * The custom attribute's type.
  */
+export const ArticleAISearchResultType = {
+  String: "STRING",
+  Integer: "INTEGER",
+  Boolean: "BOOLEAN",
+  Datetime: "DATETIME",
+} as const;
+/**
+ * The custom attribute's type.
+ */
+export type ArticleAISearchResultType = ClosedEnum<
+  typeof ArticleAISearchResultType
+>;
+
 export const ArticleAISearchResultType$zodSchema = z.enum([
   "STRING",
   "INTEGER",
   "BOOLEAN",
   "DATETIME",
 ]).describe("The custom attribute's type.");
-
-export type ArticleAISearchResultType = z.infer<
-  typeof ArticleAISearchResultType$zodSchema
->;
 
 export type ArticleAISearchResultCustomAttribute = {
   name?: string | undefined;
@@ -60,9 +86,7 @@ export type ArticleAISearchResultCustomAttribute = {
 };
 
 export const ArticleAISearchResultCustomAttribute$zodSchema: z.ZodType<
-  ArticleAISearchResultCustomAttribute,
-  z.ZodTypeDef,
-  unknown
+  ArticleAISearchResultCustomAttribute
 > = z.object({
   name: z.string().optional(),
   type: ArticleAISearchResultType$zodSchema.optional(),
@@ -77,14 +101,11 @@ export type ArticleTypeAttributes = {
   articleTypeId?: any | undefined;
 };
 
-export const ArticleTypeAttributes$zodSchema: z.ZodType<
-  ArticleTypeAttributes,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  articleTypeId: z.any().optional(),
-  typeName: z.string().optional(),
-}).describe("The type of the Article and its attributes.");
+export const ArticleTypeAttributes$zodSchema: z.ZodType<ArticleTypeAttributes> =
+  z.object({
+    articleTypeId: z.any().optional(),
+    typeName: z.string().optional(),
+  }).describe("The type of the Article and its attributes.");
 
 /**
  * Represents a single document or snippet returned by search, along with its metadata and relevance score.
@@ -110,32 +131,29 @@ export type ArticleAISearchResult = {
   normalizedScore?: number | undefined;
 };
 
-export const ArticleAISearchResult$zodSchema: z.ZodType<
-  ArticleAISearchResult,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  additionalSnippetCount: z.number().int().optional(),
-  additionalSnippets: z.array(AdditionalSnippets$zodSchema).optional(),
-  articleTypeAttributes: z.lazy(() => ArticleTypeAttributes$zodSchema)
-    .optional(),
-  contextualSummary: z.string().optional(),
-  customAttributes: z.array(
-    z.lazy(() => ArticleAISearchResultCustomAttribute$zodSchema),
-  ).optional(),
-  docName: z.string().optional(),
-  docType: ArticleAISearchResultDocType$zodSchema,
-  headerPath: z.string().optional(),
-  id: z.string(),
-  keywordSnippet: z.string().optional(),
-  modifiedDate: z.string().optional(),
-  name: z.string(),
-  normalizedScore: z.number().optional(),
-  relevanceScore: z.number().optional(),
-  snippet: z.string(),
-  source: ArticleAISearchResultSource$zodSchema,
-  tagCategories: z.array(SchemasTags$zodSchema).optional(),
-  topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema),
-}).describe(
-  "Represents a single document or snippet returned by search, along with its metadata and relevance score.",
-);
+export const ArticleAISearchResult$zodSchema: z.ZodType<ArticleAISearchResult> =
+  z.object({
+    additionalSnippetCount: z.int().optional(),
+    additionalSnippets: z.array(AdditionalSnippets$zodSchema).optional(),
+    articleTypeAttributes: z.lazy(() => ArticleTypeAttributes$zodSchema)
+      .optional(),
+    contextualSummary: z.string().optional(),
+    customAttributes: z.array(
+      z.lazy(() => ArticleAISearchResultCustomAttribute$zodSchema),
+    ).optional(),
+    docName: z.string().optional(),
+    docType: ArticleAISearchResultDocType$zodSchema,
+    headerPath: z.string().optional(),
+    id: z.string(),
+    keywordSnippet: z.string().optional(),
+    modifiedDate: z.string().optional(),
+    name: z.string(),
+    normalizedScore: z.number().optional(),
+    relevanceScore: z.number().optional(),
+    snippet: z.string(),
+    source: ArticleAISearchResultSource$zodSchema,
+    tagCategories: z.array(SchemasTags$zodSchema).optional(),
+    topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema),
+  }).describe(
+    "Represents a single document or snippet returned by search, along with its metadata and relevance score.",
+  );

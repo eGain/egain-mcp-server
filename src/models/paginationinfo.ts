@@ -12,13 +12,9 @@ export type PaginationInfo = {
   link?: Array<Link> | undefined;
 };
 
-export const PaginationInfo$zodSchema: z.ZodType<
-  PaginationInfo,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  count: z.number().int(),
+export const PaginationInfo$zodSchema: z.ZodType<PaginationInfo> = z.object({
+  count: z.int(),
   link: z.array(Link$zodSchema).optional(),
-  pagenum: z.number().int(),
-  pagesize: z.number().int(),
+  pagenum: z.int(),
+  pagesize: z.int(),
 });

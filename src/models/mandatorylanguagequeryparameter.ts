@@ -5,10 +5,7 @@
 import * as z from "zod";
 import { ClosedEnum } from "../types/enums.js";
 
-/**
- * Language code of the resource's language.
- */
-export const LanguageCode = {
+export const MandatoryLanguageQueryParameter = {
   EnUS: "en-US",
   FRFR: "fr-FR",
   EnGB: "en-GB",
@@ -39,13 +36,24 @@ export const LanguageCode = {
   HRHR: "hr-HR",
   RORO: "ro-RO",
   THTH: "th-TH",
+  DeAT: "de-AT",
+  ViVN: "vi-VN",
+  IDID: "id-ID",
+  MsMY: "ms-MY",
+  FilPH: "fil-PH",
+  FrCA: "fr-CA",
+  HiIN: "hi-IN",
+  UkUA: "uk-UA",
+  BGBG: "bg-BG",
+  SlSI: "sl-SI",
+  SrRS: "sr-RS",
+  XXXX: "xx-XX",
 } as const;
-/**
- * Language code of the resource's language.
- */
-export type LanguageCode = ClosedEnum<typeof LanguageCode>;
+export type MandatoryLanguageQueryParameter = ClosedEnum<
+  typeof MandatoryLanguageQueryParameter
+>;
 
-export const LanguageCode$zodSchema = z.enum([
+export const MandatoryLanguageQueryParameter$zodSchema = z.enum([
   "en-US",
   "fr-FR",
   "en-GB",
@@ -76,4 +84,16 @@ export const LanguageCode$zodSchema = z.enum([
   "hr-HR",
   "ro-RO",
   "th-TH",
-]).describe("Language code of the resource's language.");
+  "de-AT",
+  "vi-VN",
+  "id-ID",
+  "ms-MY",
+  "fil-PH",
+  "fr-CA",
+  "hi-IN",
+  "uk-UA",
+  "bg-BG",
+  "sl-SI",
+  "sr-RS",
+  "xx-XX",
+]);

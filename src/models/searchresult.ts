@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import {
   AITopicBreadcrumb,
   AITopicBreadcrumb$zodSchema,
@@ -11,6 +12,17 @@ import {
 /**
  * Format of the source document (HTML, DOCX, PPTX, or PDF).
  */
+export const SearchResultDocType = {
+  Html: "HTML",
+  Docx: "DOCX",
+  Pdf: "PDF",
+  Pptx: "PPTX",
+} as const;
+/**
+ * Format of the source document (HTML, DOCX, PPTX, or PDF).
+ */
+export type SearchResultDocType = ClosedEnum<typeof SearchResultDocType>;
+
 export const SearchResultDocType$zodSchema = z.enum([
   "HTML",
   "DOCX",
@@ -18,11 +30,18 @@ export const SearchResultDocType$zodSchema = z.enum([
   "PPTX",
 ]).describe("Format of the source document (HTML, DOCX, PPTX, or PDF).");
 
-export type SearchResultDocType = z.infer<typeof SearchResultDocType$zodSchema>;
-
 /**
  * The repository or system where the content originated (e.g., eGain Article, eGain Attachment).
  */
+export const SearchResultSource = {
+  EGainArticle: "eGain Article",
+  EGainAttachment: "eGain Attachment",
+} as const;
+/**
+ * The repository or system where the content originated (e.g., eGain Article, eGain Attachment).
+ */
+export type SearchResultSource = ClosedEnum<typeof SearchResultSource>;
+
 export const SearchResultSource$zodSchema = z.enum([
   "eGain Article",
   "eGain Attachment",
@@ -30,7 +49,16 @@ export const SearchResultSource$zodSchema = z.enum([
   "The repository or system where the content originated (e.g., eGain Article, eGain Attachment).",
 );
 
-export type SearchResultSource = z.infer<typeof SearchResultSource$zodSchema>;
+export const SnippetType = {
+  Chunks: "chunks",
+  ArticleContent: "articleContent",
+} as const;
+export type SnippetType = ClosedEnum<typeof SnippetType>;
+
+export const SnippetType$zodSchema = z.enum([
+  "chunks",
+  "articleContent",
+]);
 
 /**
  * Represents a single document or snippet returned by search, along with its metadata and relevance score.
@@ -43,16 +71,13 @@ export type SearchResult = {
   source: SearchResultSource;
   snippet: string;
   contextualSummary?: string | undefined;
+  snippetType?: SnippetType | undefined;
   relevanceScore?: number | undefined;
   normalizedScore?: number | undefined;
   topicBreadcrumb?: Array<AITopicBreadcrumb> | undefined;
 };
 
-export const SearchResult$zodSchema: z.ZodType<
-  SearchResult,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const SearchResult$zodSchema: z.ZodType<SearchResult> = z.object({
   contextualSummary: z.string().optional(),
   docName: z.string().optional(),
   docType: SearchResultDocType$zodSchema,
@@ -61,6 +86,7 @@ export const SearchResult$zodSchema: z.ZodType<
   normalizedScore: z.number().optional(),
   relevanceScore: z.number().optional(),
   snippet: z.string(),
+  snippetType: SnippetType$zodSchema.optional(),
   source: SearchResultSource$zodSchema,
   topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema).optional(),
 }).describe(

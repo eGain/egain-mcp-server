@@ -12,19 +12,20 @@ import {
   createRegisterResourceTemplate,
 } from "./resources.js";
 import { MCPScope } from "./scopes.js";
-import { createRegisterTool } from "./tools.js";
-import { tool$getAnnouncements } from "./tools/getAnnouncements.js";
-import { tool$getArticle } from "./tools/getArticle.js";
+import { createRegisterTool, registerDynamicTools } from "./tools.js";
+import { tool$aiSearch } from "./tools/aiSearch.js";
+import { tool$getAnnouncementArticles } from "./tools/getAnnouncementArticles.js";
+import { tool$getArticleById } from "./tools/getArticleById.js";
+import { tool$getBestAnswer } from "./tools/getBestAnswer.js";
+import { tool$getMyPortals } from "./tools/getMyPortals.js";
 import { tool$getPopularArticles } from "./tools/getPopularArticles.js";
-import { tool$getPortals } from "./tools/getPortals.js";
 import { tool$makeSuggestion } from "./tools/makeSuggestion.js";
-import { tool$queryAnswers } from "./tools/queryAnswers.js";
-import { tool$queryRetrieve } from "./tools/queryRetrieve.js";
-import { tool$querySearch } from "./tools/querySearch.js";
+import { tool$retrieveChunks } from "./tools/retrieveChunks.js";
 
 export function createMCPServer(deps: {
   logger: ConsoleLogger;
   allowedTools?: string[] | undefined;
+  dynamic?: boolean | undefined;
   scopes?: MCPScope[] | undefined;
   getSDK?: () => EgainMcpCore;
   serverURL?: string | undefined;
@@ -34,7 +35,7 @@ export function createMCPServer(deps: {
 }) {
   const server = new McpServer({
     name: "EgainMcp",
-    version: "1.0.25",
+    version: "2.0.1",
   });
 
   const getClient = deps.getSDK || (() =>
@@ -55,12 +56,13 @@ export function createMCPServer(deps: {
   const scopes = new Set(deps.scopes);
 
   const allowedTools = deps.allowedTools && new Set(deps.allowedTools);
-  const tool = createRegisterTool(
+  const [tool, tools, toolMap] = createRegisterTool(
     deps.logger,
     server,
     getClient,
     scopes,
     allowedTools,
+    deps.dynamic,
   );
   const resource = createRegisterResource(
     deps.logger,
@@ -78,14 +80,18 @@ export function createMCPServer(deps: {
   const register = { tool, resource, resourceTemplate, prompt };
   void register; // suppress unused warnings
 
-  tool(tool$queryRetrieve);
-  tool(tool$queryAnswers);
-  tool(tool$getArticle);
-  tool(tool$getAnnouncements);
+  tool(tool$retrieveChunks);
+  tool(tool$getBestAnswer);
+  tool(tool$getArticleById);
+  tool(tool$getAnnouncementArticles);
   tool(tool$getPopularArticles);
-  tool(tool$getPortals);
-  tool(tool$querySearch);
+  tool(tool$getMyPortals);
+  tool(tool$aiSearch);
   tool(tool$makeSuggestion);
 
-  return server;
+  if (deps.dynamic) {
+    registerDynamicTools(deps.logger, server, getClient, toolMap, scopes);
+  }
+
+  return { server, tools };
 }

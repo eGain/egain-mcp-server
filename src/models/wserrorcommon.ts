@@ -6,11 +6,10 @@ import * as z from "zod";
 
 export type Detail = { key: string; value?: string | undefined };
 
-export const Detail$zodSchema: z.ZodType<Detail, z.ZodTypeDef, unknown> = z
-  .object({
-    key: z.string(),
-    value: z.string().optional(),
-  });
+export const Detail$zodSchema: z.ZodType<Detail> = z.object({
+  key: z.string(),
+  value: z.string().optional(),
+});
 
 /**
  * Bad Request
@@ -22,11 +21,7 @@ export type WSErrorCommon = {
   userMessage?: string | undefined;
 };
 
-export const WSErrorCommon$zodSchema: z.ZodType<
-  WSErrorCommon,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const WSErrorCommon$zodSchema: z.ZodType<WSErrorCommon> = z.object({
   code: z.string(),
   details: z.array(z.lazy(() => Detail$zodSchema)).optional(),
   developerMessage: z.string(),

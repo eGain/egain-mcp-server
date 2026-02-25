@@ -12,13 +12,10 @@ export type AISPaginationInfo = {
   link?: Array<Link> | undefined;
 };
 
-export const AISPaginationInfo$zodSchema: z.ZodType<
-  AISPaginationInfo,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  count: z.number().int().default(1),
-  link: z.array(Link$zodSchema).optional(),
-  pagenum: z.number().int().default(1),
-  pagesize: z.number().int().default(20),
-});
+export const AISPaginationInfo$zodSchema: z.ZodType<AISPaginationInfo> = z
+  .object({
+    count: z.int().default(1),
+    link: z.array(Link$zodSchema).optional(),
+    pagenum: z.int().default(1),
+    pagesize: z.int().default(20),
+  });

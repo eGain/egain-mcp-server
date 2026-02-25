@@ -60,10 +60,10 @@ export function serverURLFromOptions(options: SDKOptions): URL | null {
 
   const serverParams: Record<string, Params> = {
     "server_0": {
-      "API_DOMAIN": options.API_DOMAIN ?? "api.aidev.egain.cloud",
+      "API_DOMAIN": options.API_DOMAIN ?? "api.ai.egain.cloud",
     },
     "server_1": {
-      "API_DOMAIN": options.API_DOMAIN ?? "api.aidev.egain.cloud",
+      "API_DOMAIN": options.API_DOMAIN ?? "api.ai.egain.cloud",
     },
   };
 
@@ -82,8 +82,8 @@ export function serverURLFromOptions(options: SDKOptions): URL | null {
 export const SDK_METADATA = {
   language: "typescript",
   openapiDocVersion: "1.0.0",
-  sdkVersion: "1.0.25",
-  genVersion: "2.723.8",
+  sdkVersion: "2.0.1",
+  genVersion: "2.836.5",
   userAgent:
-    "speakeasy-sdk/mcp-typescript 1.0.25 2.723.8 1.0.0 @egain/egain-mcp-server",
+    "speakeasy-sdk/mcp-typescript 2.0.1 2.836.5 1.0.0 @egain/egain-mcp-server",
 } as const;

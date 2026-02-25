@@ -241,6 +241,27 @@ export function resolveGlobalSecurity(
     [
       {
         fieldName: "Authorization",
+        type: "apiKey:header",
+        value: security?.oAuthUser,
+      },
+    ],
+    [
+      {
+        fieldName: "Authorization",
+        type: "apiKey:header",
+        value: security?.oAuthCustomer,
+      },
+    ],
+    [
+      {
+        fieldName: "Authorization",
+        type: "apiKey:header",
+        value: security?.oAuthAnonymousCustomer,
+      },
+    ],
+    [
+      {
+        fieldName: "Authorization",
         type: "http:bearer",
         value: security?.accessToken,
       },

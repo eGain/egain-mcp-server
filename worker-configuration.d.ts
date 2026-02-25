@@ -7,8 +7,8 @@
 // Runtime types generated with workerd@1.20250709.0 2025-07-15 nodejs_compat
 declare namespace Cloudflare {
   interface Env {
-    OPENAPI_MCP: DurableObjectNamespace<
-      import("./src/cloudflare-worker").OpenapiMCP
+    EGAIN_EGAIN_MCP_SERVER_MCP: DurableObjectNamespace<
+      import("./src/cloudflare-worker").AtEgainEgainMcpServerMCP
     >;
   }
 }

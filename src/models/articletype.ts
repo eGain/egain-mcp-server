@@ -14,12 +14,8 @@ export type ArticleType = {
   articleTypeId?: string | undefined;
 };
 
-export const ArticleType$zodSchema: z.ZodType<
-  ArticleType,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  articleCategoryId: z.number().int().optional(),
+export const ArticleType$zodSchema: z.ZodType<ArticleType> = z.object({
+  articleCategoryId: z.int().optional(),
   articleTypeId: z.string().optional(),
   typeName: z.string().optional(),
   useStructuredAuthoring: z.boolean().optional(),

@@ -3,10 +3,27 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
-/**
- * The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.
- */
+export const AcceptLanguage = {
+  EnUS: "en-US",
+  ESES: "es-ES",
+  FRFR: "fr-FR",
+  ITIT: "it-IT",
+  DEDE: "de-DE",
+  NLNL: "nl-NL",
+  PtBR: "pt-BR",
+  PTPT: "pt-PT",
+  DaDK: "da-DK",
+  RURU: "ru-RU",
+  FrCA: "fr-CA",
+  ZhCN: "zh-CN",
+  JaJP: "ja-JP",
+  KoKR: "ko-KR",
+  SvSE: "sv-SE",
+} as const;
+export type AcceptLanguage = ClosedEnum<typeof AcceptLanguage>;
+
 export const AcceptLanguage$zodSchema = z.enum([
   "en-US",
   "es-ES",
@@ -23,8 +40,4 @@ export const AcceptLanguage$zodSchema = z.enum([
   "ja-JP",
   "ko-KR",
   "sv-SE",
-]).describe(
-  "The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.",
-);
-
-export type AcceptLanguage = z.infer<typeof AcceptLanguage$zodSchema>;
+]);

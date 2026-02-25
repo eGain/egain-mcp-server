@@ -1,47 +1,22 @@
 openapi: 3.0.0
 info:
   title: eGain Portal, Retrieve, Search, Answers APIs
-  description: |
-    Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations.
-    
-    ## How to Use eGain MCP Tools
-    
-    **IMPORTANT**: When calling eGain MCP tools, you must provide all required parameters in the correct format.
-    
-    ### Parameter Format
-    - **All tools require a `request` parameter** that contains the actual request object
-    - The `request` parameter is an object that wraps all the API-specific parameters
-    - **Example**: To call `get-portals`, pass: `{"request": {"$lang": "en-US"}}`
-    - **Example**: To call `get-article`, pass: `{"request": {"portalID": "PROD-1004", "articleID": "PROD-2996"}}`
-    
-    ### Tools That Require No Parameters
-    - Some tools may accept an empty request object `{}` if all parameters are optional
-    - Always check the tool schema for exact requirements
-    - If a tool has required parameters, they must be provided in the `request` object
-    
-    ### Common Patterns
-    1. **Portal ID is often required**: Most tools need a `portalID`. Use `get-portals` first to find available portals
-    2. **Language parameter**: Many tools accept `$lang` (use `Dollar_lang` in the request object) with default "en-US"
-    3. **Request body**: For POST endpoints, include the request body fields inside the `request` object
-    
-    ### Error Prevention
-    - Always provide the `request` parameter, even if it's an empty object `{}`
-    - Ensure all required fields are present in the `request` object
-    - Check the tool schema to understand the exact structure expected
+  description: "Enterprise knowledge APIs for managing portals, searching content, retrieving AI-powered answers, and accessing content chunks for custom integrations."
   contact:
     name: API Support
     email: apisupport@egain.com
     url: https://apidev.egain.com
   version: 1.0.0
+security:
+  - oAuthUser: []
+  - oAuthCustomer: []
+  - oAuthAnonymousCustomer: []
+  - accessToken: []
 tags:
   - name: Answers
     description: APIs for Answers
   - name: Retrieve
     description: APIs for Retrieve
-  - name: Instant Answers
-    description: APIs for Instant Answers
-  - name: Prompt
-    description: APIs for AssistGPT
   - name: Article
     description: Article APIs
   - name: Popular Articles
@@ -59,59 +34,7 @@ paths:
       operationId: retrieveChunks
       tags:
         - Retrieve
-      description: |
-        Retrieve Chunks
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}`
-        - Required parameters:
-          - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-          - `q` (string) - The search query string
-          - `Dollar_lang` (string) - Language code (e.g., "en-US")
-        - Optional parameters:
-          - `dollarFilterUserProfileID` (string) - User profile ID filter
-          - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
-          - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
-          - `RetrieveRequest` (object) - Additional request body parameters:
-            - `channel` (object) - Channel information (optional, recommended to omit)
-            - `eventId` (string) - Event ID
-            - `sessionId` (string) - Session ID
-        
-        **Example**: To retrieve chunks for query "loan information" from portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}
-        ```
-        
-        **Example with RetrieveRequest body**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "RetrieveRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
-        ```
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - If a certified answer is returned (`answer` object), display the `answerValue` text and list the `references` (article IDs and names)
-        - Display all `searchResults` with their article names, IDs, snippets, and relevance scores (`normalizedScore`)
-        - Show article metadata such as `docType`, `source`, and `topicBreadcrumb` when available
-        - Format the results in a user-friendly way (e.g., numbered list, formatted text)
-        
-        **Example**: "I found 5 relevant articles about loan information: 1) [Article Name] (ID: PROD-123) - [snippet]..."
-        
-        ## Prerequisites
-        - **Requires a valid portal ID** (required parameter). If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
-        
-        ## Overview
-        The Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.
-        
-        In addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.
-        
-        By leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.
+      description: "Retrieve Chunks\n## Overview\nThe Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.\nIn addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.\nBy leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"PROD-1004\")\n\n## How to Use This Tool\nAll inputs must be wrapped inside a request object. Provide a search query and language. Optional filters can be used to narrow results by tags, topics, or user profile.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\"}}`\n- Required parameters:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `q` (string) - The search query string\n  - `Dollar_lang` (string) - Language code (e.g., \"en-US\")\n- Optional parameters:\n  - `dollarFilterUserProfileID` (string) - User profile ID filter\n  - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs\n  - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by\n  - `RetrieveRequest` (object) - Additional request body parameters:\n    - `channel` (object) - Channel information (optional, recommended to omit)\n    - `eventId` (string) - Event ID\n    - `sessionId` (string) - Session ID\n\n**Example**: To retrieve chunks for query \"loan information\" from portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\"}}\n```\n\n**Example with RetrieveRequest body**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\", \"RetrieveRequest\": {\"eventId\": \"event-123\", \"sessionId\": \"session-456\"}}}\n```\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\nAlways display results. Show each article name, article ID, snippet, and relevance score. If a certified answer is returned, display it first and list its references.\n\n**Example**: \"I found 5 relevant articles about loan information: 1) [Article Name] (ID: PROD-123) - [snippet]...\"\n"
       parameters:
         - $ref: '#/components/parameters/qQuery'
         - $ref: '#/components/parameters/portalReadableId'
@@ -787,66 +710,15 @@ paths:
       x-speakeasy-server-id: server_1
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: retrieveChunks
       x-speakeasy-group: ""
-      x-speakeasy-name-override: query-retrieve
   /{portalID}/answers:
     post:
       summary: Generate an Answer
       operationId: getBestAnswer
       tags:
         - Answers
-      description: |
-        Get Answers
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}`
-        - Required parameters:
-          - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-          - `q` (string) - The search query string
-          - `Dollar_lang` (string) - Language code (e.g., "en-US")
-        - Optional parameters:
-          - `dollarFilterUserProfileID` (string) - User profile ID filter
-          - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
-          - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
-          - `AnswersRequest` (object) - Request body parameters:
-            - `eventId` (string, **required**) - Event ID
-            - `sessionId` (string, **required**) - Session ID
-            - `channel` (object, **optional**, recommended to omit) - Channel information. Omit unless specifically needed. If you receive a 400 error with channel, retry without it.
-            - `context` (object) - Additional context (companyContext, pageContext, userContext)
-        
-        **Example**: To get answers for query "loan information" from portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "AnswersRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
-        ```
-        
-        **Note**: The `channel` field in `AnswersRequest` is optional and recommended to omit unless specifically needed. The API works reliably without it.
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display the `answer.answerValue` text prominently as the main answer to the user's query
-        - Indicate the answer type (`answerType`: "certified" or "generative")
-        - If `relevanceScore` is present, you may mention the confidence level
-        - List all `references` (article IDs and names) that were used to generate the answer
-        - Display `searchResults` showing related articles with their names, IDs, snippets, and relevance scores
-        - Format the answer in a clear, readable way - this is the primary response the user is seeking
-        
-        **Example**: "Based on the knowledge base, here's the answer: [answerValue]. This answer was generated using information from: [list references]. Related articles: [list search results]..."
-        
-        ## Prerequisites
-        - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
-        
-        ## Overview
-        The Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.
-        
-        The API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.
+      description: "Get Answers\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\"}}`\n- Required parameters:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `q` (string) - The search query string\n  - `Dollar_lang` (string) - Language code (e.g., \"en-US\")\n- Optional parameters:\n  - `dollarFilterUserProfileID` (string) - User profile ID filter\n  - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs\n  - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by\n  - `AnswersRequest` (object) - Request body parameters:\n    - `eventId` (string, **required**) - Event ID\n    - `sessionId` (string, **required**) - Session ID\n    - `channel` (object, **optional**, recommended to omit) - Channel information. Omit unless specifically needed. If you receive a 400 error with channel, retry without it.\n    - `context` (object) - Additional context (companyContext, pageContext, userContext)\n\n**Example**: To get answers for query \"loan information\" from portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\", \"AnswersRequest\": {\"eventId\": \"event-123\", \"sessionId\": \"session-456\"}}}\n```\n\n**Note**: The `channel` field in `AnswersRequest` is optional and recommended to omit unless specifically needed. The API works reliably without it.\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Display the `answer.answerValue` text prominently as the main answer to the user's query\n- Indicate the answer type (`answerType`: \"certified\" or \"generative\")\n- If `relevanceScore` is present, you may mention the confidence level\n- List all `references` (article IDs and names) that were used to generate the answer\n- Display `searchResults` showing related articles with their names, IDs, snippets, and relevance scores\n- Format the answer in a clear, readable way - this is the primary response the user is seeking\n\n**Example**: \"Based on the knowledge base, here's the answer: [answerValue]. This answer was generated using information from: [list references]. Related articles: [list search results]...\"\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"PROD-1004\")\n\n## Overview\nThe Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.\n\nThe API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.\n"
       parameters:
         - $ref: '#/components/parameters/qQuery'
         - $ref: '#/components/parameters/portalReadableId'
@@ -1534,71 +1406,15 @@ paths:
       x-speakeasy-server-id: server_1
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: getBestAnswer
       x-speakeasy-group: ""
-      x-speakeasy-name-override: query-answers
   /portals/{portalID}/articles/{articleID}:
     get:
       summary: Get Article by ID
       operationId: getArticleById
       tags:
         - Article
-      description: |
-        Get Article by ID
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "articleID": "PROD-2996"}}`
-        - Required parameters:
-          - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-          - `articleID` (string) - The article ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PROD-2996")
-        - Optional parameters:
-          - `Dollar_lang` (string, default: "en-US") - Language code
-          - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
-          - `articleAdditionalAttributes` (array) - Additional article attributes to return
-          - `Dollar_customAdditionalAttributes` (string) - Custom additional attributes
-          - `accessSource` (string, default: "article_view") - How the article was accessed
-          - `publishViewId` (string) - Publish view ID
-          - `workflowMilestone` (string) - Workflow milestone filter
-        
-        **Example**: To get article "PROD-2996" from portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999", "articleID": "PROD-2996"}}
-        ```
-        
-        **Example with optional parameters**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "articleID": "PROD-2996", "Dollar_lang": "en-US", "accessSource": "article_view"}}
-        ```
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the article content to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display the article `name` as the title
-        - Show the article `content` or `contentText` (the full article body)
-        - Display article metadata: `id`, `articleType`, `createdDate`, `modifiedDate`
-        - Show `attachments` if present
-        - Display `topicBreadcrumb` to show where the article is categorized
-        - Include any other relevant metadata like `articleSummary`, `description`, `articleKeywords`
-        - Format the article content in a readable way for the user
-        
-        **Example**: "Here's the article '[Article Name]' (ID: PROD-2996): [article content]. This article is categorized under: [topic breadcrumb]..."
-        
-        ## Prerequisites
-        - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
-        - Requires a valid article ID. Article ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-2996")
-
-        ## Overview
-        The Get Article by ID API allows a user to retrieve a specific article using its ID. Additional article attributes and contextual views can be specified in the query parameters.
-
-        This API returns structured authoring attributes of Issue, Environment, Cause and Confidence Level when the following conditions are met:
-        - The "Allow Structured Authoring" setting is enabled at the partition/department level
-        - The "Use Structured Authoring" flag is set on the article type
+      description: "Get Article by ID\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\", \"articleID\": \"PROD-2996\"}}`\n- Required parameters:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `articleID` (string) - The article ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PROD-2996\")\n  - `acceptLanguage` (string, default: \"en-US\") - Accept-Language header value\n- Optional parameters:\n  - `Dollar_lang` (string, default: \"en-US\") - Language code\n  - `articleAdditionalAttributes` (array) - Additional article attributes to return\n  - `Dollar_customAdditionalAttributes` (string) - Custom additional attributes\n  - `accessSource` (string, default: \"article_view\") - How the article was accessed\n  - `publishViewId` (string) - Publish view ID\n  - `workflowMilestone` (string) - Workflow milestone filter\n\n**Example**: To get article \"PROD-2996\" from portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"articleID\": \"PROD-2996\"}}\n```\n\n**Example with optional parameters**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"articleID\": \"PROD-2996\", \"Dollar_lang\": \"en-US\", \"accessSource\": \"article_view\"}}\n```\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the article content to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Display the article `name` as the title\n- Show the article `content` or `contentText` (the full article body)\n- Display article metadata: `id`, `articleType`, `createdDate`, `modifiedDate`\n- Show `attachments` if present\n- Display `topicBreadcrumb` to show where the article is categorized\n- Include any other relevant metadata like `articleSummary`, `description`, `articleKeywords`\n- Format the article content in a readable way for the user\n\n**Example**: \"Here's the article '[Article Name]' (ID: PROD-2996): [article content]. This article is categorized under: [topic breadcrumb]...\"\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n- Requires a valid article ID. Article ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"PROD-2996\")\n\n## Overview\nThe Get Article by ID API allows a user to retrieve a specific article using its ID. Additional article attributes and contextual views can be specified in the query parameters.\n\nThis API returns structured authoring attributes of Issue, Environment, Cause and Confidence Level when the following conditions are met:\n- The \"Allow Structured Authoring\" setting is enabled at the partition/department level\n- The \"Use Structured Authoring\" flag is set on the article type\n"
       parameters:
         - $ref: '#/components/parameters/xEgainActivityId'
         - $ref: '#/components/parameters/xExtIntegrationId'
@@ -1669,64 +1485,15 @@ paths:
       x-speakeasy-server-id: server_0
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: getArticleById
       x-speakeasy-group: ""
-      x-speakeasy-name-override: get-article
   /portals/{portalID}/articles/announcements:
     get:
       tags:
         - Article
       summary: Get Announcement Articles
       operationId: getAnnouncementArticles
-      description: |
-        Get Announcements
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999"}}`
-        - Required parameter: `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-        - Optional parameters:
-          - `Dollar_lang` (string, default: "en-US") - Language code
-          - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
-          - `dollarFilterTags` (string) - Comma-separated list of Tag/Tag Group IDs
-          - `workflowMilestone` (string) - Workflow milestone filter ("authoring", "staging", "publish")
-          - `Dollar_pagenum` (number, default: 1) - Page number for pagination
-          - `Dollar_pagesize` (number, default: 10) - Number of results per page
-        
-        **Example**: To get announcements from portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999"}}
-        ```
-        
-        **Example with optional parameters**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "Dollar_lang": "en-US", "Dollar_pagesize": 20}}
-        ```
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the announcement articles to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display all announcement articles with their names and IDs
-        - Show the article content (`content` or `contentText`) for each announcement
-        - Display metadata such as `createdDate`, `modifiedDate`, `articleSummary`
-        - Show `attachments` if present
-        - Include `paginationInfo` if pagination is used
-        - Format announcements in a clear list format
-        
-        **Example**: "Here are the announcements for this portal: 1) [Announcement Name] (ID: PROD-123) - [content]..."
-        
-        ## Prerequisites
-        - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
-        
-        ## Overview
-        The Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.
-        
-        This API returns announcement articles with their full content, metadata, and any associated attachments or links.
+      description: "Get Announcements\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\"}}`\n- Required parameter:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `acceptLanguage` (string, default: \"en-US\") - Accept-Language header value\n- Optional parameters:\n  - `Dollar_lang` (string, default: \"en-US\") - Language code\n  - `Dollar_pagesize` (number, default: 10) - Number of results per page\n\n**Example**: To get announcements from portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\"}}\n```\n\n**Example with optional parameters**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"Dollar_lang\": \"en-US\", \"Dollar_pagesize\": 20}}\n```\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the announcement articles to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Display all announcement articles with their names and IDs\n- Show the article content (`content` or `contentText`) for each announcement\n- Display metadata such as `createdDate`, `modifiedDate`, `articleSummary`\n- Show `attachments` if present\n- Include `paginationInfo` if pagination is used\n- Format announcements in a clear list format\n\n**Example**: \"Here are the announcements for this portal: 1) [Announcement Name] (ID: PROD-123) - [content]...\"\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"PROD-1004\")\n\n## Overview\nThe Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.\n\nThis API returns announcement articles with their full content, metadata, and any associated attachments or links.\n"
       parameters:
         - $ref: '#/components/parameters/xEgainActivityId'
         - $ref: '#/components/parameters/xExtIntegrationId'
@@ -1734,6 +1501,7 @@ paths:
         - $ref: '#/components/parameters/acceptLanguage'
         - $ref: '#/components/parameters/portalReadableId'
         - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/articleResultAdditionalAttributes'
         - $ref: '#/components/parameters/workflowMilestone'
         - $ref: '#/components/parameters/languageQueryParameter'
         - $ref: '#/components/parameters/pagenum'
@@ -1758,63 +1526,15 @@ paths:
       x-speakeasy-server-id: server_0
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: getAnnouncementArticles
       x-speakeasy-group: ""
-      x-speakeasy-name-override: get-announcements
   /portals/{portalID}/populararticles:
     get:
       summary: Get Popular Articles
       operationId: getpopulararticles
       tags:
         - Popular Articles
-      description: |
-        Get Popular Articles
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999"}}`
-        - Required parameter: `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-        - Optional parameters:
-          - `Dollar_lang` (string, default: "en-US") - Language code
-          - `Dollar_pagenum` (number, default: 1) - Page number for pagination
-          - `Dollar_pagesize` (number, default: 10) - Number of results per page
-          - `dollarFilterTopicId` (string) - Filter by topic ID
-          - `dollarFilterTags` (string) - Comma-separated list of Tag/Tag Group IDs
-        
-        **Example**: To get popular articles from portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999"}}
-        ```
-        
-        **Example with optional parameters**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "Dollar_lang": "en-US", "Dollar_pagesize": 20}}
-        ```
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the popular articles to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display all popular articles with their names and IDs
-        - Show article summaries or descriptions when available
-        - Display metadata such as `articleType`, `createdDate`, `modifiedDate`
-        - Show `imageURL` if available (mention thumbnail availability)
-        - Include `paginationInfo` if pagination is used
-        - Format articles in a numbered or bulleted list
-        
-        **Example**: "Here are the most popular articles: 1) [Article Name] (ID: PROD-123) - [summary]..."
-        
-        ## Prerequisites
-        - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
-        
-        ## Overview
-        The Popular Articles API allows a user to retrieve the most popular articles from a specific portal. Popular articles are typically determined by user engagement metrics such as views, ratings, or usage frequency.
-        
-        This API returns a list of popular articles with their metadata, allowing users to discover the most relevant and frequently accessed content within the portal.
+      description: "Get Popular Articles\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\"}}`\n- Required parameter:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `acceptLanguage` (string, default: \"en-US\") - Accept-Language header value\n- Optional parameters:\n  - `Dollar_lang` (string, default: \"en-US\") - Language code\n  - `Dollar_pagenum` (number, default: 1) - Page number for pagination\n  - `Dollar_pagesize` (number, default: 10) - Number of results per page\n  - `dollarFilterTopicId` (string) - Filter by topic ID\n  - `dollarFilterTags` (string) - Comma-separated list of Tag/Tag Group IDs\n\n**Example**: To get popular articles from portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\"}}\n```\n\n**Example with optional parameters**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"Dollar_lang\": \"en-US\", \"Dollar_pagesize\": 20}}\n```\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the popular articles to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Display all popular articles with their names and IDs\n- Show article summaries or descriptions when available\n- Display metadata such as `articleType`, `createdDate`, `modifiedDate`\n- Show `imageURL` if available (mention thumbnail availability)\n- Include `paginationInfo` if pagination is used\n- Format articles in a numbered or bulleted list\n\n**Example**: \"Here are the most popular articles: 1) [Article Name] (ID: PROD-123) - [summary]...\"\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Popular Articles API allows a user to retrieve the most popular articles from a specific portal. Popular articles are typically determined by user engagement metrics such as views, ratings, or usage frequency.\n\nThis API returns a list of popular articles with their metadata, allowing users to discover the most relevant and frequently accessed content within the portal.\n"
       parameters:
         - $ref: '#/components/parameters/acceptLanguage'
         - $ref: '#/components/parameters/xExtIntegrationId'
@@ -1826,6 +1546,7 @@ paths:
         - $ref: '#/components/parameters/tags'
         - $ref: '#/components/parameters/pagenum'
         - $ref: '#/components/parameters/pagesize'
+        - $ref: '#/components/parameters/articleResultAdditionalAttributes'
       responses:
         '200':
           $ref: '#/components/responses/GetPopularArticlesResponse'
@@ -1846,93 +1567,18 @@ paths:
       x-speakeasy-server-id: server_0
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: getPopularArticles
       x-speakeasy-group: ""
-      x-speakeasy-name-override: get-popular-articles
   /myportals:
     get:
       summary: Get All Portals Accessible To User
       operationId: getMyPortals
       tags:
         - Portal
-      description: |
-        Get All Portals Accessible to User
-
-        ## How to Use This Tool
-        
-        **Parameter Format**: This tool requires a `request` parameter containing the request object.
-        - **CRITICAL**: All parameters in this tool are optional. You may pass an empty request object: `{"request": {}}`
-        - If you want to specify a language, pass: `{"request": {"Dollar_lang": "en-US"}}`
-        - The `Dollar_lang` parameter is **optional** - if omitted, the API defaults to "en-US"
-        - **Example with empty request** (recommended if you don't need to specify language): `{"request": {}}`
-        - **Example with language**: `{"request": {"Dollar_lang": "en-US"}}`
-        
-        ## Overview
-        The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
-        - If no access tags are specified for a portal, any user can access the portal.
-        - If access tags are specified for a portal, users with a user profile that allows access can access the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.
-        - Global users (partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.
-        - The only articles returned are associated to an Article type when the parameter “Include in browse on portals” is set to "Yes".
-        - When the `shortUrlTemplate` query parameter is provided, the API filters accessible portals according to the specified language and template name. A portal short URL specific to the `shortUrlTemplate` value is returned in the response when available. If there is no short URL for a language, the portal object returns an empty `shortURL` field.
-
-        ## Pagination behavior (CRITICAL for AI assistants)
-
-        **IMPORTANT**: This endpoint is paginated. When searching for a portal by name or listing portals, you MUST automatically fetch ALL pages before concluding that a portal doesn't exist.
-
-        ### Automatic pagination is REQUIRED when:
-        - User asks to find a portal by name (e.g., "business portal", "Master portal")
-        - User requests to list or see all portals
-        - You need to resolve a natural portal name to its ID
-
-        ### How to detect more pages exist:
-        The response includes `paginationInfo` with:
-        - `count`: Total number of items across all pages
-        - `pagenum`: Current page number
-        - `pagesize`: Items per page (default: 25)
-
-        **Check for more pages if ANY of these are true:**
-        1. The number of portals returned equals `pagesize` (e.g., exactly 25 portals returned)
-        2. `paginationInfo.count > (pagenum * pagesize)` - there are more items beyond this page
-        3. The response includes a `link` array with a `next` relation
-
-        ### Required pagination workflow:
-        1. Start with `$pagenum=1` and `$pagesize=25` (default)
-        2. After receiving the response, check `paginationInfo`
-        3. **If more pages exist** (using the checks above), automatically call this endpoint again with `$pagenum=2`, then `$pagenum=3`, etc.
-        4. Continue incrementing `$pagenum` until:
-           - A page returns fewer portals than `pagesize` (indicating the last page)
-           - A page returns zero portals
-           - `pagenum * pagesize >= paginationInfo.count` (if count represents total items)
-        5. Merge all portals from all pages by unique portal ID
-        6. Only then search through the complete merged list or report results to the user
-
-        ### Example scenario:
-        If you search for "business portal" and the first page returns 25 portals but none match:
-        - DO NOT immediately tell the user the portal doesn't exist
-        - Check `paginationInfo.count` - if it's > 25, automatically fetch page 2
-        - Continue fetching until all pages are retrieved
-        - Search the complete merged list before concluding the portal doesn't exist
-
-        This ensures reliable portal name-to-ID resolution and prevents false "not found" errors.
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the portal information to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display all portals with their names and IDs
-        - Show portal `id` (the portal ID needed for other API calls)
-        - Display portal `name` (the human-readable portal name)
-        - Show `departmentName` if available
-        - Include `shortURL` if available
-        - Display `paginationInfo` to show total count and current page
-        - Format portals in a clear list format (e.g., "Portal Name (ID: PORTAL-123)")
-        
-        **Example**: "Here are the available portals: 1) Business Portal (ID: PORTAL-123), 2) Customer Portal (ID: PORTAL-456)..."
-        
-        **Important**: Always display portal IDs clearly, as users will need these IDs to call other tools.
+      description: "Get All Portals Accessible to User\n\n## Overview\nRetrieves the list of portals available to the authenticated user or application. Each portal contains a readable portal ID that is required by almost all other Portal Manager APIs.\n\n- If no access tags are specified for a portal, any user can access the portal.\n- If access tags are specified for a portal, users with a user profile that allows access can access the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.\n- Global users (partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.\n- The only articles returned are associated to an Article type when the parameter “Include in browse on portals” is set to \"Yes\".\n- When the `shortUrlTemplate` query parameter is provided, the API filters accessible portals according to the specified language and template name. A portal short URL specific to the `shortUrlTemplate` value is returned in the response when available. If there is no short URL for a language, the portal object returns an empty `shortURL` field.\n\n## Prerequisites\nAuthentication is required. No portal ID is needed for this call. This is typically the first API you should call before using any other tool.\n\n## How to Use This Tool\n- Call this endpoint to discover which portals you have access to. Use the returned portal IDs as inputs to Retrieve, Answers, Search, Article, and Suggestion APIs.\n\n## Parameter Requirements\nThis tool requires **both** a query language parameter **and** an HTTP language header. An empty request object is **invalid** and MUST NOT be used.\n\n### Required (both MUST be provided)\n- `Dollar_lang` (string, default: \"en-US\") - Language code\n- `Accept-Language` (string, default: \"en-US\") - Accept-Language header value\n\nBoth parameters **MUST** be present on every invocation.  \nIf either parameter is missing, the request is invalid.\n\n#### Optional\n\n- `Dollar_pagenum` — Page number to retrieve (defaults to `1` if omitted)\n- `Dollar_pagesize` — Number of items per page (server default applied if omitted)\n\n**Example**: To get all portals accessible to the user, call with:\n```json\n{\"request\": {\"Dollar_lang\": \"en-US\", \"Accept-Language\": \"en-US\"}}\n```\n\n## Overview\nThe Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.\n\n## Pagination behavior (CRITICAL for AI assistants)\n\n**IMPORTANT**: This endpoint is paginated. When searching for a portal by name or listing portals, you MUST automatically fetch ALL pages before concluding that a portal doesn't exist.\n\n### Automatic pagination is REQUIRED when:\n- User asks to find a portal by name (e.g., \"business portal\", \"Master portal\")\n- User requests to list or see all portals\n- You need to resolve a natural portal name to its ID\n\n### How to detect more pages exist:\nThe response includes `paginationInfo` with:\n- `count`: Total number of items across all pages\n- `pagenum`: Current page number\n- `pagesize`: Items per page (default: 25)\n\n**Check for more pages if ANY of these are true:**\n1. The number of portals returned equals `pagesize` (e.g., exactly 25 portals returned)\n2. `paginationInfo.count > (pagenum * pagesize)` - there are more items beyond this page\n3. The response includes a `link` array with a `next` relation\n\n### Required pagination workflow:\n1. Start with `$pagenum=1` and `$pagesize=25` (default)\n2. After receiving the response, check `paginationInfo`\n3. **If more pages exist** (using the checks above), automatically call this endpoint again with `$pagenum=2`, then `$pagenum=3`, etc.\n4. Continue incrementing `$pagenum` until:\n   - A page returns fewer portals than `pagesize` (indicating the last page)\n   - A page returns zero portals\n   - `pagenum * pagesize >= paginationInfo.count` (if count represents total items)\n5. Merge all portals from all pages by unique portal ID\n6. Only then search through the complete merged list or report results to the user\n\n### Example scenario:\nIf you search for \"business portal\" and the first page returns 25 portals but none match:\n- DO NOT immediately tell the user the portal doesn't exist\n- Check `paginationInfo.count` - if it's > 25, automatically fetch page 2\n- Continue fetching until all pages are retrieved\n- Search the complete merged list before concluding the portal doesn't exist\n\nThis ensures reliable portal name-to-ID resolution and prevents false \"not found\" errors.\n\n## Displaying Results (MCP-Specific)\nAlways display the list of portals returned. Show portal name, portal ID, and any descriptive metadata. If multiple portals exist, prompt the user to select one for subsequent calls.\n"
       parameters:
         - $ref: '#/components/parameters/acceptLanguage'
-        - $ref: '#/components/parameters/languageQueryParameter'
+        - $ref: '#/components/parameters/mandatoryLanguageQueryParameter'
         - name: department
           description: The Name of the department for which portals are to be fetched
           in: query
@@ -1962,24 +1608,8 @@ paths:
             maxLength: 255
         - $ref: '#/components/parameters/sortIdNameDepartment'
         - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/pagenum'
         - $ref: '#/components/parameters/pagesizeNewFrameWork'
-        - name: $pagenum
-          in: query
-          required: false
-          description: Pagination parameter that specifies the page number of results to be returned. Used in conjunction with $pagesize.
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: $pagesize
-          in: query
-          required: false
-          description: Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 25
-            default: 25
       responses:
         '200':
           $ref: '#/components/responses/GetAllPortalsAccessibleToAgentResponse'
@@ -2000,64 +1630,15 @@ paths:
       x-speakeasy-server-id: server_0
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: getMyPortals
       x-speakeasy-group: ""
-      x-speakeasy-name-override: get-portals
   /{portalID}/search:
     get:
       summary: Hybrid Search
       tags:
         - Search
       operationId: aiSearch
-      description: |
-        Hybrid Search
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information"}}`
-        - Required parameters:
-          - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-          - `q` (string) - The search query string (must be URL-escaped)
-        - Optional parameters:
-          - `Dollar_lang` (string, default: "en-US") - Language code
-          - `dollarFilterUserProfileID` (string) - User profile ID filter
-          - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
-          - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
-          - `articleCustomAdditionalAttributes` (string) - Comma-separated custom attribute names
-          - `Dollar_pagenum` (number, default: 1) - Page number for pagination
-          - `Dollar_pagesize` (number, default: 20) - Number of results per page
-        
-        **Example**: To search for "loan information" in portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999", "q": "loan information"}}
-        ```
-        
-        **Example with optional parameters**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "Dollar_pagesize": 25}}
-        ```
-        
-        **Note**: This endpoint is only available for Self Service environments.
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the search results to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Display all search results with article names and IDs
-        - Show article `snippet` or `keywordSnippet` (the relevant text excerpt)
-        - Display `normalizedScore` or `relevanceScore` to indicate relevance
-        - Show `docType`, `source`, and `topicBreadcrumb` metadata
-        - Display `contextualSummary` if available
-        - Include `paginationInfo` if pagination is used
-        - Format results in a numbered list with clear relevance indicators
-        
-        **Example**: "I found 10 articles matching 'loan information': 1) [Article Name] (ID: PROD-123) - [snippet] (Relevance: 0.89)..."
-        
-        ## Overview
-        The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores.
+      description: "Hybrid Search\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\"}}`\n- Required parameters:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `q` (string) - The search query string (must be URL-escaped)\n- Optional parameters:\n  - `Dollar_lang` (string, default: \"en-US\") - Language code\n  - `dollarFilterUserProfileID` (string) - User profile ID filter\n  - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs\n  - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by\n  - `articleCustomAdditionalAttributes` (string) - Comma-separated custom attribute names\n  - `Dollar_pagenum` (number, default: 1) - Page number for pagination\n  - `Dollar_pagesize` (number, default: 20) - Number of results per page\n\n**Example**: To search for \"loan information\" in portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\"}}\n```\n\n**Example with optional parameters**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"q\": \"loan information\", \"Dollar_lang\": \"en-US\", \"Dollar_pagesize\": 25}}\n```\n\n**Note**: This endpoint is only available for Self Service environments.\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the search results to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Display all search results with article names and IDs\n- Show article `snippet` or `keywordSnippet` (the relevant text excerpt)\n- Display `normalizedScore` or `relevanceScore` to indicate relevance\n- Show `docType`, `source`, and `topicBreadcrumb` metadata\n- Display `contextualSummary` if available\n- Include `paginationInfo` if pagination is used\n- Format results in a numbered list with clear relevance indicators\n\n**Example**: \"I found 10 articles matching 'loan information': 1) [Article Name] (ID: PROD-123) - [snippet] (Relevance: 0.89)...\"\n\n## Overview\nThe Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores.\n"
       parameters:
         - $ref: '#/components/parameters/q'
         - $ref: '#/components/parameters/portalReadableId'
@@ -2548,70 +2129,17 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       x-speakeasy-server-id: server_0
-      x-speakeasy-name-override: query-search
-      x-speakeasy-group: ""
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: aiSearch
+      x-speakeasy-group: ""
   /portals/{portalID}/suggestions:
     post:
       summary: Make a Suggestion
       operationId: makeSuggestion
       tags:
         - Suggestion
-      description: |
-        Make a Suggestion
-        
-        ## How to Use This Tool
-        
-        **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
-        
-        **Parameter Format**: 
-        - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "CreateSuggestion": {...}}}`
-        - Required parameters:
-          - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
-          - `CreateSuggestion` (object) - The suggestion object with:
-            - `name` (string, **required**) - Name/title of the suggestion
-            - `content` (string, **required**) - Content/description of the suggestion
-            - `language` (object, **required**) - Language object with `code` property (e.g., {"code": "en-US"})
-        - Optional parameters:
-          - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
-          - `CreateSuggestion` additional optional fields:
-            - `description` (string) - Additional description
-            - `feedbackArticle` (object) - Article ID object if providing feedback on existing article: `{"id": "PROD-2996"}`
-            - `attachments` (object) - Attachments object
-            - `customAttributes` (array) - Custom attributes array
-        
-        **Example**: To create a suggestion in portal "PZ-9999", call with:
-        ```json
-        {"request": {"portalID": "PZ-9999", "CreateSuggestion": {"name": "New Article Request", "content": "Please add information about loan rates", "language": {"code": "en-US"}}}}
-        ```
-        
-        **Example with feedback on existing article**:
-        ```json
-        {"request": {"portalID": "PZ-9999", "CreateSuggestion": {"name": "Article Feedback", "content": "This article needs updating", "language": {"code": "en-US"}, "feedbackArticle": {"id": "PROD-2996"}}}}
-        ```
-        
-        ## Displaying Results (MCP-Specific)
-        **CRITICAL**: When this tool returns data successfully, you MUST display the suggestion creation result to the user in your response. Do not silently process the data - always show the user what was returned.
-        
-        **What to display:**
-        - Confirm that the suggestion was successfully created
-        - Display the suggestion `id` if returned in the response
-        - Show the suggestion `name` and `content` that was submitted
-        - If an error occurs, display the error message clearly
-        - Provide confirmation message to the user
-        
-        **Example**: "Your suggestion '[Suggestion Name]' has been successfully submitted. Suggestion ID: [id]..."
-        
-        ## Prerequisites
-        - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
-        - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "EB-123456789")
-
-        ## Overview
-        The Make a Suggestion API allows users to create an Article Suggestion from within a knowledge portal. This enables users to submit feedback, request new articles, or suggest improvements to existing content.
-
-        Users can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.
+      description: "Make a Suggestion\n\n## How to Use This Tool\n\n**CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.\n\n**Parameter Format**: \n- Always wrap parameters in a `request` object: `{\"request\": {\"portalID\": \"PZ-9999\", \"CreateSuggestion\": {...}}}`\n- Required parameters:\n  - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., \"PZ-9999\")\n  - `CreateSuggestion` (object) - The suggestion object with:\n    - `name` (string, **required**) - Name/title of the suggestion\n    - `content` (string, **required**) - Content/description of the suggestion\n    - `language` (object, **required**) - Language object with `code` property (e.g., {\"code\": \"en-US\"})\n  - `acceptLanguage` (string, default: \"en-US\") - Accept-Language header value\n\n- Optional parameters:\n  - `CreateSuggestion` additional optional fields:\n    - `description` (string) - Additional description\n    - `feedbackArticle` (object) - Article ID object if providing feedback on existing article: `{\"id\": \"PROD-2996\"}`\n    - `attachments` (object) - Attachments object\n    - `customAttributes` (array) - Custom attributes array\n\n**Example**: To create a suggestion in portal \"PZ-9999\", call with:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"CreateSuggestion\": {\"name\": \"New Article Request\", \"content\": \"Please add information about loan rates\", \"language\": {\"code\": \"en-US\"}}}}\n```\n\n**Example with feedback on existing article**:\n```json\n{\"request\": {\"portalID\": \"PZ-9999\", \"CreateSuggestion\": {\"name\": \"Article Feedback\", \"content\": \"This article needs updating\", \"language\": {\"code\": \"en-US\"}, \"feedbackArticle\": {\"id\": \"PROD-2996\"}}}}\n```\n\n## Displaying Results (MCP-Specific)\n**CRITICAL**: When this tool returns data successfully, you MUST display the suggestion creation result to the user in your response. Do not silently process the data - always show the user what was returned.\n\n**What to display:**\n- Confirm that the suggestion was successfully created\n- Display the suggestion `id` if returned in the response\n- Show the suggestion `name` and `content` that was submitted\n- If an error occurs, display the error message clearly\n- Provide confirmation message to the user\n\n**Example**: \"Your suggestion '[Suggestion Name]' has been successfully submitted. Suggestion ID: [id]...\"\n\n## Prerequisites\n- Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.\n- Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., \"EB-123456789\")\n\n## Overview\nThe Make a Suggestion API allows users to create an Article Suggestion from within a knowledge portal. This enables users to submit feedback, request new articles, or suggest improvements to existing content.\n\nUsers can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.\n"
       parameters:
         - $ref: '#/components/parameters/xEgainActivityId'
         - $ref: '#/components/parameters/xExtIntegrationId'
@@ -2680,9 +2208,8 @@ paths:
       x-speakeasy-server-id: server_0
       security:
         - accessToken: []
-          # Per-tag grouping to achieve eGain.portal.(tag).method
+      x-speakeasy-name-override: makeSuggestion
       x-speakeasy-group: ""
-      x-speakeasy-name-override: make-suggestion
 components:
   schemas:
     PurgeJob:
@@ -2915,6 +2442,7 @@ components:
             - answerValue
             - references
             - answerType
+            - relevanceScore
         searchResults:
           type: array
           description: Top search results with relevance scores and metadata.
@@ -3035,41 +2563,23 @@ components:
       properties:
         channel:
           type: object
-          description: |
-            **Optional** channel information. **Recommended: Omit this field** unless specifically needed.
-            
-            **Important Notes:**
-            - The API works reliably without this field (defaults are applied automatically)
-            - Including channel may cause validation errors (400 Bad Request) in some cases
-            - If you receive a 400 error when including channel, retry the request without it
-            - When channel is provided, both type and name are optional, but name should be non-empty if provided
-            
-            **Working examples:**
-            - Omit channel entirely (recommended)
-            - channel: {type: "portal", name: "portal"}
-            - channel: {type: "custom", name: "test"}
-            - channel: {name: "portal"} (type defaults to "portal")
+          required:
+            - type
           properties:
             type:
               type: string
               enum:
                 - portal
                 - custom
-              description: |
-                Optional channel type. Defaults to "portal" if omitted. 
-                Accepts "portal" or "custom". Only include if channel object is provided.
-              default: portal
+              description: The channel where the query originated, e.g., directly from the portal or via a custom integration.
+              default: custom
               example: custom
             name:
               type: string
-              minLength: 1
+              minLength: 2
               maxLength: 1000
-              description: |
-                Optional channel name. If provided, must be a non-empty string.
-                Examples: "portal", "test", "web", "mobile app", "agent console".
-                **Note:** Some values may cause validation errors - if you receive 400, try omitting channel entirely.
-              example: portal
-              default: portal
+              description: A descriptive name for the channel (e.g., "web", "mobile app", "agent console").
+              example: Eight Bank Website
         eventId:
           type: string
           maxLength: 255
@@ -3088,17 +2598,8 @@ components:
           description: eGain Session ID that ties multiple API calls to the same user session. Will be used as part of to tie events back to a session.
           pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
           example: 6154589f-b43f-4471-b2c7-92c6c888a689
-      required:
-        - sessionId
-        - eventId
     SearchResult:
       type: object
-      required:
-        - id
-        - name
-        - docType
-        - source
-        - snippet
       description: Represents a single document or snippet returned by search, along with its metadata and relevance score.
       properties:
         id:
@@ -3149,6 +2650,12 @@ components:
           maxLength: 1000
           pattern: ^[\w\W]+$
           example: The summary of the lending FAQ...
+        snippetType:
+          type: string
+          enum:
+            - chunks
+            - articleContent
+          example: articleContent
         relevanceScore:
           type: number
           format: float
@@ -3171,6 +2678,12 @@ components:
             $ref: '#/components/schemas/AITopicBreadcrumb'
           minItems: 1
           maxItems: 50
+      required:
+        - id
+        - name
+        - docType
+        - source
+        - snippet
     ReferenceResponse:
       type: object
       required:
@@ -5662,8 +5175,8 @@ components:
             - up
             - down
             - no change
-    AnalyticsPaginationInfo:
-      title: AnalyticsPaginationInfo
+    paginationInfo:
+      title: paginationInfo
       type: object
       required:
         - $pagenum
@@ -6463,7 +5976,6 @@ components:
         - id
         - name
         - createdBy
-        - topicBreadcrumb
       properties:
         id:
           type: string
@@ -7957,12 +7469,12 @@ components:
           type: integer
           format: int64
           description: lower value of the answer
-          minimum: !!int -100000000000000000000
+          minimum: -9223372036854775808
         upperValue:
           type: integer
           format: int64
           description: upper value of the answer
-          maximum: !!int 100000000000000000000
+          maximum: 9223372036854775807
         enumLowerValue:
           type: string
           description: lower value of enum answer
@@ -10862,7 +10374,7 @@ components:
               - portals
               - all
             example: articles
-          description: "Types of Knowledge Hub resources to export. Multiple values can be specified using a comma-separated list. Details of a single portal are exported. \nArticles whose state is Published are returned.\n\nPortal Attribute Name | Description \n------------------------------- | -----------\n| id | The ID of the Portal in Readable format.\n| alternateId | The system-generated ID of the Portal in long format.\n| name  | The name of the Portal.\n| description | The Portal's description.\n| departmentId | ID of the department this Portal belongs to. \n| defaultContentLanguageId | The default ID of the language for the portal content.\n\n| Topic Attribute Name | Description \n| ------------------------------ | -----------\n| id | The ID of the Topic in Readable form.\n| alternateId | The system-generated ID of the Topic in long form.\n| name  | The name of the Topic.\n| departmentId | ID of the department this Topic belongs to.\n| modifiedDate | The date when the Topic was last modified on.\n| topicHomeArticleId | The ID of the Article used as the home page of this Topic.\n| childCount | Total number of children sub-topis below the current Topic.\n| subTopicIds | Array with the list of sub-topics (all levels of the topic hierarchy).\n| parentTopicId | ID of the parent Topic. -1 if it is the root Topic.\n| imageURL | URL of the inline Topic image.\n| customAttributes | One or more comma-separated names for Topic custom attributes defined by the user to be returned.\n\n| Article Attribute Name | Description \n| ---------------------- | -----------\n| id | The ID of the Article in Readable form.\n| alternateId | The system-generated ID of the Article in long form.\n| name  | The name of the Article.\n| additionalInfo | Additional information provided as Article metadata. \n| type | The Article type object and its attributes.\n| keywords | A comma-separated list of keywords associated with this Article, provided as metadata.\n| summary | A brief summary of the Article, provided as metadata.\n| state | The state of the Article. State P (Published).\n| departmentId | ID of the department this Article belongs to. \n| description | The description of the Article.\n| imageURL | The URL of the image that is present in the Article version. It is used as the thumbnail image for the Article.\n| attachements | The Article's uploaded attachments and their IDs.\n| includeInGenAI  | Indicates whether this Article is used for eGain's generative AI features.\n| topicBreadcrumb | Contains a list of topics from the top-level topic to this Article. There may be multiple paths.\n| versionId | The ID of the Article version that is returned.\n| expirationDate | The date that the Article is set to expire.  \n| averageRating | Average rating of the Article.\n| timesRated | Number or times the Article was rated.  \n| availabilityDate | The date the Article is set to be available. \n| modifiedDate | The date that the Article was last modified on.   \n| articleMacro | The macro of the Article.             \n| content | path to the Article content in .html format.\n| customAttributes | One or more comma-separated names for Article custom attributes defined by the user to be returned.\n| personalization | Article personalization details, incuding tag categories.\n| editions | The editions of the Article, including the publish profile (view) associated with each edition.\n"
+          description: "Types of Knowledge Hub resources to export. Multiple values can be specified using a comma-separated list: {articles, topics, portals, all}.\nDetails of a single portal are exported. \nArticles whose state is Published are returned.\n\nPortal Attribute Name | Description \n------------------------------- | -----------\n| id | The ID of the Portal in Readable format.\n| alternateId | The system-generated ID of the Portal in long format.\n| name  | The name of the Portal.\n| description | The Portal's description.\n| departmentId | ID of the department this Portal belongs to. \n| defaultContentLanguageId | The default ID of the language for the portal content.\n\n| Topic Attribute Name | Description \n| ------------------------------ | -----------\n| id | The ID of the Topic in Readable form.\n| alternateId | The system-generated ID of the Topic in long form.\n| name  | The name of the Topic.\n| departmentId | ID of the department this Topic belongs to.\n| modifiedDate | The date when the Topic was last modified on.\n| topicHomeArticleId | The ID of the Article used as the home page of this Topic.\n| childCount | Total number of children sub-topis below the current Topic.\n| subTopicIds | Array with the list of sub-topics (all levels of the topic hierarchy).\n| parentTopicId | ID of the parent Topic. -1 if it is the root Topic.\n| imageURL | URL of the inline Topic image.\n| customAttributes | One or more comma-separated names for Topic custom attributes defined by the user to be returned.\n\n| Article Attribute Name | Description \n| ---------------------- | -----------\n| id | The ID of the Article in Readable form.\n| alternateId | The system-generated ID of the Article in long form.\n| name  | The name of the Article.\n| additionalInfo | Additional information provided as Article metadata. \n| type | The Article type object and its attributes.\n| keywords | A comma-separated list of keywords associated with this Article, provided as metadata.\n| summary | A brief summary of the Article, provided as metadata.\n| state | The state of the Article. State P (Published).\n| departmentId | ID of the department this Article belongs to. \n| description | The description of the Article.\n| imageURL | The URL of the image that is present in the Article version. It is used as the thumbnail image for the Article.\n| attachements | The Article's uploaded attachments and their IDs.\n| includeInGenAI  | Indicates whether this Article is used for eGain's generative AI features.\n| topicBreadcrumb | Contains a list of topics from the top-level topic to this Article. There may be multiple paths.\n| versionId | The ID of the Article version that is returned.\n| expirationDate | The date that the Article is set to expire.  \n| averageRating | Average rating of the Article.\n| timesRated | Number or times the Article was rated.  \n| availabilityDate | The date the Article is set to be available. \n| modifiedDate | The date that the Article was last modified on.   \n| articleMacro | The macro of the Article.             \n| content | path to the Article content in .html format.\n| customAttributes | One or more comma-separated names for Article custom attributes defined by the user to be returned.\n| personalization | Article personalization details, incuding tag categories.\n| editions | The editions of the Article, including the publish profile (view) associated with each edition.\n"
         dataDestination:
           type: object
           properties:
@@ -11068,13 +10580,11 @@ components:
           - ro-RO
           - th-TH
           - xx-XX
-      x-speakeasy-name-override: lang
-      x-speakeasy-param-description: 'CRITICAL: Use `Dollar_lang` as the parameter name in MCP/SDK calls, NOT `$lang` or `lang`.'
     languageCode:
       name: $lang
       required: true
       in: query
-      description: 'The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal''s default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.'
+      description: The language that describes the details of a resource. Resources available in different languages may differ from each other. <br><br> If lang is not passed, then the portal's default language is used.
       schema:
         type: string
         example: en-US
@@ -11121,41 +10631,6 @@ components:
           - sl-SI
           - sr-RS
           - xx-XX
-          - en-US
-          - fr-FR
-          - en-GB
-          - es-ES
-          - it-IT
-          - nl-NL
-          - da-DA
-          - sv-SE
-          - pt-PT
-          - fi-FI
-          - no-NB
-          - no-NN
-          - ja-JA
-          - de-DE
-          - pt-BR
-          - zh-CN
-          - zh-TW
-          - ko-KO
-          - ru-RU
-          - el-EL
-          - tr-TR
-          - pl-PL
-          - cs-CS
-          - sk-SK
-          - hu-HU
-          - sr-SR
-          - ar-SA
-          - hr-HR
-          - ro-RO
-          - th-TH
-          - xx-XX
-        default: en-US
-        description: "The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`."
-      x-speakeasy-name-override: lang
-      x-speakeasy-param-description: 'CRITICAL: Use `Dollar_lang` as the parameter name in MCP/SDK calls, NOT `$lang` or `lang`.'
     filterTopicIds:
       name: $filter[topicIds]
       in: query
@@ -11209,7 +10684,6 @@ components:
           - alphabetical
           - relevance
         default: relevance
-      x-speakeasy-name-override: sort
     order:
       name: $order
       in: query
@@ -11223,7 +10697,6 @@ components:
           - asc
           - desc
         example: asc
-      x-speakeasy-name-override: order
     departmentId:
       name: departmentId
       in: path
@@ -11343,9 +10816,7 @@ components:
       required: true
       schema:
         type: number
-        maximum: 25
       description: Number of items you need in that page number. If pageSize is set to 25 and if currentPageNumber is '2' then we get items from 25 to 49
-      x-speakeasy-name-override: pagesize
     dollarpagenum:
       name: $pagenum
       in: query
@@ -11353,7 +10824,6 @@ components:
       schema:
         type: number
       description: $pagenum
-      x-speakeasy-name-override: pagenum
     dollarsort:
       name: $sort
       in: query
@@ -11361,7 +10831,6 @@ components:
       schema:
         type: string
       description: Key or Column on which we apply the given order to
-      x-speakeasy-name-override: sort
     dollarorder:
       name: $order
       in: query
@@ -11369,7 +10838,6 @@ components:
       schema:
         type: string
       description: Decides the sort order whether it is ascending or descending
-      x-speakeasy-name-override: order
     filtertext:
       name: filterText
       in: query
@@ -11401,7 +10869,6 @@ components:
         maxLength: 9
         pattern: ^[0-9]{4,9}$
       example: '59237'
-      x-speakeasy-ignore: true
     xExtIntegrationId:
       name: x-ext-integration-id
       in: header
@@ -11416,7 +10883,6 @@ components:
           value: 3155180e-0c13-43e9-9c38-e9045bcbf176
         hex:
           value: 00Dbn00000IxGnx
-      x-speakeasy-ignore: true
     xExtInteractionId:
       name: x-ext-interaction-id
       in: header
@@ -11431,12 +10897,20 @@ components:
           value: 3155180e-0c13-43e9-9c38-e9045bcbf176
         hex:
           value: 00Dbn00000IxGnx
-      x-speakeasy-ignore: true
     acceptLanguage:
       name: Accept-Language
       in: header
-      description: 'The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal''s default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.'
-      required: false
+      description: |
+        Specifies the language and locale used to retrieve, rank, and generate content for this request.
+
+        This parameter is required for all content-based portalmgr APIs.
+        If this parameter is omitted, the request may fail validation or return undefined behavior depending on the endpoint.
+
+        Language directly affects which content is eligible, how relevance is calculated, and how certified or generative answers are produced.
+        Some endpoints may appear to work without this parameter due to server-side fallbacks, but this behavior is not guaranteed and should not be relied upon.
+
+        MCP tools and LLM clients must always include this parameter explicitly.
+      required: true
       schema:
         type: string
         enum:
@@ -11455,25 +10929,8 @@ components:
           - ja-JP
           - ko-KR
           - sv-SE
-          - en-US
-          - es-ES
-          - fr-FR
-          - it-IT
-          - de-DE
-          - nl-NL
-          - pt-BR
-          - pt-PT
-          - da-DK
-          - ru-RU
-          - fr-CA
-          - zh-CN
-          - ja-JP
-          - ko-KR
-          - sv-SE
         example: en-US
         default: en-US
-        description: "The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`."
-      x-speakeasy-param-description: 'CRITICAL: Use `Dollar_lang` as the parameter name in MCP/SDK calls, NOT `$lang` or `lang`.'
     articleReadableId:
       name: articleID
       description: The ID of the Article.<br><br>An Article ID is composed of a 2-4 letter prefix followed by a dash and 4-15 digits.
@@ -11488,11 +10945,10 @@ components:
     languageQueryParameter:
       name: $lang
       in: query
-      description: 'The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal''s default language is used (typically "en-US").</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.<br><br>**MCP Note**: This parameter is optional. If omitted, the API will use the default language ("en-US"). You may pass an empty request object `{"request": {}}` or omit `Dollar_lang` from the request.'
+      description: The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>lang</code> is not passed, then the portal's default language is used.</li>
       required: false
       schema:
         type: string
-        default: en-US
         enum:
           - en-US
           - fr-FR
@@ -11536,42 +10992,7 @@ components:
           - sl-SI
           - sr-RS
           - xx-XX
-          - en-US
-          - fr-FR
-          - en-GB
-          - es-ES
-          - it-IT
-          - nl-NL
-          - da-DA
-          - sv-SE
-          - pt-PT
-          - fi-FI
-          - no-NB
-          - no-NN
-          - ja-JA
-          - de-DE
-          - pt-BR
-          - zh-CN
-          - zh-TW
-          - ko-KO
-          - ru-RU
-          - el-EL
-          - tr-TR
-          - pl-PL
-          - cs-CS
-          - sk-SK
-          - hu-HU
-          - sr-SR
-          - ar-SA
-          - hr-HR
-          - ro-RO
-          - th-TH
-          - xx-XX
         example: en-US
-        default: en-US
-        description: "The language that describes the details of a resource. Resources available in different languages may differ from each other.<li>If <code>$lang</code> is not passed, then the portal's default language is used.</li><br><br>**Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`."
-      x-speakeasy-name-override: lang
-      x-speakeasy-param-description: 'CRITICAL: Use `Dollar_lang` as the parameter name in MCP/SDK calls, NOT `$lang` or `lang`.'
     articleAdditionalAttributes:
       name: articleAdditionalAttributes
       in: query
@@ -11596,7 +11017,6 @@ components:
             - ownedBy.userName
             - workflow
             - all
-            - content
       description: "The attributes of an Article to be returned *in addition to* the default list of attributes, listed below. Multiple additional attributes can be specified using a comma-separated list. Passing 'all' will return all attributes.\n\n#### Default Attributes\nThese Article attributes are always returned:\n\n| Name | Description \n| ---- | -----------\n| id | The ID of the Article.\n| name  | The name of the Article.\n| additionalInfo | Additional information provided as Article metadata.\n| articleType | The Article type and its attributes.\n| articleKeywords | A comma-separated list of keywords associated with this Article.\n| articleState | The current state of the Article. States include A (Authoring), S (Staging), and P (Published).\n| articleSummary | A brief summary of the Article, provided as metadata.\n| createdBy | The ID, first name, middle name and last name of the user that created the Article.\n| createdDate | The date that the Article was created.\n| departmentId | ID of the department for which this Article belongs to.\n| description | The Article's description.\n| expirationDate | The date that the Article is set to expire.\n| attachments | The Article's attachments\n| imageURL | The URL of the image that is present in the Article version. It is used as the thumbnail image for the Article.\n| includeInGenAI | Indicates whether this Article is used for eGain's generative AI features.\n| isSubscribed | Indicates whether the Article is subscribed for notifications. \n| languageCode | The language code of the Article language. \n| link | The link object, used to retrieve the details of the Article.\n| modifiedBy | The ID, first name, middle name and last name of the user that last modified the Article.\n| modifiedDate | The date that the Article was last modified on.\n| topicBreadcrumb | Contains a list of topics from the top-level topic to this Article. There may be multiple paths.\n| versionId | The ID of the Article version that is returned.\n"
       style: form
       explode: false
@@ -11631,7 +11051,6 @@ components:
         Multiple:
           value: internalScore,performance-rating_dept_923
           description: Multiple user-defined custom attributes.
-      x-speakeasy-name-override: customAdditionalAttributes
     workflowMilestone:
       name: workflowMilestone
       in: query
@@ -11646,7 +11065,7 @@ components:
     mandatoryLanguageQueryParameter:
       name: $lang
       in: query
-      description: 'The language used for fetching the details of a resource. Resources available in different languages may differ from each other. **Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`.'
+      description: The language used for fetching the details of a resource. Resources available in different languages may differ from each other.
       required: true
       schema:
         type: string
@@ -11694,9 +11113,6 @@ components:
           - sr-RS
           - xx-XX
         example: en-US
-        description: "The language used for fetching the details of a resource. Resources available in different languages may differ from each other. **Important**: When using this API via SDK or MCP, use the parameter name `Dollar_lang`, not `$lang` or `lang`."
-      x-speakeasy-name-override: lang
-      x-speakeasy-param-description: 'CRITICAL: Use `Dollar_lang` as the parameter name in MCP/SDK calls, NOT `$lang` or `lang`.'
     articleId:
       name: articleID
       in: path
@@ -11778,7 +11194,6 @@ components:
             - compliance
             - personalization
             - all
-            - content
       description: "The attributes of an Article to be returned *in addition to* the default list of attributes, listed below. Multiple additional attributes can be specified using a comma-separated list. Passing 'all' will return all attributes.\n\n#### Default Attributes\nThese Article attributes are always returned:\n\n| Name | Description \n| ---- | -----------\n| id | The ID of the Article.\n| name  | The name of the Article.\n| articleType | The Article Type and its attributes.\n| createdBy | The ID, first name, middle name and last name of the user that created the Article.\n| createdDate | The date that the Article was created.\n| hasAttachments | True: The Article has one or more attachments.<br>False: The Article does not have any attachments.\n| languageCode | The language code of the Article language. \n| modifiedBy | The ID, first name, middle name and last name of the user that last modified the Article.\n| modifiedDate | The date that the Article was last modified on.\n| link | The link object, used to retrieve the details of the Article.\n| versionId | The ID of the Article version that is returned.\n"
       style: form
       explode: false
@@ -11818,7 +11233,6 @@ components:
         minimum: 1
         maximum: 999
         default: 1
-      x-speakeasy-name-override: pagenum
     pagesize:
       name: $pagesize
       in: query
@@ -11828,9 +11242,8 @@ components:
         type: integer
         format: int64
         minimum: 1
-        maximum: 25
+        maximum: 75
         default: 10
-      x-speakeasy-name-override: pagesize
     articleSort:
       name: $sort
       in: query
@@ -11843,7 +11256,6 @@ components:
           - name
         example: name
       description: Articles to be sorted on.
-      x-speakeasy-name-override: sort
     articleSortOrder:
       name: $order
       in: query
@@ -11855,7 +11267,6 @@ components:
           - desc
         example: asc
         description: Sort order of articles.
-      x-speakeasy-name-override: order
     attachmentId:
       name: attachmentID
       description: The ID of the attachment.<br><br>An attachment ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.
@@ -11991,7 +11402,6 @@ components:
         minimum: 1
         maximum: 999
         default: 1
-      x-speakeasy-name-override: pagenum
     pagesizeTopics:
       name: $pagesize
       in: query
@@ -12001,9 +11411,8 @@ components:
         type: integer
         format: int32
         minimum: 1
-        maximum: 25
+        maximum: 75
         default: 10
-      x-speakeasy-name-override: pagesize
     filterTopicId:
       name: $filter[topicId]
       in: query
@@ -12167,7 +11576,6 @@ components:
           - id
           - name
           - departmentName
-      x-speakeasy-name-override: sort
     pagesizeNewFrameWork:
       name: $pagesize
       in: query
@@ -12177,9 +11585,8 @@ components:
         type: integer
         format: int64
         minimum: 1
-        maximum: 25
+        maximum: 75
         default: 25
-      x-speakeasy-name-override: pagesize
     filterUserProfileID:
       name: $filter[userProfileID]
       in: query
@@ -12212,7 +11619,6 @@ components:
         minimum: 1
         maximum: 1
         default: 1
-      x-speakeasy-name-override: pagenum
     aispagesize:
       name: $pagesize
       in: query
@@ -12222,9 +11628,8 @@ components:
         type: integer
         format: int64
         minimum: 1
-        maximum: 25
+        maximum: 30
         default: 20
-      x-speakeasy-name-override: pagesize
     xEgainIdpSession:
       name: x-egain-idp-session-id
       in: header
@@ -12246,7 +11651,6 @@ components:
           - id
           - name
         example: id
-      x-speakeasy-name-override: sort
     suggestionId:
       name: suggestionID
       description: The ID of the Suggestion.<br><br>A Suggestion ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.
@@ -17447,10 +16851,10 @@ servers:
     description: Portal Manager API Server
     variables:
       API_DOMAIN:
-        default: api.aidev.egain.cloud
+        default: api.ai.egain.cloud
   - x-speakeasy-server-id: server_1
     url: https://{API_DOMAIN}/core/aiservices/v4
     description: AI Services API Server
     variables:
       API_DOMAIN:
-        default: api.aidev.egain.cloud
+        default: api.ai.egain.cloud

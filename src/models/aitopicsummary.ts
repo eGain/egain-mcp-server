@@ -12,11 +12,7 @@ export type AITopicSummary = {
   name?: string | undefined;
 };
 
-export const AITopicSummary$zodSchema: z.ZodType<
-  AITopicSummary,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const AITopicSummary$zodSchema: z.ZodType<AITopicSummary> = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
 }).describe(

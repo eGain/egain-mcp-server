@@ -6,9 +6,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import type { Env } from "../../worker-configuration.js";
 import { EgainMcpCore } from "../core.js";
+import { landingPage } from "../landing-page.js";
 import { createConsoleLogger } from "../mcp-server/console-logger.js";
 import { createMCPServer } from "../mcp-server/server.js";
-import { landingPage } from "./landing-page.js";
 
 interface State {}
 
@@ -18,14 +18,16 @@ export class AtEgainEgainMcpServerMCP extends McpAgent<Env, State, Props> {
   server!: McpServer;
 
   async init() {
-    this.server = createMCPServer({
+    const { server } = createMCPServer({
       logger: createConsoleLogger("debug"),
       getSDK: () => this.getSDK(),
     });
+
+    this.server = server;
   }
 
   getSDK() {
-    const getHeader = (name: string) => this.props[name] || "";
+    const getHeader = (name: string) => this.props?.[name] ?? "";
 
     const sdk = new EgainMcpCore({
       debugLogger: {
@@ -33,9 +35,12 @@ export class AtEgainEgainMcpServerMCP extends McpAgent<Env, State, Props> {
         group: (...args) => console.group(...args),
         groupEnd: (...args) => console.groupEnd(...args),
       },
-      security: async () => {
-        return { accessToken: getHeader("authorization") };
-      },
+      security: async () => ({
+        oAuthUser: getHeader("Authorization"),
+        oAuthCustomer: getHeader("Authorization"),
+        oAuthAnonymousCustomer: getHeader("Authorization"),
+        accessToken: getHeader("authorization"),
+      }),
     });
     return sdk;
   }
@@ -54,7 +59,7 @@ export default {
 
     if (url.pathname === "/sse" || url.pathname.startsWith("/sse/")) {
       return AtEgainEgainMcpServerMCP.serveSSE("/sse", {
-        binding: "@EGAIN/EGAIN-MCP-SERVER_MCP",
+        binding: "EGAIN_EGAIN_MCP_SERVER_MCP",
       }).fetch(
         request,
         env,
@@ -64,7 +69,7 @@ export default {
 
     if (url.pathname === "/mcp") {
       return AtEgainEgainMcpServerMCP.serve("/mcp", {
-        binding: "@EGAIN/EGAIN-MCP-SERVER_MCP",
+        binding: "EGAIN_EGAIN_MCP_SERVER_MCP",
       }).fetch(
         request,
         env,
@@ -77,6 +82,14 @@ export default {
       return landingPage(request);
     }
 
+    // NOTE: we renamed .dxt extension to .mcpb; redirect for backwards compatibility
+    if (url.pathname.endsWith(".dxt")) {
+      const newPath = url.pathname.replace(/\.dxt$/, ".mcpb");
+      const newUrl = new URL(url);
+      newUrl.pathname = newPath;
+      return Response.redirect(newUrl.toString(), 301);
+    }
+
     // Fallback to serving static assets
     const response = await env.ASSETS.fetch(request);
 
@@ -86,7 +99,7 @@ export default {
       return new Response(response.body, {
         headers: {
           "Content-Type": "application/octet-stream",
-          "Content-Disposition": "attachment; filename=\"mcp-server.dxt\"",
+          "Content-Disposition": "attachment; filename=\"mcp-server.mcpb\"",
           "Cache-Control": "public, max-age=3600",
         },
       });

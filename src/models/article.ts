@@ -71,7 +71,7 @@ export type Article = {
   structuredAuthoringFields?: StructuredAuthoringFields | undefined;
   articleState?: string | undefined;
   timesRated?: number | undefined;
-  topicBreadcrumb: Array<TopicBreadcrumb>;
+  topicBreadcrumb?: Array<TopicBreadcrumb> | undefined;
   versionId?: string | undefined;
   workflow?: Workflow | undefined;
   compliance?: ComplianceForArticle | undefined;
@@ -79,42 +79,41 @@ export type Article = {
   bookmarkStatus?: BookmarkStatus | undefined;
 };
 
-export const Article$zodSchema: z.ZodType<Article, z.ZodTypeDef, unknown> = z
-  .object({
-    additionalInfo: z.string().optional(),
-    articleKeywords: z.string().optional(),
-    articleMacro: z.string().optional(),
-    articleState: z.string().optional(),
-    articleSummary: z.string().optional(),
-    articleType: ArticleType$zodSchema.optional(),
-    attachments: z.array(ArticleAttachment$zodSchema).optional(),
-    availabilityDate: z.string().optional(),
-    availableEditions: z.array(Edition$zodSchema).optional(),
-    averageRating: z.number().optional(),
-    bookmarkStatus: BookmarkStatus$zodSchema.optional(),
-    compliance: ComplianceForArticle$zodSchema.optional(),
-    content: z.string().optional(),
-    contentText: z.string().optional(),
-    createdBy: CreatedBy$zodSchema,
-    createdDate: z.string().optional(),
-    customAttributes: z.array(CustomAttribute$zodSchema).optional(),
-    departmentID: z.string().optional(),
-    description: z.string().optional(),
-    expirationDate: z.string().optional(),
-    id: z.string(),
-    imageURL: z.string().optional(),
-    includeInGenAI: z.boolean().optional(),
-    isSubscribed: z.boolean().optional(),
-    languageCode: LanguageCode$zodSchema.optional(),
-    link: Link$zodSchema.optional(),
-    modifiedBy: ModifiedBy$zodSchema.optional(),
-    modifiedDate: z.string().optional(),
-    name: z.string(),
-    ownedBy: OwnedBy$zodSchema.optional(),
-    personalization: Personalization$zodSchema.optional(),
-    structuredAuthoringFields: StructuredAuthoringFields$zodSchema.optional(),
-    timesRated: z.number().int().optional(),
-    topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema),
-    versionId: z.string().optional(),
-    workflow: Workflow$zodSchema.optional(),
-  }).describe("Success");
+export const Article$zodSchema: z.ZodType<Article> = z.object({
+  additionalInfo: z.string().optional(),
+  articleKeywords: z.string().optional(),
+  articleMacro: z.string().optional(),
+  articleState: z.string().optional(),
+  articleSummary: z.string().optional(),
+  articleType: ArticleType$zodSchema.optional(),
+  attachments: z.array(ArticleAttachment$zodSchema).optional(),
+  availabilityDate: z.string().optional(),
+  availableEditions: z.array(Edition$zodSchema).optional(),
+  averageRating: z.number().optional(),
+  bookmarkStatus: BookmarkStatus$zodSchema.optional(),
+  compliance: ComplianceForArticle$zodSchema.optional(),
+  content: z.string().optional(),
+  contentText: z.string().optional(),
+  createdBy: CreatedBy$zodSchema,
+  createdDate: z.string().optional(),
+  customAttributes: z.array(CustomAttribute$zodSchema).optional(),
+  departmentID: z.string().optional(),
+  description: z.string().optional(),
+  expirationDate: z.string().optional(),
+  id: z.string(),
+  imageURL: z.string().optional(),
+  includeInGenAI: z.boolean().optional(),
+  isSubscribed: z.boolean().optional(),
+  languageCode: LanguageCode$zodSchema.optional(),
+  link: Link$zodSchema.optional(),
+  modifiedBy: ModifiedBy$zodSchema.optional(),
+  modifiedDate: z.string().optional(),
+  name: z.string(),
+  ownedBy: OwnedBy$zodSchema.optional(),
+  personalization: Personalization$zodSchema.optional(),
+  structuredAuthoringFields: StructuredAuthoringFields$zodSchema.optional(),
+  timesRated: z.int().optional(),
+  topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema).optional(),
+  versionId: z.string().optional(),
+  workflow: Workflow$zodSchema.optional(),
+}).describe("Success");

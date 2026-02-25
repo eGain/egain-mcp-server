@@ -28,8 +28,9 @@ Make a Suggestion
     - \`name\` (string, **required**) - Name/title of the suggestion
     - \`content\` (string, **required**) - Content/description of the suggestion
     - \`language\` (object, **required**) - Language object with \`code\` property (e.g., {"code": "en-US"})
-- Optional parameters:
   - \`acceptLanguage\` (string, default: "en-US") - Accept-Language header value
+
+- Optional parameters:
   - \`CreateSuggestion\` additional optional fields:
     - \`description\` (string) - Additional description
     - \`feedbackArticle\` (object) - Article ID object if providing feedback on existing article: \`{"id": "PROD-2996"}\`
@@ -68,6 +69,7 @@ The Make a Suggestion API allows users to create an Article Suggestion from with
 Users can submit suggestions with details about what they're looking for, which helps content creators understand user needs and improve the knowledge base.
 `,
   annotations: {
+    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

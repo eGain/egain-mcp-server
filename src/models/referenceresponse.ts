@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import {
   AITopicBreadcrumb,
   AITopicBreadcrumb$zodSchema,
@@ -11,6 +12,19 @@ import {
 /**
  * Format of the source document (HTML, DOCX, PPTX, or PDF).
  */
+export const ReferenceResponseDocType = {
+  Html: "HTML",
+  Docx: "DOCX",
+  Pdf: "PDF",
+  Pptx: "PPTX",
+} as const;
+/**
+ * Format of the source document (HTML, DOCX, PPTX, or PDF).
+ */
+export type ReferenceResponseDocType = ClosedEnum<
+  typeof ReferenceResponseDocType
+>;
+
 export const ReferenceResponseDocType$zodSchema = z.enum([
   "HTML",
   "DOCX",
@@ -18,21 +32,24 @@ export const ReferenceResponseDocType$zodSchema = z.enum([
   "PPTX",
 ]).describe("Format of the source document (HTML, DOCX, PPTX, or PDF).");
 
-export type ReferenceResponseDocType = z.infer<
-  typeof ReferenceResponseDocType$zodSchema
->;
-
 /**
  * Source Type
  */
+export const ReferenceResponseSource = {
+  EGainArticle: "eGain Article",
+  EGainAttachment: "eGain Attachment",
+} as const;
+/**
+ * Source Type
+ */
+export type ReferenceResponseSource = ClosedEnum<
+  typeof ReferenceResponseSource
+>;
+
 export const ReferenceResponseSource$zodSchema = z.enum([
   "eGain Article",
   "eGain Attachment",
 ]).describe("Source Type");
-
-export type ReferenceResponseSource = z.infer<
-  typeof ReferenceResponseSource$zodSchema
->;
 
 /**
  * One document used in generated response
@@ -46,15 +63,12 @@ export type ReferenceResponse = {
   topicBreadcrumb?: Array<AITopicBreadcrumb> | undefined;
 };
 
-export const ReferenceResponse$zodSchema: z.ZodType<
-  ReferenceResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  docName: z.string().optional(),
-  docType: ReferenceResponseDocType$zodSchema,
-  id: z.string(),
-  name: z.string(),
-  source: ReferenceResponseSource$zodSchema,
-  topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema).optional(),
-}).describe("One document used in generated response");
+export const ReferenceResponse$zodSchema: z.ZodType<ReferenceResponse> = z
+  .object({
+    docName: z.string().optional(),
+    docType: ReferenceResponseDocType$zodSchema,
+    id: z.string(),
+    name: z.string(),
+    source: ReferenceResponseSource$zodSchema,
+    topicBreadcrumb: z.array(AITopicBreadcrumb$zodSchema).optional(),
+  }).describe("One document used in generated response");

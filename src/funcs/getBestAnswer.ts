@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
+import { encodeFormQuery, encodeJSON, encodeSimple } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -11,11 +11,9 @@ import { RequestOptions } from "../lib/sdks.js";
 import { extractSecurity, resolveGlobalSecurity } from "../lib/security.js";
 import { pathToFunc } from "../lib/url.js";
 import {
-  AiSearchRequest,
-  AiSearchRequest$zodSchema,
-  AiSearchResponseResponse,
-  AiSearchResponseResponse$zodSchema,
-} from "../models/aisearchop.js";
+  AnswersResponse,
+  AnswersResponse$zodSchema,
+} from "../models/answersresponse.js";
 import { APIError } from "../models/errors/apierror.js";
 import {
   ConnectionError,
@@ -25,69 +23,75 @@ import {
   UnexpectedClientError,
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
+import {
+  GetBestAnswerRequest,
+  GetBestAnswerRequest$zodSchema,
+} from "../models/getbestanswerop.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Hybrid Search
+ * Generate an Answer
  *
  * @remarks
- * Hybrid Search
+ * Get Answers
  *
  * ## How to Use This Tool
  *
  * **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
  *
  * **Parameter Format**:
- * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information"}}`
+ * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}`
  * - Required parameters:
  *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
- *   - `q` (string) - The search query string (must be URL-escaped)
+ *   - `q` (string) - The search query string
+ *   - `Dollar_lang` (string) - Language code (e.g., "en-US")
  * - Optional parameters:
- *   - `Dollar_lang` (string, default: "en-US") - Language code
  *   - `dollarFilterUserProfileID` (string) - User profile ID filter
  *   - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
  *   - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
- *   - `articleCustomAdditionalAttributes` (string) - Comma-separated custom attribute names
- *   - `Dollar_pagenum` (number, default: 1) - Page number for pagination
- *   - `Dollar_pagesize` (number, default: 20) - Number of results per page
+ *   - `AnswersRequest` (object) - Request body parameters:
+ *     - `eventId` (string, **required**) - Event ID
+ *     - `sessionId` (string, **required**) - Session ID
+ *     - `channel` (object, **optional**, recommended to omit) - Channel information. Omit unless specifically needed. If you receive a 400 error with channel, retry without it.
+ *     - `context` (object) - Additional context (companyContext, pageContext, userContext)
  *
- * **Example**: To search for "loan information" in portal "PZ-9999", call with:
+ * **Example**: To get answers for query "loan information" from portal "PZ-9999", call with:
  * ```json
- * {"request": {"portalID": "PZ-9999", "q": "loan information"}}
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "AnswersRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
  * ```
  *
- * **Example with optional parameters**:
- * ```json
- * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "Dollar_pagesize": 25}}
- * ```
- *
- * **Note**: This endpoint is only available for Self Service environments.
+ * **Note**: The `channel` field in `AnswersRequest` is optional and recommended to omit unless specifically needed. The API works reliably without it.
  *
  * ## Displaying Results (MCP-Specific)
- * **CRITICAL**: When this tool returns data successfully, you MUST display the search results to the user in your response. Do not silently process the data - always show the user what was returned.
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
  *
  * **What to display:**
- * - Display all search results with article names and IDs
- * - Show article `snippet` or `keywordSnippet` (the relevant text excerpt)
- * - Display `normalizedScore` or `relevanceScore` to indicate relevance
- * - Show `docType`, `source`, and `topicBreadcrumb` metadata
- * - Display `contextualSummary` if available
- * - Include `paginationInfo` if pagination is used
- * - Format results in a numbered list with clear relevance indicators
+ * - Display the `answer.answerValue` text prominently as the main answer to the user's query
+ * - Indicate the answer type (`answerType`: "certified" or "generative")
+ * - If `relevanceScore` is present, you may mention the confidence level
+ * - List all `references` (article IDs and names) that were used to generate the answer
+ * - Display `searchResults` showing related articles with their names, IDs, snippets, and relevance scores
+ * - Format the answer in a clear, readable way - this is the primary response the user is seeking
  *
- * **Example**: "I found 10 articles matching 'loan information': 1) [Article Name] (ID: PROD-123) - [snippet] (Relevance: 0.89)..."
+ * **Example**: "Based on the knowledge base, here's the answer: [answerValue]. This answer was generated using information from: [list references]. Related articles: [list search results]..."
+ *
+ * ## Prerequisites
+ * - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
+ * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
  *
  * ## Overview
- * The Search API is a hybrid search service that combines semantic understanding with keyword precision to deliver fast, contextual, and relevant results from your enterprise knowledge base. It enables secure, role-aware access to articles, FAQs, and documentation across customer, agent, and employee interfaces. Each query returns a ranked list of results with snippets, metadata, and relevance scores.
+ * The Answers API enables users to get the best answer for a user query. This API can return certified answers or generative answers along with search results, providing users with comprehensive responses to their questions.
+ *
+ * The API leverages AI capabilities to provide intelligent answers based on the knowledge base content, making it easier for users to find the information they need quickly and accurately.
  */
-export function querySearch(
+export function getBestAnswer(
   client$: EgainMcpCore,
-  request: AiSearchRequest,
+  request: GetBestAnswerRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    AiSearchResponseResponse,
+    AnswersResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -106,12 +110,12 @@ export function querySearch(
 
 async function $do(
   client$: EgainMcpCore,
-  request: AiSearchRequest,
+  request: GetBestAnswerRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      AiSearchResponseResponse,
+      AnswersResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -125,14 +129,14 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => AiSearchRequest$zodSchema.parse(value$),
+    (value$) => GetBestAnswerRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
     return [parsed$, { status: "invalid" }];
   }
   const payload$ = parsed$.value;
-  const body$ = null;
+  const body$ = encodeJSON("body", payload$.AnswersRequest, { explode: true });
 
   const pathParams$ = {
     portalID: encodeSimple("portalID", payload$.portalID, {
@@ -140,7 +144,7 @@ async function $do(
       charEncoding: "percent",
     }),
   };
-  const path$ = pathToFunc("/{portalID}/search")(
+  const path$ = pathToFunc("/{portalID}/answers")(
     pathParams$,
   );
   const query$ = encodeFormQuery({
@@ -148,14 +152,11 @@ async function $do(
     "$filter[topicIds]": payload$.dollarFilterTopicIds,
     "$filter[userProfileID]": payload$.dollarFilterUserProfileID,
     "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "articleCustomAdditionalAttributes":
-      payload$.articleCustomAdditionalAttributes,
     "q": payload$.q,
   });
 
   const headers$ = new Headers(compactMap({
+    "Content-Type": "application/json",
     Accept: "application/json",
   }));
   const securityInput = await extractSecurity(client$._options.security);
@@ -164,7 +165,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "aiSearch",
+    operationID: "getBestAnswer",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -182,7 +183,7 @@ async function $do(
 
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
-    method: "GET",
+    method: "POST",
     baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
@@ -212,7 +213,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    AiSearchResponseResponse,
+    AnswersResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -221,14 +222,9 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, AiSearchResponseResponse$zodSchema, {
-      key: "AISearchResponse",
-    }),
-    M.nil(204, AiSearchResponseResponse$zodSchema),
-    M.json([400, 401, 403, 404, 406], AiSearchResponseResponse$zodSchema, {
-      key: "WSErrorCommon",
-    }),
-    M.json(500, AiSearchResponseResponse$zodSchema, { key: "WSErrorCommon" }),
+    M.json(200, AnswersResponse$zodSchema, { key: "AnswersResponse" }),
+    M.nil(400, AnswersResponse$zodSchema),
+    M.nil(500, AnswersResponse$zodSchema),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

@@ -6,7 +6,7 @@ import * as z from "zod";
 
 export type Tag = { name?: string | undefined; id?: string | undefined };
 
-export const Tag$zodSchema: z.ZodType<Tag, z.ZodTypeDef, unknown> = z.object({
+export const Tag$zodSchema: z.ZodType<Tag> = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
 });

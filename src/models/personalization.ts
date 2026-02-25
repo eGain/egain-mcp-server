@@ -8,28 +8,19 @@ import { TagCategory, TagCategory$zodSchema } from "./tagcategory.js";
 
 export type AccessTags = { tagCategory?: Array<TagCategory> | undefined };
 
-export const AccessTags$zodSchema: z.ZodType<
-  AccessTags,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const AccessTags$zodSchema: z.ZodType<AccessTags> = z.object({
   tagCategory: z.array(TagCategory$zodSchema).optional(),
 });
 
 export type Filters = { tagCategory?: Array<TagCategory> | undefined };
 
-export const Filters$zodSchema: z.ZodType<Filters, z.ZodTypeDef, unknown> = z
-  .object({
-    tagCategory: z.array(TagCategory$zodSchema).optional(),
-  });
+export const Filters$zodSchema: z.ZodType<Filters> = z.object({
+  tagCategory: z.array(TagCategory$zodSchema).optional(),
+});
 
 export type PublishViews = { publishView?: Array<PublishView> | undefined };
 
-export const PublishViews$zodSchema: z.ZodType<
-  PublishViews,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const PublishViews$zodSchema: z.ZodType<PublishViews> = z.object({
   publishView: z.array(PublishView$zodSchema).optional(),
 });
 
@@ -42,11 +33,7 @@ export type Personalization = {
   publishViews?: PublishViews | undefined;
 };
 
-export const Personalization$zodSchema: z.ZodType<
-  Personalization,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const Personalization$zodSchema: z.ZodType<Personalization> = z.object({
   accessTags: z.lazy(() => AccessTags$zodSchema).optional(),
   filters: z.lazy(() => Filters$zodSchema).optional(),
   publishViews: z.lazy(() => PublishViews$zodSchema).optional(),

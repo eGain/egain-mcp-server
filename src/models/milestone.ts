@@ -10,7 +10,6 @@ import { MilestoneName, MilestoneName$zodSchema } from "./milestonename.js";
  */
 export type Milestone = { name?: MilestoneName | undefined };
 
-export const Milestone$zodSchema: z.ZodType<Milestone, z.ZodTypeDef, unknown> =
-  z.object({
-    name: MilestoneName$zodSchema.optional(),
-  }).describe("A resource's workflow milestone.");
+export const Milestone$zodSchema: z.ZodType<Milestone> = z.object({
+  name: MilestoneName$zodSchema.optional(),
+}).describe("A resource's workflow milestone.");

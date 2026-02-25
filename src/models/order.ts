@@ -3,10 +3,15 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
+
+export const Order = {
+  Asc: "asc",
+  Desc: "desc",
+} as const;
+export type Order = ClosedEnum<typeof Order>;
 
 export const Order$zodSchema = z.enum([
   "asc",
   "desc",
 ]);
-
-export type Order = z.infer<typeof Order$zodSchema>;

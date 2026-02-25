@@ -6,11 +6,7 @@ import * as z from "zod";
 
 export type Department = { id?: string | undefined; name?: string | undefined };
 
-export const Department$zodSchema: z.ZodType<
-  Department,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const Department$zodSchema: z.ZodType<Department> = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
 });

@@ -13,8 +13,7 @@ export type Stage = {
   milestone?: Milestone | undefined;
 };
 
-export const Stage$zodSchema: z.ZodType<Stage, z.ZodTypeDef, unknown> = z
-  .object({
-    milestone: Milestone$zodSchema.optional(),
-    name: z.string().optional(),
-  }).describe("A stage in the Article's workflow.");
+export const Stage$zodSchema: z.ZodType<Stage> = z.object({
+  milestone: Milestone$zodSchema.optional(),
+  name: z.string().optional(),
+}).describe("A stage in the Article's workflow.");

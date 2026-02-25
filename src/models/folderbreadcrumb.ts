@@ -12,10 +12,8 @@ export type FolderBreadcrumb = {
   folderSummary?: Array<FolderSummary> | undefined;
 };
 
-export const FolderBreadcrumb$zodSchema: z.ZodType<
-  FolderBreadcrumb,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  folderSummary: z.array(FolderSummary$zodSchema).optional(),
-}).describe("This schema contains one or more FolderSummary instances.");
+export const FolderBreadcrumb$zodSchema: z.ZodType<FolderBreadcrumb> = z.object(
+  {
+    folderSummary: z.array(FolderSummary$zodSchema).optional(),
+  },
+).describe("This schema contains one or more FolderSummary instances.");

@@ -9,11 +9,7 @@ export type L10NString = {
   displayValue?: string | undefined;
 };
 
-export const L10NString$zodSchema: z.ZodType<
-  L10NString,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const L10NString$zodSchema: z.ZodType<L10NString> = z.object({
   displayValue: z.string().optional(),
   value: z.string().optional(),
 });

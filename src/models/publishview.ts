@@ -10,9 +10,7 @@ export type PublishViewTagCategory = {
 };
 
 export const PublishViewTagCategory$zodSchema: z.ZodType<
-  PublishViewTagCategory,
-  z.ZodTypeDef,
-  unknown
+  PublishViewTagCategory
 > = z.object({
   tagCategory: z.array(TagCategory$zodSchema).optional(),
 });
@@ -23,11 +21,7 @@ export type PublishView = {
   tagCategories?: Array<PublishViewTagCategory> | undefined;
 };
 
-export const PublishView$zodSchema: z.ZodType<
-  PublishView,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const PublishView$zodSchema: z.ZodType<PublishView> = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
   tagCategories: z.array(z.lazy(() => PublishViewTagCategory$zodSchema))

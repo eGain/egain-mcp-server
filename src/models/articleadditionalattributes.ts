@@ -3,6 +3,28 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
+
+export const ArticleAdditionalAttributes = {
+  ArticleMacro: "articleMacro",
+  AvailabilityDate: "availabilityDate",
+  AvailableEditions: "availableEditions",
+  AverageRating: "averageRating",
+  BookmarkStatus: "bookmarkStatus",
+  Content: "content",
+  ContentText: "contentText",
+  Compliance: "compliance",
+  TimesRated: "timesRated",
+  CreatedByUserName: "createdBy.userName",
+  ModifiedByUserName: "modifiedBy.userName",
+  OwnedBy: "ownedBy",
+  OwnedByUserName: "ownedBy.userName",
+  Workflow: "workflow",
+  All: "all",
+} as const;
+export type ArticleAdditionalAttributes = ClosedEnum<
+  typeof ArticleAdditionalAttributes
+>;
 
 export const ArticleAdditionalAttributes$zodSchema = z.enum([
   "articleMacro",
@@ -21,7 +43,3 @@ export const ArticleAdditionalAttributes$zodSchema = z.enum([
   "workflow",
   "all",
 ]);
-
-export type ArticleAdditionalAttributes = z.infer<
-  typeof ArticleAdditionalAttributes$zodSchema
->;

@@ -12,11 +12,10 @@ export type OwnedBy = {
   lastName?: string | undefined;
 };
 
-export const OwnedBy$zodSchema: z.ZodType<OwnedBy, z.ZodTypeDef, unknown> = z
-  .object({
-    firstName: z.string().optional(),
-    id: z.string().optional(),
-    lastName: z.string().optional(),
-    middleName: z.string().optional(),
-    userName: z.string().optional(),
-  });
+export const OwnedBy$zodSchema: z.ZodType<OwnedBy> = z.object({
+  firstName: z.string().optional(),
+  id: z.string().optional(),
+  lastName: z.string().optional(),
+  middleName: z.string().optional(),
+  userName: z.string().optional(),
+});

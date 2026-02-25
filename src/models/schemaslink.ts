@@ -10,11 +10,7 @@ export type SchemasLink = {
   _default?: boolean | undefined;
 };
 
-export const SchemasLink$zodSchema: z.ZodType<
-  SchemasLink,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const SchemasLink$zodSchema: z.ZodType<SchemasLink> = z.object({
   _default: z.boolean().optional(),
   href: z.string().optional(),
   rel: z.string().optional(),

@@ -57,11 +57,7 @@ export type ArticleResult = {
   personalization?: Personalization | undefined;
 };
 
-export const ArticleResult$zodSchema: z.ZodType<
-  ArticleResult,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const ArticleResult$zodSchema: z.ZodType<ArticleResult> = z.object({
   articleKeywords: z.string().optional(),
   articleSummary: z.string().optional(),
   articleType: ArticleType$zodSchema.optional(),
@@ -82,7 +78,7 @@ export const ArticleResult$zodSchema: z.ZodType<
   name: z.string().optional(),
   ownedBy: OwnedBy$zodSchema.optional(),
   personalization: Personalization$zodSchema.optional(),
-  timesRated: z.number().int().optional(),
+  timesRated: z.int().optional(),
   topicBreadcrumb: z.array(TopicBreadcrumb$zodSchema).optional(),
   versionId: z.string().optional(),
   workflow: Workflow$zodSchema.optional(),

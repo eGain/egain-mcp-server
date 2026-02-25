@@ -3,10 +3,20 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
 /**
  * The channel where the query originated, e.g., directly from the portal or via a custom integration.
  */
+export const RetrieveRequestType = {
+  Portal: "portal",
+  Custom: "custom",
+} as const;
+/**
+ * The channel where the query originated, e.g., directly from the portal or via a custom integration.
+ */
+export type RetrieveRequestType = ClosedEnum<typeof RetrieveRequestType>;
+
 export const RetrieveRequestType$zodSchema = z.enum([
   "portal",
   "custom",
@@ -14,17 +24,13 @@ export const RetrieveRequestType$zodSchema = z.enum([
   "The channel where the query originated, e.g., directly from the portal or via a custom integration.",
 );
 
-export type RetrieveRequestType = z.infer<typeof RetrieveRequestType$zodSchema>;
-
 export type RetrieveRequestChannel = {
   type?: RetrieveRequestType | undefined;
   name?: string | undefined;
 };
 
 export const RetrieveRequestChannel$zodSchema: z.ZodType<
-  RetrieveRequestChannel,
-  z.ZodTypeDef,
-  unknown
+  RetrieveRequestChannel
 > = z.object({
   name: z.string().optional(),
   type: RetrieveRequestType$zodSchema.default("custom"),
@@ -37,11 +43,7 @@ export type RetrieveRequest = {
   sessionId?: string | undefined;
 };
 
-export const RetrieveRequest$zodSchema: z.ZodType<
-  RetrieveRequest,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const RetrieveRequest$zodSchema: z.ZodType<RetrieveRequest> = z.object({
   channel: z.lazy(() => RetrieveRequestChannel$zodSchema).optional(),
   clientSessionId: z.string().optional(),
   eventId: z.string().optional(),

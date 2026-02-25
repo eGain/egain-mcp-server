@@ -12,11 +12,10 @@ export type CreatedBy = {
   lastName?: string | undefined;
 };
 
-export const CreatedBy$zodSchema: z.ZodType<CreatedBy, z.ZodTypeDef, unknown> =
-  z.object({
-    firstName: z.string().optional(),
-    id: z.string().optional(),
-    lastName: z.string().optional(),
-    middleName: z.string().optional(),
-    userName: z.string().optional(),
-  });
+export const CreatedBy$zodSchema: z.ZodType<CreatedBy> = z.object({
+  firstName: z.string().optional(),
+  id: z.string().optional(),
+  lastName: z.string().optional(),
+  middleName: z.string().optional(),
+  userName: z.string().optional(),
+});

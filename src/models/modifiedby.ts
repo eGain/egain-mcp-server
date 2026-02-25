@@ -12,11 +12,7 @@ export type ModifiedBy = {
   lastName?: string | undefined;
 };
 
-export const ModifiedBy$zodSchema: z.ZodType<
-  ModifiedBy,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const ModifiedBy$zodSchema: z.ZodType<ModifiedBy> = z.object({
   firstName: z.string().optional(),
   id: z.string().optional(),
   lastName: z.string().optional(),

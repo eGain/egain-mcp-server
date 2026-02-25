@@ -8,40 +8,30 @@ import {
   CreateSuggestion,
   CreateSuggestion$zodSchema,
 } from "./createsuggestion.js";
-import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
 export type MakeSuggestionRequest = {
+  xEgainActivityId?: string | undefined;
+  xExtIntegrationId?: string | undefined;
+  xExtInteractionId?: string | undefined;
   acceptLanguage?: AcceptLanguage | undefined;
   portalID: string;
   CreateSuggestion?: CreateSuggestion | undefined;
 };
 
-export const MakeSuggestionRequest$zodSchema: z.ZodType<
-  MakeSuggestionRequest,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  CreateSuggestion: CreateSuggestion$zodSchema.optional(),
-  acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
-  portalID: z.string().describe(
-    "The ID of the portal being accessed.<br><br>A portal ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.",
-  ),
-});
-
-export type MakeSuggestionResponse = {
-  ContentType: string;
-  StatusCode: number;
-  RawResponse: Response;
-  WSErrorCommon?: WSErrorCommon | undefined;
-};
-
-export const MakeSuggestionResponse$zodSchema: z.ZodType<
-  MakeSuggestionResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  ContentType: z.string(),
-  RawResponse: z.instanceof(Response),
-  StatusCode: z.number().int(),
-  WSErrorCommon: WSErrorCommon$zodSchema.optional(),
-});
+export const MakeSuggestionRequest$zodSchema: z.ZodType<MakeSuggestionRequest> =
+  z.object({
+    CreateSuggestion: CreateSuggestion$zodSchema.optional(),
+    acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
+    portalID: z.string().describe(
+      "The ID of the portal being accessed.<br><br>A portal ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.",
+    ),
+    xEgainActivityId: z.string().describe(
+      "A unique numeric interaction identifier from eGain.",
+    ).optional(),
+    xExtIntegrationId: z.string().describe(
+      "The unique numeric identifier for a tenant, used in self-service functionality as well as third-party integrations.<br><br>*Note: If x-egain-activity-id is not provided, then this must be passed along with x-ext-interaction-id.*",
+    ).optional(),
+    xExtInteractionId: z.string().describe(
+      "A unique interaction identifier from other CRM applications.<br><br>*Note: If x-egain-activity-id is not provided, then this must be passed along with x-ext-integration-id.*",
+    ).optional(),
+  });

@@ -10,9 +10,7 @@ import * as z from "zod";
 export type AttachmentForCreateSuggestion = { altId?: string | undefined };
 
 export const AttachmentForCreateSuggestion$zodSchema: z.ZodType<
-  AttachmentForCreateSuggestion,
-  z.ZodTypeDef,
-  unknown
+  AttachmentForCreateSuggestion
 > = z.object({
   altId: z.string().optional(),
 }).describe("This schema contains the definition of an Attachment.");

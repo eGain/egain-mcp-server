@@ -12,11 +12,7 @@ export type MilestoneName = {
   displayValue?: string | undefined;
 };
 
-export const MilestoneName$zodSchema: z.ZodType<
-  MilestoneName,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const MilestoneName$zodSchema: z.ZodType<MilestoneName> = z.object({
   displayValue: z.string().optional(),
   value: z.string().optional(),
 }).describe("The identifiers of the milestone.");

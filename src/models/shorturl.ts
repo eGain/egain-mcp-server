@@ -11,10 +11,9 @@ export type ShortURL = {
   isDefault?: boolean | undefined;
 };
 
-export const ShortURL$zodSchema: z.ZodType<ShortURL, z.ZodTypeDef, unknown> = z
-  .object({
-    id: z.string().optional(),
-    isDefault: z.boolean().optional(),
-    shortURLName: z.string().optional(),
-    templateName: z.string().optional(),
-  });
+export const ShortURL$zodSchema: z.ZodType<ShortURL> = z.object({
+  id: z.string().optional(),
+  isDefault: z.boolean().optional(),
+  shortURLName: z.string().optional(),
+  templateName: z.string().optional(),
+});

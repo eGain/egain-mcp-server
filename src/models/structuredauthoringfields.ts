@@ -13,9 +13,7 @@ export type StructuredAuthoringFields = {
 };
 
 export const StructuredAuthoringFields$zodSchema: z.ZodType<
-  StructuredAuthoringFields,
-  z.ZodTypeDef,
-  unknown
+  StructuredAuthoringFields
 > = z.object({
   cause: z.string().optional(),
   confidenceLevel: L10NString$zodSchema.optional(),

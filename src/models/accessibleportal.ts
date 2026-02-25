@@ -14,14 +14,12 @@ export type AccessiblePortal = {
   shortURL?: Array<ShortURL> | undefined;
 };
 
-export const AccessiblePortal$zodSchema: z.ZodType<
-  AccessiblePortal,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  department: Department$zodSchema.optional(),
-  description: z.string().optional(),
-  id: z.string().optional(),
-  name: z.string().optional(),
-  shortURL: z.array(ShortURL$zodSchema).optional(),
-});
+export const AccessiblePortal$zodSchema: z.ZodType<AccessiblePortal> = z.object(
+  {
+    department: Department$zodSchema.optional(),
+    description: z.string().optional(),
+    id: z.string().optional(),
+    name: z.string().optional(),
+    shortURL: z.array(ShortURL$zodSchema).optional(),
+  },
+);

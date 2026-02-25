@@ -3,11 +3,17 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
+
+export const WorkflowMilestone = {
+  Authoring: "authoring",
+  Staging: "staging",
+  Publish: "publish",
+} as const;
+export type WorkflowMilestone = ClosedEnum<typeof WorkflowMilestone>;
 
 export const WorkflowMilestone$zodSchema = z.enum([
   "authoring",
   "staging",
   "publish",
 ]);
-
-export type WorkflowMilestone = z.infer<typeof WorkflowMilestone$zodSchema>;

@@ -3,10 +3,49 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
 /**
  * The language that describes the details of a resource. Resources available in different languages may differ from each other.
  */
+export const RequiredLanguageCode = {
+  EnUS: "en-US",
+  FRFR: "fr-FR",
+  EnGB: "en-GB",
+  ESES: "es-ES",
+  ITIT: "it-IT",
+  NLNL: "nl-NL",
+  DADA: "da-DA",
+  SvSE: "sv-SE",
+  PTPT: "pt-PT",
+  FIFI: "fi-FI",
+  NoNB: "no-NB",
+  NoNN: "no-NN",
+  JAJA: "ja-JA",
+  DEDE: "de-DE",
+  PtBR: "pt-BR",
+  ZhCN: "zh-CN",
+  ZhTW: "zh-TW",
+  KOKO: "ko-KO",
+  RURU: "ru-RU",
+  ELEL: "el-EL",
+  TRTR: "tr-TR",
+  PLPL: "pl-PL",
+  CSCS: "cs-CS",
+  SKSK: "sk-SK",
+  HUHU: "hu-HU",
+  SRSR: "sr-SR",
+  ArSA: "ar-SA",
+  HRHR: "hr-HR",
+  RORO: "ro-RO",
+  THTH: "th-TH",
+  XXXX: "xx-XX",
+} as const;
+/**
+ * The language that describes the details of a resource. Resources available in different languages may differ from each other.
+ */
+export type RequiredLanguageCode = ClosedEnum<typeof RequiredLanguageCode>;
+
 export const RequiredLanguageCode$zodSchema = z.enum([
   "en-US",
   "fr-FR",
@@ -42,7 +81,3 @@ export const RequiredLanguageCode$zodSchema = z.enum([
 ]).describe(
   "The language that describes the details of a resource. Resources available in different languages may differ from each other.",
 );
-
-export type RequiredLanguageCode = z.infer<
-  typeof RequiredLanguageCode$zodSchema
->;

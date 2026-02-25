@@ -22,7 +22,9 @@ Get Popular Articles
 
 **Parameter Format**: 
 - Always wrap parameters in a \`request\` object: \`{"request": {"portalID": "PZ-9999"}}\`
-- Required parameter: \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+- Required parameter:
+  - \`portalID\` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+  - \`acceptLanguage\` (string, default: "en-US") - Accept-Language header value
 - Optional parameters:
   - \`Dollar_lang\` (string, default: "en-US") - Language code
   - \`Dollar_pagenum\` (number, default: 1) - Page number for pagination
@@ -63,6 +65,7 @@ The Popular Articles API allows a user to retrieve the most popular articles fro
 This API returns a list of popular articles with their metadata, allowing users to discover the most relevant and frequently accessed content within the portal.
 `,
   annotations: {
+    "title": "",
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,

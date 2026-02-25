@@ -14,11 +14,7 @@ export type ArticleResults = {
   paginationInfo?: PaginationInfo | undefined;
 };
 
-export const ArticleResults$zodSchema: z.ZodType<
-  ArticleResults,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const ArticleResults$zodSchema: z.ZodType<ArticleResults> = z.object({
   articles: z.array(ArticleResult$zodSchema).optional(),
   paginationInfo: PaginationInfo$zodSchema.optional(),
 }).describe("One or more instances of an Article result.");

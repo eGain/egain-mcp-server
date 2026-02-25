@@ -7,7 +7,6 @@ import { TagGroup, TagGroup$zodSchema } from "./taggroup.js";
 
 export type TagGroups = { tagGroup?: Array<TagGroup> | undefined };
 
-export const TagGroups$zodSchema: z.ZodType<TagGroups, z.ZodTypeDef, unknown> =
-  z.object({
-    tagGroup: z.array(TagGroup$zodSchema).optional(),
-  });
+export const TagGroups$zodSchema: z.ZodType<TagGroups> = z.object({
+  tagGroup: z.array(TagGroup$zodSchema).optional(),
+});

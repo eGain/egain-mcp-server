@@ -19,11 +19,7 @@ export type SearchResults = {
   article?: Array<ArticleAISearchResult> | undefined;
 };
 
-export const SearchResults$zodSchema: z.ZodType<
-  SearchResults,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const SearchResults$zodSchema: z.ZodType<SearchResults> = z.object({
   article: z.array(ArticleAISearchResult$zodSchema).optional(),
 }).describe("Top search results with relevance scores");
 
@@ -32,11 +28,9 @@ export type AISearchResponse = {
   paginationInfo?: AISPaginationInfo | undefined;
 };
 
-export const AISearchResponse$zodSchema: z.ZodType<
-  AISearchResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  paginationInfo: AISPaginationInfo$zodSchema.optional(),
-  searchResults: z.lazy(() => SearchResults$zodSchema),
-});
+export const AISearchResponse$zodSchema: z.ZodType<AISearchResponse> = z.object(
+  {
+    paginationInfo: AISPaginationInfo$zodSchema.optional(),
+    searchResults: z.lazy(() => SearchResults$zodSchema),
+  },
+);

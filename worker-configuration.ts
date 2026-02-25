@@ -7,5 +7,6 @@ export interface Env {
   // For example:
   // MY_KV_NAMESPACE: KVNamespace;
   // MY_DURABLE_OBJECT: DurableObjectNamespace;
+  EGAIN_EGAIN_MCP_SERVER_MCP: DurableObjectNamespace;
   ASSETS: Fetcher; // For serving static assets
 }

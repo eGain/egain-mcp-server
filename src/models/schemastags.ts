@@ -9,11 +9,7 @@ export type SchemasTags = {
   tags?: Array<string> | undefined;
 };
 
-export const SchemasTags$zodSchema: z.ZodType<
-  SchemasTags,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const SchemasTags$zodSchema: z.ZodType<SchemasTags> = z.object({
   id: z.string().optional(),
   tags: z.array(z.string()).optional(),
 });

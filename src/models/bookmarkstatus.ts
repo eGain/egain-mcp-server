@@ -17,12 +17,8 @@ export type BookmarkStatus = {
   folderBreadcrumb?: FolderBreadcrumb | undefined;
 };
 
-export const BookmarkStatus$zodSchema: z.ZodType<
-  BookmarkStatus,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  bookmarkID: z.number().int().optional(),
+export const BookmarkStatus$zodSchema: z.ZodType<BookmarkStatus> = z.object({
+  bookmarkID: z.int().optional(),
   folderBreadcrumb: FolderBreadcrumb$zodSchema.optional(),
   isBookmarked: z.boolean(),
 }).describe("Article Bookmark Status");

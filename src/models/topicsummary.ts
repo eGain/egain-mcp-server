@@ -14,11 +14,7 @@ export type TopicSummary = {
   link?: Link | undefined;
 };
 
-export const TopicSummary$zodSchema: z.ZodType<
-  TopicSummary,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const TopicSummary$zodSchema: z.ZodType<TopicSummary> = z.object({
   id: z.string().optional(),
   link: Link$zodSchema.optional(),
   name: z.string().optional(),

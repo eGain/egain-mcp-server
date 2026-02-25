@@ -73,7 +73,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
   private authConfig: AuthConfig;
   private codeVerifier: string;
   private codeChallenge: string;
-  private portalCacheHook?: any; // PortalCacheHook reference
   private configServer: http.Server | null = null; // HTTP server for configuration form
   private detectedBrowser: string = 'Google Chrome'; // Default fallback
   private authCancelled: boolean = false; // Track if user cancelled authentication
@@ -111,8 +110,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     };
   }
 
-  constructor(portalCacheHook?: any) {
-    this.portalCacheHook = portalCacheHook;
+  constructor() {
     this.authConfig = this.loadAuthConfig();
     
     // Generate secure PKCE values instead of using hardcoded ones
@@ -1179,18 +1177,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 
                 this.token = accessToken;
                 
-                // Trigger cache initialization if available
-                if (this.portalCacheHook) {
-                  try {
-                    const fakeRequest = new Request(this.authConfig.environmentUrl!, {
-                      headers: { 'Authorization': `Bearer ${accessToken}` }
-                    });
-                    await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-                  } catch (error) {
-                    // Cache init failure is non-fatal
-                  }
-                }
-                
                 console.error('🎉 Authentication complete! Stopping config server...');
                 
                 // Close browser window on Windows (macOS handles this via AppleScript in monitoring)
@@ -1669,17 +1655,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         // If code is 'code-received', token was already set by callback handler
         if (code === 'code-received') {
           // Token already set, just ensure cache is initialized
-          if (this.portalCacheHook && this.token) {
-            try {
-              const fakeRequest = new Request(this.authConfig.environmentUrl!, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
-              });
-              await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-              console.error('✅ Cache initialization completed');
-            } catch (error) {
-              console.error('⚠️  Cache initialization failed:', error);
-            }
-          }
+          
           console.error('🎉 Authentication complete! Stopping config server...');
           this.stopConfigServer();
           return; // Success - exit
@@ -1690,19 +1666,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         console.error('✅ Access token received');
         
         this.token = accessToken;
-        
-        // Trigger cache initialization if available
-        if (this.portalCacheHook) {
-          try {
-            const fakeRequest = new Request(this.authConfig.environmentUrl!, {
-              headers: { 'Authorization': `Bearer ${accessToken}` }
-            });
-            await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-            console.error('✅ Cache initialization completed');
-          } catch (error) {
-            console.error('⚠️  Cache initialization failed:', error);
-          }
-        }
+      
         
         console.error('🎉 Authentication complete! Stopping config server...');
         this.stopConfigServer();
@@ -1901,18 +1865,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             
             this.token = accessToken;
             
-            // Trigger cache initialization if available
-            if (this.portalCacheHook) {
-              try {
-                const fakeRequest = new Request(this.authConfig.environmentUrl!, {
-                  headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-                console.error('✅ Cache initialization completed');
-              } catch (error) {
-                console.error('⚠️  Cache initialization failed:', error);
-              }
-            }
             
             console.error('🎉 Authentication complete! Stopping config server...');
             this.stopConfigServer();
@@ -2272,18 +2224,6 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         if (existingToken) {
           console.error('🎉 Using existing valid bearer token (lazy mode)');
           this.token = existingToken;
-          
-          // Trigger cache initialization with existing token
-          if (this.portalCacheHook) {
-            try {
-              const fakeRequest = new Request(this.authConfig.environmentUrl || 'https://api-dev9.knowledge.ai/knowledge', {
-                headers: { 'Authorization': `Bearer ${existingToken}` }
-              });
-              await this.portalCacheHook.ensureCacheInitialized(fakeRequest);
-            } catch (error) {
-              // Cache init failure is non-fatal
-            }
-          }
           
           return this.token;
         }

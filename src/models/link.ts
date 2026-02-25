@@ -9,7 +9,7 @@ import * as z from "zod";
  */
 export type Link = { rel?: string | undefined; href?: string | undefined };
 
-export const Link$zodSchema: z.ZodType<Link, z.ZodTypeDef, unknown> = z.object({
+export const Link$zodSchema: z.ZodType<Link> = z.object({
   href: z.string().optional(),
   rel: z.string().optional(),
 }).describe(

@@ -9,9 +9,9 @@ import {
   AllAccessiblePortals$zodSchema,
 } from "./allaccessibleportals.js";
 import {
-  LanguageQueryParameter,
-  LanguageQueryParameter$zodSchema,
-} from "./languagequeryparameter.js";
+  MandatoryLanguageQueryParameter,
+  MandatoryLanguageQueryParameter$zodSchema,
+} from "./mandatorylanguagequeryparameter.js";
 import { Order, Order$zodSchema } from "./order.js";
 import {
   SortIdNameDepartment,
@@ -21,58 +21,43 @@ import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
 
 export type GetMyPortalsRequest = {
   acceptLanguage?: AcceptLanguage | undefined;
-  Dollar_lang?: LanguageQueryParameter | undefined;
+  Dollar_lang: MandatoryLanguageQueryParameter;
   department?: string | undefined;
   filterText?: string | undefined;
   shortUrlTemplate?: string | undefined;
   Dollar_sort?: SortIdNameDepartment | undefined;
   Dollar_order?: Order | undefined;
-  Dollar_pagesize?: number | undefined;
   Dollar_pagenum?: number | undefined;
+  Dollar_pagesize?: number | undefined;
 };
 
-export const GetMyPortalsRequest$zodSchema: z.ZodType<
-  GetMyPortalsRequest,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  Dollar_lang: LanguageQueryParameter$zodSchema.default("en-US"),
-  Dollar_order: Order$zodSchema.optional(),
-  Dollar_pagenum: z.number().int().default(1).describe(
-    "Pagination parameter that specifies the page number of results to be returned. Used in conjunction with $pagesize.",
-  ),
-  Dollar_pagesize: z.number().int().default(25).describe(
-    "Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.<br>Valid range of 5-75<br>_Default value_: 25",
-  ),
-  Dollar_sort: SortIdNameDepartment$zodSchema.optional(),
-  acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
-  department: z.string().describe(
-    "The Name of the department for which portals are to be fetched",
-  ).optional(),
-  filterText: z.string().describe(
-    "Portal name starting with a specific character are considered to filter the result.",
-  ).optional(),
-  shortUrlTemplate: z.string().describe(
-    "The Name of the template used while creating Short URL.",
-  ).optional(),
-});
+export const GetMyPortalsRequest$zodSchema: z.ZodType<GetMyPortalsRequest> = z
+  .object({
+    Dollar_lang: MandatoryLanguageQueryParameter$zodSchema,
+    Dollar_order: Order$zodSchema.optional(),
+    Dollar_pagenum: z.int().default(1).describe(
+      "Pagination parameter that specifies the page number of results to be returned. Used in conjunction with $pagesize.",
+    ),
+    Dollar_pagesize: z.int().default(25).describe(
+      "Pagination parameter that specifies the number of results per page. Used in conjunction with $pagenum.<br>Valid range of 5-75<br>_Default value_: 25",
+    ),
+    Dollar_sort: SortIdNameDepartment$zodSchema.optional(),
+    acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
+    department: z.string().describe(
+      "The Name of the department for which portals are to be fetched",
+    ).optional(),
+    filterText: z.string().describe(
+      "Portal name starting with a specific character are considered to filter the result.",
+    ).optional(),
+    shortUrlTemplate: z.string().describe(
+      "The Name of the template used while creating Short URL.",
+    ).optional(),
+  });
 
-export type GetMyPortalsResponse = {
-  ContentType: string;
-  StatusCode: number;
-  RawResponse: Response;
-  AllAccessiblePortals?: AllAccessiblePortals | undefined;
-  WSErrorCommon?: WSErrorCommon | undefined;
-};
+export type GetMyPortalsResponse = WSErrorCommon | AllAccessiblePortals;
 
-export const GetMyPortalsResponse$zodSchema: z.ZodType<
-  GetMyPortalsResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  AllAccessiblePortals: AllAccessiblePortals$zodSchema.optional(),
-  ContentType: z.string(),
-  RawResponse: z.instanceof(Response),
-  StatusCode: z.number().int(),
-  WSErrorCommon: WSErrorCommon$zodSchema.optional(),
-});
+export const GetMyPortalsResponse$zodSchema: z.ZodType<GetMyPortalsResponse> = z
+  .union([
+    WSErrorCommon$zodSchema,
+    AllAccessiblePortals$zodSchema,
+  ]);

@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
+import { encodeFormQuery, encodeSimple, queryJoin } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -40,7 +40,9 @@ import { Result } from "../types/fp.js";
  *
  * **Parameter Format**:
  * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999"}}`
- * - Required parameter: `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ * - Required parameter:
+ *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ *   - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
  * - Optional parameters:
  *   - `Dollar_lang` (string, default: "en-US") - Language code
  *   - `Dollar_pagenum` (number, default: 1) - Page number for pagination
@@ -142,19 +144,40 @@ async function $do(
   const path$ = pathToFunc("/portals/{portalID}/populararticles")(
     pathParams$,
   );
-  const query$ = encodeFormQuery({
-    "$filter[tags]": payload$.dollarFilterTags,
-    "$filter[topicId]": payload$.dollarFilterTopicId,
-    "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-  });
+  const query$ = queryJoin(
+    encodeFormQuery({
+      "articleResultAdditionalAttributes":
+        payload$.articleResultAdditionalAttributes,
+    }, { explode: false }),
+    encodeFormQuery({
+      "$filter[tags]": payload$.dollarFilterTags,
+      "$filter[topicId]": payload$.dollarFilterTopicId,
+      "$lang": payload$.Dollar_lang,
+      "$pagenum": payload$.Dollar_pagenum,
+      "$pagesize": payload$.Dollar_pagesize,
+    }),
+  );
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
     "Accept-Language": encodeSimple(
       "Accept-Language",
       payload$.acceptLanguage,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-egain-activity-id": encodeSimple(
+      "x-egain-activity-id",
+      payload$.xEgainActivityId,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-ext-integration-id": encodeSimple(
+      "x-ext-integration-id",
+      payload$.xExtIntegrationId,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-ext-interaction-id": encodeSimple(
+      "x-ext-interaction-id",
+      payload$.xExtInteractionId,
       { explode: false, charEncoding: "none" },
     ),
   }));

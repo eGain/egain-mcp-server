@@ -43,9 +43,9 @@ import { Result } from "../types/fp.js";
  * - Required parameters:
  *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
  *   - `articleID` (string) - The article ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PROD-2996")
+ *   - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
  * - Optional parameters:
  *   - `Dollar_lang` (string, default: "en-US") - Language code
- *   - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
  *   - `articleAdditionalAttributes` (array) - Additional article attributes to return
  *   - `Dollar_customAdditionalAttributes` (string) - Custom additional attributes
  *   - `accessSource` (string, default: "article_view") - How the article was accessed
@@ -88,7 +88,7 @@ import { Result } from "../types/fp.js";
  * - The "Allow Structured Authoring" setting is enabled at the partition/department level
  * - The "Use Structured Authoring" flag is set on the article type
  */
-export function getArticle(
+export function getArticleById(
   client$: EgainMcpCore,
   request: GetArticleByIdRequest,
   options?: RequestOptions,
@@ -172,6 +172,21 @@ async function $do(
     "Accept-Language": encodeSimple(
       "Accept-Language",
       payload$.acceptLanguage,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-egain-activity-id": encodeSimple(
+      "x-egain-activity-id",
+      payload$.xEgainActivityId,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-ext-integration-id": encodeSimple(
+      "x-ext-integration-id",
+      payload$.xExtIntegrationId,
+      { explode: false, charEncoding: "none" },
+    ),
+    "x-ext-interaction-id": encodeSimple(
+      "x-ext-interaction-id",
+      payload$.xExtInteractionId,
       { explode: false, charEncoding: "none" },
     ),
   }));

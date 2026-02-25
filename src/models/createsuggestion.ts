@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import {
   AttachmentForCreateSuggestion,
   AttachmentForCreateSuggestion$zodSchema,
@@ -20,9 +21,7 @@ export type RelatedArticleForCreateUpdateDeleteSuggestion = {
 };
 
 export const RelatedArticleForCreateUpdateDeleteSuggestion$zodSchema: z.ZodType<
-  RelatedArticleForCreateUpdateDeleteSuggestion,
-  z.ZodTypeDef,
-  unknown
+  RelatedArticleForCreateUpdateDeleteSuggestion
 > = z.object({
   id: z.string().optional(),
 }).describe("The Article that the Suggestion was created for.");
@@ -34,17 +33,48 @@ export type Attachments = {
   attachment?: Array<AttachmentForCreateSuggestion> | undefined;
 };
 
-export const Attachments$zodSchema: z.ZodType<
-  Attachments,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const Attachments$zodSchema: z.ZodType<Attachments> = z.object({
   attachment: z.array(AttachmentForCreateSuggestion$zodSchema).optional(),
 }).describe("Details of Attachments for the Suggestion.");
 
 /**
  * The code of the language.
  */
+export const Code = {
+  EnUS: "en-US",
+  EnGB: "en-GB",
+  FRFR: "fr-FR",
+  ESES: "es-ES",
+  ITIT: "it-IT",
+  DEDE: "de-DE",
+  NLNL: "nl-NL",
+  PtBR: "pt-BR",
+  PTPT: "pt-PT",
+  DaDK: "da-DK",
+  SvSE: "sv-SE",
+  RURU: "ru-RU",
+  ZhCN: "zh-CN",
+  JaJP: "ja-JP",
+  KoKR: "ko-KR",
+  DeAT: "de-AT",
+  THTH: "th-TH",
+  ViVN: "vi-VN",
+  IDID: "id-ID",
+  MsMY: "ms-MY",
+  FilPH: "fil-PH",
+  FrCA: "fr-CA",
+  HiIN: "hi-IN",
+  UkUA: "uk-UA",
+  BGBG: "bg-BG",
+  SKSK: "sk-SK",
+  SlSI: "sl-SI",
+  SrRS: "sr-RS",
+} as const;
+/**
+ * The code of the language.
+ */
+export type Code = ClosedEnum<typeof Code>;
+
 export const Code$zodSchema = z.enum([
   "en-US",
   "en-GB",
@@ -76,19 +106,14 @@ export const Code$zodSchema = z.enum([
   "sr-RS",
 ]).describe("The code of the language.");
 
-export type Code = z.infer<typeof Code$zodSchema>;
-
 /**
  * The knowledge base language in which the Suggestion is created.
  */
 export type Language = { code: Code };
 
-export const Language$zodSchema: z.ZodType<Language, z.ZodTypeDef, unknown> = z
-  .object({
-    code: Code$zodSchema,
-  }).describe(
-    "The knowledge base language in which the Suggestion is created.",
-  );
+export const Language$zodSchema: z.ZodType<Language> = z.object({
+  code: Code$zodSchema,
+}).describe("The knowledge base language in which the Suggestion is created.");
 
 /**
  * This schema contains information about a Suggestion.
@@ -103,18 +128,16 @@ export type CreateSuggestion = {
   customAttributes?: Array<CustomAttribute> | undefined;
 };
 
-export const CreateSuggestion$zodSchema: z.ZodType<
-  CreateSuggestion,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  attachments: z.lazy(() => Attachments$zodSchema).optional(),
-  content: z.string(),
-  customAttributes: z.array(CustomAttribute$zodSchema).optional(),
-  description: z.string().optional(),
-  feedbackArticle: z.lazy(() =>
-    RelatedArticleForCreateUpdateDeleteSuggestion$zodSchema
-  ).optional(),
-  language: z.lazy(() => Language$zodSchema),
-  name: z.string(),
-}).describe("This schema contains information about a Suggestion.");
+export const CreateSuggestion$zodSchema: z.ZodType<CreateSuggestion> = z.object(
+  {
+    attachments: z.lazy(() => Attachments$zodSchema).optional(),
+    content: z.string(),
+    customAttributes: z.array(CustomAttribute$zodSchema).optional(),
+    description: z.string().optional(),
+    feedbackArticle: z.lazy(() =>
+      RelatedArticleForCreateUpdateDeleteSuggestion$zodSchema
+    ).optional(),
+    language: z.lazy(() => Language$zodSchema),
+    name: z.string(),
+  },
+).describe("This schema contains information about a Suggestion.");

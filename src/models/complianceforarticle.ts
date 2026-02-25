@@ -9,26 +9,20 @@ import * as z from "zod";
  */
 export type StartDateDateAndTime = { date: string };
 
-export const StartDateDateAndTime$zodSchema: z.ZodType<
-  StartDateDateAndTime,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  date: z.string().datetime({ offset: true }),
-}).describe("The start date for the Article.");
+export const StartDateDateAndTime$zodSchema: z.ZodType<StartDateDateAndTime> = z
+  .object({
+    date: z.iso.datetime({ offset: true }),
+  }).describe("The start date for the Article.");
 
 /**
  * The end date for the Article.
  */
 export type DueDateDateAndTime = { date: string };
 
-export const DueDateDateAndTime$zodSchema: z.ZodType<
-  DueDateDateAndTime,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  date: z.string().datetime({ offset: true }),
-}).describe("The end date for the Article.");
+export const DueDateDateAndTime$zodSchema: z.ZodType<DueDateDateAndTime> = z
+  .object({
+    date: z.iso.datetime({ offset: true }),
+  }).describe("The end date for the Article.");
 
 /**
  * This schema contains the compliance details for an Article.
@@ -38,11 +32,8 @@ export type ComplianceForArticle = {
   dueDate?: DueDateDateAndTime | undefined;
 };
 
-export const ComplianceForArticle$zodSchema: z.ZodType<
-  ComplianceForArticle,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  dueDate: z.lazy(() => DueDateDateAndTime$zodSchema).optional(),
-  startDate: z.lazy(() => StartDateDateAndTime$zodSchema).optional(),
-}).describe("This schema contains the compliance details for an Article.");
+export const ComplianceForArticle$zodSchema: z.ZodType<ComplianceForArticle> = z
+  .object({
+    dueDate: z.lazy(() => DueDateDateAndTime$zodSchema).optional(),
+    startDate: z.lazy(() => StartDateDateAndTime$zodSchema).optional(),
+  }).describe("This schema contains the compliance details for an Article.");

@@ -10,7 +10,6 @@ import { Stage, Stage$zodSchema } from "./stage.js";
  */
 export type Workflow = { stages?: Array<Stage> | undefined };
 
-export const Workflow$zodSchema: z.ZodType<Workflow, z.ZodTypeDef, unknown> = z
-  .object({
-    stages: z.array(Stage$zodSchema).optional(),
-  }).describe("The Article's workflow.");
+export const Workflow$zodSchema: z.ZodType<Workflow> = z.object({
+  stages: z.array(Stage$zodSchema).optional(),
+}).describe("The Article's workflow.");

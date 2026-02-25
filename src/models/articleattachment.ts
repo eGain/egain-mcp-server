@@ -3,19 +3,25 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import { Link, Link$zodSchema } from "./link.js";
 
 /**
  * The type of attachment.
  */
+export const ArticleAttachmentType = {
+  Internal: "INTERNAL",
+  External: "EXTERNAL",
+} as const;
+/**
+ * The type of attachment.
+ */
+export type ArticleAttachmentType = ClosedEnum<typeof ArticleAttachmentType>;
+
 export const ArticleAttachmentType$zodSchema = z.enum([
   "INTERNAL",
   "EXTERNAL",
 ]).describe("The type of attachment.");
-
-export type ArticleAttachmentType = z.infer<
-  typeof ArticleAttachmentType$zodSchema
->;
 
 export type ArticleAttachment = {
   id?: string | undefined;
@@ -25,14 +31,11 @@ export type ArticleAttachment = {
   link?: Link | undefined;
 };
 
-export const ArticleAttachment$zodSchema: z.ZodType<
-  ArticleAttachment,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  id: z.string().optional(),
-  link: Link$zodSchema.optional(),
-  name: z.string().optional(),
-  size: z.number().int().optional(),
-  type: ArticleAttachmentType$zodSchema.optional(),
-});
+export const ArticleAttachment$zodSchema: z.ZodType<ArticleAttachment> = z
+  .object({
+    id: z.string().optional(),
+    link: Link$zodSchema.optional(),
+    name: z.string().optional(),
+    size: z.int().optional(),
+    type: ArticleAttachmentType$zodSchema.optional(),
+  });

@@ -3,84 +3,48 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
 /**
- * Optional channel type. Defaults to "portal" if omitted.
- *
- * @remarks
- * Accepts "portal" or "custom". Only include if channel object is provided.
+ * The channel where the query originated, e.g., directly from the portal or via a custom integration.
  */
+export const AnswersRequestType = {
+  Portal: "portal",
+  Custom: "custom",
+} as const;
+/**
+ * The channel where the query originated, e.g., directly from the portal or via a custom integration.
+ */
+export type AnswersRequestType = ClosedEnum<typeof AnswersRequestType>;
+
 export const AnswersRequestType$zodSchema = z.enum([
   "portal",
   "custom",
 ]).describe(
-  "Optional channel type. Defaults to \"portal\" if omitted. \n"
-    + "Accepts \"portal\" or \"custom\". Only include if channel object is provided.\n"
-    + "",
+  "The channel where the query originated, e.g., directly from the portal or via a custom integration.",
 );
 
-export type AnswersRequestType = z.infer<typeof AnswersRequestType$zodSchema>;
-
-/**
- * **Optional** channel information. **Recommended: Omit this field** unless specifically needed.
- *
- * @remarks
- *
- * **Important Notes:**
- * - The API works reliably without this field (defaults are applied automatically)
- * - Including channel may cause validation errors (400 Bad Request) in some cases
- * - If you receive a 400 error when including channel, retry the request without it
- * - When channel is provided, both type and name are optional, but name should be non-empty if provided
- *
- * **Working examples:**
- * - Omit channel entirely (recommended)
- * - channel: {type: "portal", name: "portal"}
- * - channel: {type: "custom", name: "test"}
- * - channel: {name: "portal"} (type defaults to "portal")
- */
 export type AnswersRequestChannel = {
   type?: AnswersRequestType | undefined;
   name?: string | undefined;
 };
 
-export const AnswersRequestChannel$zodSchema: z.ZodType<
-  AnswersRequestChannel,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  name: z.string().default("portal"),
-  type: AnswersRequestType$zodSchema.default("portal"),
-}).describe(
-  "**Optional** channel information. **Recommended: Omit this field** unless specifically needed.\n"
-    + "\n"
-    + "**Important Notes:**\n"
-    + "- The API works reliably without this field (defaults are applied automatically)\n"
-    + "- Including channel may cause validation errors (400 Bad Request) in some cases\n"
-    + "- If you receive a 400 error when including channel, retry the request without it\n"
-    + "- When channel is provided, both type and name are optional, but name should be non-empty if provided\n"
-    + "\n"
-    + "**Working examples:**\n"
-    + "- Omit channel entirely (recommended)\n"
-    + "- channel: {type: \"portal\", name: \"portal\"}\n"
-    + "- channel: {type: \"custom\", name: \"test\"}\n"
-    + "- channel: {name: \"portal\"} (type defaults to \"portal\")\n"
-    + "",
-);
+export const AnswersRequestChannel$zodSchema: z.ZodType<AnswersRequestChannel> =
+  z.object({
+    name: z.string().optional(),
+    type: AnswersRequestType$zodSchema.default("custom"),
+  });
 
 export type AnswersRequest = {
   channel?: AnswersRequestChannel | undefined;
-  eventId: string;
+  eventId?: string | undefined;
   clientSessionId?: string | undefined;
-  sessionId: string;
+  sessionId?: string | undefined;
 };
 
-export const AnswersRequest$zodSchema: z.ZodType<
-  AnswersRequest,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const AnswersRequest$zodSchema: z.ZodType<AnswersRequest> = z.object({
   channel: z.lazy(() => AnswersRequestChannel$zodSchema).optional(),
   clientSessionId: z.string().optional(),
-  eventId: z.string(),
-  sessionId: z.string(),
+  eventId: z.string().optional(),
+  sessionId: z.string().optional(),
 });

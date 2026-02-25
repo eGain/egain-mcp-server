@@ -3,7 +3,7 @@
  */
 
 import { EgainMcpCore } from "../core.js";
-import { encodeFormQuery, encodeSimple } from "../lib/encodings.js";
+import { encodeFormQuery, encodeJSON, encodeSimple } from "../lib/encodings.js";
 import * as M from "../lib/matchers.js";
 import { compactMap } from "../lib/primitives.js";
 import { safeParse } from "../lib/schemas.js";
@@ -20,74 +20,73 @@ import {
 } from "../models/errors/httpclienterrors.js";
 import { SDKValidationError } from "../models/errors/sdkvalidationerror.js";
 import {
-  GetAnnouncementArticlesRequest,
-  GetAnnouncementArticlesRequest$zodSchema,
-  GetAnnouncementArticlesResponse,
-  GetAnnouncementArticlesResponse$zodSchema,
-} from "../models/getannouncementarticlesop.js";
+  RetrieveChunksRequest,
+  RetrieveChunksRequest$zodSchema,
+} from "../models/retrievechunksop.js";
+import {
+  RetrieveResponse,
+  RetrieveResponse$zodSchema,
+} from "../models/retrieveresponse.js";
 import { APICall, APIPromise } from "../types/async.js";
 import { Result } from "../types/fp.js";
 
 /**
- * Get Announcement Articles
+ * Retrieve Chunks
  *
  * @remarks
- * Get Announcements
- *
- * ## How to Use This Tool
- *
- * **CRITICAL**: This tool requires a `request` parameter containing the request object. All parameters must be passed inside a `request` object.
- *
- * **Parameter Format**:
- * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999"}}`
- * - Required parameter: `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
- * - Optional parameters:
- *   - `Dollar_lang` (string, default: "en-US") - Language code
- *   - `acceptLanguage` (string, default: "en-US") - Accept-Language header value
- *   - `dollarFilterTags` (string) - Comma-separated list of Tag/Tag Group IDs
- *   - `workflowMilestone` (string) - Workflow milestone filter ("authoring", "staging", "publish")
- *   - `Dollar_pagenum` (number, default: 1) - Page number for pagination
- *   - `Dollar_pagesize` (number, default: 10) - Number of results per page
- *
- * **Example**: To get announcements from portal "PZ-9999", call with:
- * ```json
- * {"request": {"portalID": "PZ-9999"}}
- * ```
- *
- * **Example with optional parameters**:
- * ```json
- * {"request": {"portalID": "PZ-9999", "Dollar_lang": "en-US", "Dollar_pagesize": 20}}
- * ```
- *
- * ## Displaying Results (MCP-Specific)
- * **CRITICAL**: When this tool returns data successfully, you MUST display the announcement articles to the user in your response. Do not silently process the data - always show the user what was returned.
- *
- * **What to display:**
- * - Display all announcement articles with their names and IDs
- * - Show the article content (`content` or `contentText`) for each announcement
- * - Display metadata such as `createdDate`, `modifiedDate`, `articleSummary`
- * - Show `attachments` if present
- * - Include `paginationInfo` if pagination is used
- * - Format announcements in a clear list format
- *
- * **Example**: "Here are the announcements for this portal: 1) [Announcement Name] (ID: PROD-123) - [content]..."
+ * Retrieve Chunks
+ * ## Overview
+ * The Retrieve API enables enterprises to directly access relevant content chunks from their organizational knowledge sources. It is designed for scenarios where developers want granular control over retrieved information, such as powering custom search, analytics, or retrieval-augmented generation (RAG) pipelines.
+ * In addition to raw chunk retrieval, the API can return **Certified Answers** if it meets the 'Certified Answer' threshold score. Responses include relevance scores, metadata, and references to maintain transparency and flexibility.
+ * By leveraging the Retrieve API, organizations can build tailored experiences while retaining confidence in the source material.
  *
  * ## Prerequisites
  * - Requires a valid portal ID. If you don't have the portal ID, first call 'get-portals' to get available portals.
  * - Portal ID format: 2-4 letter prefix + dash + 4-15 digits (e.g., "PROD-1004")
  *
- * ## Overview
- * The Get Announcements API allows a user to retrieve all announcement articles for a specific portal. Announcements are special articles that are prominently displayed to users and typically contain important updates, news, or notifications.
+ * ## How to Use This Tool
+ * All inputs must be wrapped inside a request object. Provide a search query and language. Optional filters can be used to narrow results by tags, topics, or user profile.
  *
- * This API returns announcement articles with their full content, metadata, and any associated attachments or links.
+ * **Parameter Format**:
+ * - Always wrap parameters in a `request` object: `{"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}`
+ * - Required parameters:
+ *   - `portalID` (string) - The portal ID (format: 2-4 letter prefix + dash + 4-15 digits, e.g., "PZ-9999")
+ *   - `q` (string) - The search query string
+ *   - `Dollar_lang` (string) - Language code (e.g., "en-US")
+ * - Optional parameters:
+ *   - `dollarFilterUserProfileID` (string) - User profile ID filter
+ *   - `dollarFilterTags` (object) - Object where keys are Category Tag IDs and values are arrays of Tag IDs
+ *   - `dollarFilterTopicIds` (array) - Array of topic IDs to filter by
+ *   - `RetrieveRequest` (object) - Additional request body parameters:
+ *     - `channel` (object) - Channel information (optional, recommended to omit)
+ *     - `eventId` (string) - Event ID
+ *     - `sessionId` (string) - Session ID
+ *
+ * **Example**: To retrieve chunks for query "loan information" from portal "PZ-9999", call with:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US"}}
+ * ```
+ *
+ * **Example with RetrieveRequest body**:
+ * ```json
+ * {"request": {"portalID": "PZ-9999", "q": "loan information", "Dollar_lang": "en-US", "RetrieveRequest": {"eventId": "event-123", "sessionId": "session-456"}}}
+ * ```
+ *
+ * ## Displaying Results (MCP-Specific)
+ * **CRITICAL**: When this tool returns data successfully, you MUST display the results to the user in your response. Do not silently process the data - always show the user what was returned.
+ *
+ * **What to display:**
+ * Always display results. Show each article name, article ID, snippet, and relevance score. If a certified answer is returned, display it first and list its references.
+ *
+ * **Example**: "I found 5 relevant articles about loan information: 1) [Article Name] (ID: PROD-123) - [snippet]..."
  */
-export function getAnnouncements(
+export function retrieveChunks(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: RetrieveChunksRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
-    GetAnnouncementArticlesResponse,
+    RetrieveResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -106,12 +105,12 @@ export function getAnnouncements(
 
 async function $do(
   client$: EgainMcpCore,
-  request: GetAnnouncementArticlesRequest,
+  request: RetrieveChunksRequest,
   options?: RequestOptions,
 ): Promise<
   [
     Result<
-      GetAnnouncementArticlesResponse,
+      RetrieveResponse,
       | APIError
       | SDKValidationError
       | UnexpectedClientError
@@ -125,14 +124,14 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => GetAnnouncementArticlesRequest$zodSchema.parse(value$),
+    (value$) => RetrieveChunksRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
     return [parsed$, { status: "invalid" }];
   }
   const payload$ = parsed$.value;
-  const body$ = null;
+  const body$ = encodeJSON("body", payload$.RetrieveRequest, { explode: true });
 
   const pathParams$ = {
     portalID: encodeSimple("portalID", payload$.portalID, {
@@ -140,24 +139,20 @@ async function $do(
       charEncoding: "percent",
     }),
   };
-  const path$ = pathToFunc("/portals/{portalID}/articles/announcements")(
+  const path$ = pathToFunc("/{portalID}/retrieve")(
     pathParams$,
   );
   const query$ = encodeFormQuery({
     "$filter[tags]": payload$.dollarFilterTags,
+    "$filter[topicIds]": payload$.dollarFilterTopicIds,
+    "$filter[userProfileID]": payload$.dollarFilterUserProfileID,
     "$lang": payload$.Dollar_lang,
-    "$pagenum": payload$.Dollar_pagenum,
-    "$pagesize": payload$.Dollar_pagesize,
-    "workflowMilestone": payload$.workflowMilestone,
+    "q": payload$.q,
   });
 
   const headers$ = new Headers(compactMap({
+    "Content-Type": "application/json",
     Accept: "application/json",
-    "Accept-Language": encodeSimple(
-      "Accept-Language",
-      payload$.acceptLanguage,
-      { explode: false, charEncoding: "none" },
-    ),
   }));
   const securityInput = await extractSecurity(client$._options.security);
   const requestSecurity = resolveGlobalSecurity(securityInput);
@@ -165,7 +160,7 @@ async function $do(
   const context = {
     options: client$._options,
     baseURL: options?.serverURL ?? client$._baseURL ?? "",
-    operationID: "getAnnouncementArticles",
+    operationID: "retrieveChunks",
     oAuth2Scopes: null,
     resolvedSecurity: requestSecurity,
     securitySource: client$._options.security,
@@ -183,7 +178,7 @@ async function $do(
 
   const requestRes = client$._createRequest(context, {
     security: requestSecurity,
-    method: "GET",
+    method: "POST",
     baseURL: options?.serverURL,
     path: path$,
     headers: headers$,
@@ -213,7 +208,7 @@ async function $do(
   };
 
   const [result$] = await M.match<
-    GetAnnouncementArticlesResponse,
+    RetrieveResponse,
     | APIError
     | SDKValidationError
     | UnexpectedClientError
@@ -222,18 +217,9 @@ async function $do(
     | RequestTimeoutError
     | ConnectionError
   >(
-    M.json(200, GetAnnouncementArticlesResponse$zodSchema, {
-      key: "ArticleResults",
-    }),
-    M.nil(204, GetAnnouncementArticlesResponse$zodSchema),
-    M.json(
-      [400, 401, 403, 404, 406],
-      GetAnnouncementArticlesResponse$zodSchema,
-      { key: "WSErrorCommon" },
-    ),
-    M.json(500, GetAnnouncementArticlesResponse$zodSchema, {
-      key: "WSErrorCommon",
-    }),
+    M.json(200, RetrieveResponse$zodSchema, { key: "RetrieveResponse" }),
+    M.nil(400, RetrieveResponse$zodSchema),
+    M.nil(500, RetrieveResponse$zodSchema),
   )(response, req$, { extraFields: responseFields$ });
 
   return [result$, { status: "complete", request: req$, response }];

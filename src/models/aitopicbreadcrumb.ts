@@ -12,10 +12,7 @@ export type AITopicBreadcrumb = {
   topicSummary?: Array<AITopicSummary> | undefined;
 };
 
-export const AITopicBreadcrumb$zodSchema: z.ZodType<
-  AITopicBreadcrumb,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  topicSummary: z.array(AITopicSummary$zodSchema).optional(),
-}).describe("This schema contains one or more TopicSummary instances.");
+export const AITopicBreadcrumb$zodSchema: z.ZodType<AITopicBreadcrumb> = z
+  .object({
+    topicSummary: z.array(AITopicSummary$zodSchema).optional(),
+  }).describe("This schema contains one or more TopicSummary instances.");

@@ -106,5 +106,7 @@ npx @modelcontextprotocol/inspector npx @egain/egain-mcp-server start --api-doma
 * eGain Support: [Support Portal](https://support.egain.com)
 * MCP Support: eloh@egain.com
 
+<!-- No Progressive Discovery [dynamic-mode] -->
+
 <!-- Placeholder for Future Speakeasy SDK Sections -->
 MCP Server Created by [Speakeasy](https://www.speakeasy.com/?utm_source=egain-mcp&utm_campaign=mcp-typescript)

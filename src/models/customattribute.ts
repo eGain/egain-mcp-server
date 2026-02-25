@@ -3,10 +3,22 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 
 /**
  * The custom attribute's type.
  */
+export const CustomAttributeType = {
+  String: "STRING",
+  Integer: "INTEGER",
+  Boolean: "BOOLEAN",
+  Datetime: "DATETIME",
+} as const;
+/**
+ * The custom attribute's type.
+ */
+export type CustomAttributeType = ClosedEnum<typeof CustomAttributeType>;
+
 export const CustomAttributeType$zodSchema = z.enum([
   "STRING",
   "INTEGER",
@@ -14,19 +26,13 @@ export const CustomAttributeType$zodSchema = z.enum([
   "DATETIME",
 ]).describe("The custom attribute's type.");
 
-export type CustomAttributeType = z.infer<typeof CustomAttributeType$zodSchema>;
-
 export type CustomAttribute = {
   name?: string | undefined;
   value?: Array<string> | undefined;
   type?: CustomAttributeType | undefined;
 };
 
-export const CustomAttribute$zodSchema: z.ZodType<
-  CustomAttribute,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const CustomAttribute$zodSchema: z.ZodType<CustomAttribute> = z.object({
   name: z.string().optional(),
   type: CustomAttributeType$zodSchema.optional(),
   value: z.array(z.string()).optional(),

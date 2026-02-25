@@ -34,22 +34,43 @@ import { Result } from "../types/fp.js";
  * @remarks
  * Get All Portals Accessible to User
  *
- * ## How to Use This Tool
- *
- * **Parameter Format**: This tool requires a `request` parameter containing the request object.
- * - **CRITICAL**: All parameters in this tool are optional. You may pass an empty request object: `{"request": {}}`
- * - If you want to specify a language, pass: `{"request": {"Dollar_lang": "en-US"}}`
- * - The `Dollar_lang` parameter is **optional** - if omitted, the API defaults to "en-US"
- * - **Example with empty request** (recommended if you don't need to specify language): `{"request": {}}`
- * - **Example with language**: `{"request": {"Dollar_lang": "en-US"}}`
- *
  * ## Overview
- * The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
+ * Retrieves the list of portals available to the authenticated user or application. Each portal contains a readable portal ID that is required by almost all other Portal Manager APIs.
+ *
  * - If no access tags are specified for a portal, any user can access the portal.
  * - If access tags are specified for a portal, users with a user profile that allows access can access the portal. For users with multiple user profiles, the user profile that allows access does not need to be the active user profile.
  * - Global users (partition) cannot be assigned user profiles; their access is limited to portals without access restrictions.
  * - The only articles returned are associated to an Article type when the parameter “Include in browse on portals” is set to "Yes".
  * - When the `shortUrlTemplate` query parameter is provided, the API filters accessible portals according to the specified language and template name. A portal short URL specific to the `shortUrlTemplate` value is returned in the response when available. If there is no short URL for a language, the portal object returns an empty `shortURL` field.
+ *
+ * ## Prerequisites
+ * Authentication is required. No portal ID is needed for this call. This is typically the first API you should call before using any other tool.
+ *
+ * ## How to Use This Tool
+ * - Call this endpoint to discover which portals you have access to. Use the returned portal IDs as inputs to Retrieve, Answers, Search, Article, and Suggestion APIs.
+ *
+ * ## Parameter Requirements
+ * This tool requires **both** a query language parameter **and** an HTTP language header. An empty request object is **invalid** and MUST NOT be used.
+ *
+ * ### Required (both MUST be provided)
+ * - `Dollar_lang` (string, default: "en-US") - Language code
+ * - `Accept-Language` (string, default: "en-US") - Accept-Language header value
+ *
+ * Both parameters **MUST** be present on every invocation.
+ * If either parameter is missing, the request is invalid.
+ *
+ * #### Optional
+ *
+ * - `Dollar_pagenum` — Page number to retrieve (defaults to `1` if omitted)
+ * - `Dollar_pagesize` — Number of items per page (server default applied if omitted)
+ *
+ * **Example**: To get all portals accessible to the user, call with:
+ * ```json
+ * {"request": {"Dollar_lang": "en-US", "Accept-Language": "en-US"}}
+ * ```
+ *
+ * ## Overview
+ * The Get All Portals Accessible to User API allows a user to fetch all portals accessible to the user across all departments.
  *
  * ## Pagination behavior (CRITICAL for AI assistants)
  *
@@ -92,24 +113,11 @@ import { Result } from "../types/fp.js";
  * This ensures reliable portal name-to-ID resolution and prevents false "not found" errors.
  *
  * ## Displaying Results (MCP-Specific)
- * **CRITICAL**: When this tool returns data successfully, you MUST display the portal information to the user in your response. Do not silently process the data - always show the user what was returned.
- *
- * **What to display:**
- * - Display all portals with their names and IDs
- * - Show portal `id` (the portal ID needed for other API calls)
- * - Display portal `name` (the human-readable portal name)
- * - Show `departmentName` if available
- * - Include `shortURL` if available
- * - Display `paginationInfo` to show total count and current page
- * - Format portals in a clear list format (e.g., "Portal Name (ID: PORTAL-123)")
- *
- * **Example**: "Here are the available portals: 1) Business Portal (ID: PORTAL-123), 2) Customer Portal (ID: PORTAL-456)..."
- *
- * **Important**: Always display portal IDs clearly, as users will need these IDs to call other tools.
+ * Always display the list of portals returned. Show portal name, portal ID, and any descriptive metadata. If multiple portals exist, prompt the user to select one for subsequent calls.
  */
-export function getPortals(
+export function getMyPortals(
   client$: EgainMcpCore,
-  request?: GetMyPortalsRequest | undefined,
+  request: GetMyPortalsRequest,
   options?: RequestOptions,
 ): APIPromise<
   Result<
@@ -132,7 +140,7 @@ export function getPortals(
 
 async function $do(
   client$: EgainMcpCore,
-  request?: GetMyPortalsRequest | undefined,
+  request: GetMyPortalsRequest,
   options?: RequestOptions,
 ): Promise<
   [
@@ -151,7 +159,7 @@ async function $do(
 > {
   const parsed$ = safeParse(
     request,
-    (value$) => GetMyPortalsRequest$zodSchema.optional().parse(value$),
+    (value$) => GetMyPortalsRequest$zodSchema.parse(value$),
     "Input validation failed",
   );
   if (!parsed$.ok) {
@@ -161,21 +169,21 @@ async function $do(
   const body$ = null;
   const path$ = pathToFunc("/myportals")();
   const query$ = encodeFormQuery({
-    "$lang": payload$?.Dollar_lang,
-    "$order": payload$?.Dollar_order,
-    "$pagenum": payload$?.Dollar_pagenum,
-    "$pagesize": payload$?.Dollar_pagesize,
-    "$sort": payload$?.Dollar_sort,
-    "department": payload$?.department,
-    "filterText": payload$?.filterText,
-    "shortUrlTemplate": payload$?.shortUrlTemplate,
+    "$lang": payload$.Dollar_lang,
+    "$order": payload$.Dollar_order,
+    "$pagenum": payload$.Dollar_pagenum,
+    "$pagesize": payload$.Dollar_pagesize,
+    "$sort": payload$.Dollar_sort,
+    "department": payload$.department,
+    "filterText": payload$.filterText,
+    "shortUrlTemplate": payload$.shortUrlTemplate,
   });
 
   const headers$ = new Headers(compactMap({
     Accept: "application/json",
     "Accept-Language": encodeSimple(
       "Accept-Language",
-      payload$?.acceptLanguage,
+      payload$.acceptLanguage,
       { explode: false, charEncoding: "none" },
     ),
   }));

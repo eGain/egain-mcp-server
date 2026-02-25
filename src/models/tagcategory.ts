@@ -16,11 +16,7 @@ export type TagCategory = {
   tagGroups?: TagGroups | undefined;
 };
 
-export const TagCategory$zodSchema: z.ZodType<
-  TagCategory,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const TagCategory$zodSchema: z.ZodType<TagCategory> = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
   tagGroups: TagGroups$zodSchema.optional(),

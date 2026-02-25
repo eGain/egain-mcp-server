@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # Durable Object binding for MCP Agent
 [[durable_objects.bindings]]
-name = "@EGAIN/EGAIN-MCP-SERVER_MCP"
+name = "EGAIN_EGAIN_MCP_SERVER_MCP"
 class_name = "AtEgainEgainMcpServerMCP"
 
 # Durable Object migration

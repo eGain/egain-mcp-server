@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import {
   ReferenceResponse,
   ReferenceResponse$zodSchema,
@@ -12,13 +13,19 @@ import { SearchResult, SearchResult$zodSchema } from "./searchresult.js";
 /**
  * Specifies that the answer produced was a certified answer.
  */
+export const RetrieveResponseAnswerType = {
+  Certified: "certified",
+} as const;
+/**
+ * Specifies that the answer produced was a certified answer.
+ */
+export type RetrieveResponseAnswerType = ClosedEnum<
+  typeof RetrieveResponseAnswerType
+>;
+
 export const RetrieveResponseAnswerType$zodSchema = z.enum([
   "certified",
 ]).describe("Specifies that the answer produced was a certified answer.");
-
-export type RetrieveResponseAnswerType = z.infer<
-  typeof RetrieveResponseAnswerType$zodSchema
->;
 
 /**
  * If a certified answer is given. The answer object will be present. <br><br> This will be shown only if certified answers are configured and the certified answer meets the configured threshold.
@@ -27,18 +34,16 @@ export type RetrieveResponseAnswer = {
   answerValue: string;
   references: Array<ReferenceResponse>;
   answerType: RetrieveResponseAnswerType;
-  relevanceScore?: number | undefined;
+  relevanceScore: number;
 };
 
 export const RetrieveResponseAnswer$zodSchema: z.ZodType<
-  RetrieveResponseAnswer,
-  z.ZodTypeDef,
-  unknown
+  RetrieveResponseAnswer
 > = z.object({
   answerType: RetrieveResponseAnswerType$zodSchema,
   answerValue: z.string(),
   references: z.array(ReferenceResponse$zodSchema),
-  relevanceScore: z.number().optional(),
+  relevanceScore: z.number(),
 }).describe(
   "If a certified answer is given. The answer object will be present. <br><br> This will be shown only if certified answers are configured and the certified answer meets the configured threshold.",
 );
@@ -46,6 +51,15 @@ export const RetrieveResponseAnswer$zodSchema: z.ZodType<
 /**
  * The channel where the query originated, e.g., directly from the portal or via a custom integration.
  */
+export const RetrieveResponseType = {
+  Portal: "portal",
+  Custom: "custom",
+} as const;
+/**
+ * The channel where the query originated, e.g., directly from the portal or via a custom integration.
+ */
+export type RetrieveResponseType = ClosedEnum<typeof RetrieveResponseType>;
+
 export const RetrieveResponseType$zodSchema = z.enum([
   "portal",
   "custom",
@@ -53,19 +67,13 @@ export const RetrieveResponseType$zodSchema = z.enum([
   "The channel where the query originated, e.g., directly from the portal or via a custom integration.",
 );
 
-export type RetrieveResponseType = z.infer<
-  typeof RetrieveResponseType$zodSchema
->;
-
 export type RetrieveResponseChannel = {
   type: RetrieveResponseType;
   name?: string | undefined;
 };
 
 export const RetrieveResponseChannel$zodSchema: z.ZodType<
-  RetrieveResponseChannel,
-  z.ZodTypeDef,
-  unknown
+  RetrieveResponseChannel
 > = z.object({
   name: z.string().optional(),
   type: RetrieveResponseType$zodSchema,
@@ -80,15 +88,13 @@ export type RetrieveResponse = {
   sessionId: string;
 };
 
-export const RetrieveResponse$zodSchema: z.ZodType<
-  RetrieveResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  answer: z.lazy(() => RetrieveResponseAnswer$zodSchema).optional(),
-  channel: z.lazy(() => RetrieveResponseChannel$zodSchema).optional(),
-  clientSessionId: z.string().optional(),
-  eventId: z.string().optional(),
-  searchResults: z.array(SearchResult$zodSchema),
-  sessionId: z.string(),
-});
+export const RetrieveResponse$zodSchema: z.ZodType<RetrieveResponse> = z.object(
+  {
+    answer: z.lazy(() => RetrieveResponseAnswer$zodSchema).optional(),
+    channel: z.lazy(() => RetrieveResponseChannel$zodSchema).optional(),
+    clientSessionId: z.string().optional(),
+    eventId: z.string().optional(),
+    searchResults: z.array(SearchResult$zodSchema),
+    sessionId: z.string(),
+  },
+);

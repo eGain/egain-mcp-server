@@ -36,6 +36,37 @@ export const startCommand = buildCommand({
           return z.string().parse(value);
         },
       },
+      mode: {
+        kind: "enum",
+        brief:
+          "Server mode (dynamic: expose list_tools, describe_tool, and execute_tool instead of individual tools)",
+        values: ["dynamic"],
+        optional: true,
+      },
+      "o-auth-user": {
+        kind: "parsed",
+        brief: "Sets the oAuthUser auth field for the API",
+        optional: true,
+        parse: (value) => {
+          return z.string().parse(value);
+        },
+      },
+      "o-auth-customer": {
+        kind: "parsed",
+        brief: "Sets the oAuthCustomer auth field for the API",
+        optional: true,
+        parse: (value) => {
+          return z.string().parse(value);
+        },
+      },
+      "o-auth-anonymous-customer": {
+        kind: "parsed",
+        brief: "Sets the oAuthAnonymousCustomer auth field for the API",
+        optional: true,
+        parse: (value) => {
+          return z.string().parse(value);
+        },
+      },
       "access-token": {
         kind: "parsed",
         brief: "Sets the accessToken auth field for the API",

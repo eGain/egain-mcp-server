@@ -14,12 +14,8 @@ export type FolderSummary = {
   link?: SchemasLink | undefined;
 };
 
-export const FolderSummary$zodSchema: z.ZodType<
-  FolderSummary,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  id: z.number().int().optional(),
+export const FolderSummary$zodSchema: z.ZodType<FolderSummary> = z.object({
+  id: z.int().optional(),
   link: SchemasLink$zodSchema.optional(),
   name: z.string().optional(),
 }).describe(

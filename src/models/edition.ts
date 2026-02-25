@@ -10,11 +10,7 @@ import { Link, Link$zodSchema } from "./link.js";
  */
 export type PublishProfile = { id: string; name: string };
 
-export const PublishProfile$zodSchema: z.ZodType<
-  PublishProfile,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const PublishProfile$zodSchema: z.ZodType<PublishProfile> = z.object({
   id: z.string(),
   name: z.string(),
 }).describe("The publish view associated with this edition.");
@@ -30,11 +26,10 @@ export type Edition = {
   link?: Link | undefined;
 };
 
-export const Edition$zodSchema: z.ZodType<Edition, z.ZodTypeDef, unknown> = z
-  .object({
-    id: z.string().optional(),
-    isContentEdition: z.boolean().optional(),
-    link: Link$zodSchema.optional(),
-    name: z.string().optional(),
-    publishProfile: z.lazy(() => PublishProfile$zodSchema).optional(),
-  }).describe("This schema contains information about an article edition.");
+export const Edition$zodSchema: z.ZodType<Edition> = z.object({
+  id: z.string().optional(),
+  isContentEdition: z.boolean().optional(),
+  link: Link$zodSchema.optional(),
+  name: z.string().optional(),
+  publishProfile: z.lazy(() => PublishProfile$zodSchema).optional(),
+}).describe("This schema contains information about an article edition.");

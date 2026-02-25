@@ -3,6 +3,7 @@
  */
 
 import * as z from "zod";
+import { ClosedEnum } from "../types/enums.js";
 import { AcceptLanguage, AcceptLanguage$zodSchema } from "./acceptlanguage.js";
 import { Article, Article$zodSchema } from "./article.js";
 import {
@@ -46,6 +47,57 @@ import { WSErrorCommon, WSErrorCommon$zodSchema } from "./wserrorcommon.js";
  * | instant_answer | View an Article via an Instant Answers solution.
  * | instant_answer_reference | View an Article that is used as a reference for an Instant Answers solution.
  */
+export const AccessSource = {
+  ArticleView: "article_view",
+  ArticleViewMoreRelatedArticle: "article_view_more_related_Article",
+  ArticleViewBasicSearch: "article_view_basic_search",
+  ArticleViewAdvSearch: "article_view_adv_search",
+  ArticleViewGuidedHelp: "article_view_guided_help",
+  ArticleViewBrowseTopic: "article_view_browse_topic",
+  ArticleViewBrowseTree: "article_view_browse_tree",
+  ArticleViewPopularArticles: "article_view_popular_articles",
+  ArticleViewUsefulItems: "article_view_useful_items",
+  ArticleViewWidget: "article_view_widget",
+  ArticleViewAnnouncement: "article_view_announcement",
+  ArticleViewBookmarked: "article_view_bookmarked",
+  ArticleViewSubscriptionNotification: "article_view_subscription_notification",
+  ArticleViewGuidedHelpAdditionalInfo:
+    "article_view_guided_help_additional_info",
+  ViewArticlesPendingCompliance: "view_articles_pending_compliance",
+  TypeAheadSuggestion: "type_ahead_Suggestion",
+  SemanticSuggestion: "semantic_Suggestion",
+  InstantAnswer: "instant_answer",
+  InstantAnswerReference: "instant_answer_reference",
+} as const;
+/**
+ * Provides information about the method in which the Article is accessed and is used for self-service analytics. Refer to the eGain User Guide regarding "Article View Contexts".
+ *
+ * @remarks
+ *
+ * | Name | Description
+ * | ---- | -----------
+ * | article_view | View an Article directly using its ID.
+ * | article_view_more_related_Article  | View related articles of an Article using its ID.
+ * | article_view_basic_search | View an Article via a basic search.
+ * | article_view_adv_search | View an Article via an advanced search.
+ * | article_view_guided_help | View an Article via a Guided Help solution.
+ * | article_view_browse_topic | View an Article via browsing a topic.
+ * | article_view_browse_tree | View an Article via browsing a topic tree.
+ * | article_view_popular_articles | View an Article using the Popular Items list in the Self-Service portal.
+ * | article_view_useful_items | View Article using the Useful Items list in the Self-Service portal.
+ * | article_view_widget | View an Article via a widget.
+ * | article_view_announcement | View an Article from the announcement section in the Self-Service portal.
+ * | article_view_bookmarked | View a bookmarked Article.
+ * | article_view_subscription_notification | View an Article from a subscription notification.
+ * | article_view_guided_help_additional_info | View an Article via additional information from a Guided Help search.
+ * | view_articles_pending_compliance | View an Article via Read & Sign in the Self-Service portal.
+ * | type_ahead_Suggestion | View an Article from a type-ahead Suggestion in the Self-Service portal.
+ * | semantic_Suggestion | View an Article from a semantic Suggestion in the Self-Service portal.
+ * | instant_answer | View an Article via an Instant Answers solution.
+ * | instant_answer_reference | View an Article that is used as a reference for an Instant Answers solution.
+ */
+export type AccessSource = ClosedEnum<typeof AccessSource>;
+
 export const AccessSource$zodSchema = z.enum([
   "article_view",
   "article_view_more_related_Article",
@@ -67,35 +119,13 @@ export const AccessSource$zodSchema = z.enum([
   "instant_answer",
   "instant_answer_reference",
 ]).describe(
-  "Provides information about the method in which the Article is accessed and is used for self-service analytics. Refer to the eGain User Guide regarding \"Article View Contexts\".\n"
-    + "\n"
-    + "| Name | Description \n"
-    + "| ---- | -----------\n"
-    + "| article_view | View an Article directly using its ID.\n"
-    + "| article_view_more_related_Article  | View related articles of an Article using its ID.\n"
-    + "| article_view_basic_search | View an Article via a basic search.\n"
-    + "| article_view_adv_search | View an Article via an advanced search.\n"
-    + "| article_view_guided_help | View an Article via a Guided Help solution.\n"
-    + "| article_view_browse_topic | View an Article via browsing a topic.\n"
-    + "| article_view_browse_tree | View an Article via browsing a topic tree.\n"
-    + "| article_view_popular_articles | View an Article using the Popular Items list in the Self-Service portal.\n"
-    + "| article_view_useful_items | View Article using the Useful Items list in the Self-Service portal.\n"
-    + "| article_view_widget | View an Article via a widget.\n"
-    + "| article_view_announcement | View an Article from the announcement section in the Self-Service portal.\n"
-    + "| article_view_bookmarked | View a bookmarked Article.\n"
-    + "| article_view_subscription_notification | View an Article from a subscription notification.\n"
-    + "| article_view_guided_help_additional_info | View an Article via additional information from a Guided Help search.\n"
-    + "| view_articles_pending_compliance | View an Article via Read & Sign in the Self-Service portal.\n"
-    + "| type_ahead_Suggestion | View an Article from a type-ahead Suggestion in the Self-Service portal.\n"
-    + "| semantic_Suggestion | View an Article from a semantic Suggestion in the Self-Service portal.\n"
-    + "| instant_answer | View an Article via an Instant Answers solution.\n"
-    + "| instant_answer_reference | View an Article that is used as a reference for an Instant Answers solution.\n"
-    + "",
+  "Provides information about the method in which the Article is accessed and is used for self-service analytics. Refer to the eGain User Guide regarding \"Article View Contexts\".\n\n| Name | Description \n| ---- | -----------\n| article_view | View an Article directly using its ID.\n| article_view_more_related_Article  | View related articles of an Article using its ID.\n| article_view_basic_search | View an Article via a basic search.\n| article_view_adv_search | View an Article via an advanced search.\n| article_view_guided_help | View an Article via a Guided Help solution.\n| article_view_browse_topic | View an Article via browsing a topic.\n| article_view_browse_tree | View an Article via browsing a topic tree.\n| article_view_popular_articles | View an Article using the Popular Items list in the Self-Service portal.\n| article_view_useful_items | View Article using the Useful Items list in the Self-Service portal.\n| article_view_widget | View an Article via a widget.\n| article_view_announcement | View an Article from the announcement section in the Self-Service portal.\n| article_view_bookmarked | View a bookmarked Article.\n| article_view_subscription_notification | View an Article from a subscription notification.\n| article_view_guided_help_additional_info | View an Article via additional information from a Guided Help search.\n| view_articles_pending_compliance | View an Article via Read & Sign in the Self-Service portal.\n| type_ahead_Suggestion | View an Article from a type-ahead Suggestion in the Self-Service portal.\n| semantic_Suggestion | View an Article from a semantic Suggestion in the Self-Service portal.\n| instant_answer | View an Article via an Instant Answers solution.\n| instant_answer_reference | View an Article that is used as a reference for an Instant Answers solution.\n",
 );
 
-export type AccessSource = z.infer<typeof AccessSource$zodSchema>;
-
 export type GetArticleByIdRequest = {
+  xEgainActivityId?: string | undefined;
+  xExtIntegrationId?: string | undefined;
+  xExtInteractionId?: string | undefined;
   acceptLanguage?: AcceptLanguage | undefined;
   portalID: string;
   articleID: string;
@@ -107,76 +137,42 @@ export type GetArticleByIdRequest = {
   workflowMilestone?: WorkflowMilestone | undefined;
 };
 
-export const GetArticleByIdRequest$zodSchema: z.ZodType<
-  GetArticleByIdRequest,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  Dollar_customAdditionalAttributes: z.string().optional(),
-  Dollar_lang: LanguageQueryParameter$zodSchema.default("en-US"),
-  acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
-  accessSource: AccessSource$zodSchema.default("article_view"),
-  articleAdditionalAttributes: z.array(ArticleAdditionalAttributes$zodSchema)
-    .describe(
-      "The attributes of an Article to be returned *in addition to* the default list of attributes, listed below. Multiple additional attributes can be specified using a comma-separated list. Passing 'all' will return all attributes.\n"
-        + "\n"
-        + "#### Default Attributes\n"
-        + "These Article attributes are always returned:\n"
-        + "\n"
-        + "| Name | Description \n"
-        + "| ---- | -----------\n"
-        + "| id | The ID of the Article.\n"
-        + "| name  | The name of the Article.\n"
-        + "| additionalInfo | Additional information provided as Article metadata.\n"
-        + "| articleType | The Article type and its attributes.\n"
-        + "| articleKeywords | A comma-separated list of keywords associated with this Article.\n"
-        + "| articleState | The current state of the Article. States include A (Authoring), S (Staging), and P (Published).\n"
-        + "| articleSummary | A brief summary of the Article, provided as metadata.\n"
-        + "| createdBy | The ID, first name, middle name and last name of the user that created the Article.\n"
-        + "| createdDate | The date that the Article was created.\n"
-        + "| departmentId | ID of the department for which this Article belongs to.\n"
-        + "| description | The Article's description.\n"
-        + "| expirationDate | The date that the Article is set to expire.\n"
-        + "| attachments | The Article's attachments\n"
-        + "| imageURL | The URL of the image that is present in the Article version. It is used as the thumbnail image for the Article.\n"
-        + "| includeInGenAI | Indicates whether this Article is used for eGain's generative AI features.\n"
-        + "| isSubscribed | Indicates whether the Article is subscribed for notifications. \n"
-        + "| languageCode | The language code of the Article language. \n"
-        + "| link | The link object, used to retrieve the details of the Article.\n"
-        + "| modifiedBy | The ID, first name, middle name and last name of the user that last modified the Article.\n"
-        + "| modifiedDate | The date that the Article was last modified on.\n"
-        + "| topicBreadcrumb | Contains a list of topics from the top-level topic to this Article. There may be multiple paths.\n"
-        + "| versionId | The ID of the Article version that is returned.\n"
-        + "",
+export const GetArticleByIdRequest$zodSchema: z.ZodType<GetArticleByIdRequest> =
+  z.object({
+    Dollar_customAdditionalAttributes: z.string().optional(),
+    Dollar_lang: LanguageQueryParameter$zodSchema.optional(),
+    acceptLanguage: AcceptLanguage$zodSchema.default("en-US"),
+    accessSource: AccessSource$zodSchema.default("article_view"),
+    articleAdditionalAttributes: z.array(ArticleAdditionalAttributes$zodSchema)
+      .describe(
+        "The attributes of an Article to be returned *in addition to* the default list of attributes, listed below. Multiple additional attributes can be specified using a comma-separated list. Passing 'all' will return all attributes.\n\n#### Default Attributes\nThese Article attributes are always returned:\n\n| Name | Description \n| ---- | -----------\n| id | The ID of the Article.\n| name  | The name of the Article.\n| additionalInfo | Additional information provided as Article metadata.\n| articleType | The Article type and its attributes.\n| articleKeywords | A comma-separated list of keywords associated with this Article.\n| articleState | The current state of the Article. States include A (Authoring), S (Staging), and P (Published).\n| articleSummary | A brief summary of the Article, provided as metadata.\n| createdBy | The ID, first name, middle name and last name of the user that created the Article.\n| createdDate | The date that the Article was created.\n| departmentId | ID of the department for which this Article belongs to.\n| description | The Article's description.\n| expirationDate | The date that the Article is set to expire.\n| attachments | The Article's attachments\n| imageURL | The URL of the image that is present in the Article version. It is used as the thumbnail image for the Article.\n| includeInGenAI | Indicates whether this Article is used for eGain's generative AI features.\n| isSubscribed | Indicates whether the Article is subscribed for notifications. \n| languageCode | The language code of the Article language. \n| link | The link object, used to retrieve the details of the Article.\n| modifiedBy | The ID, first name, middle name and last name of the user that last modified the Article.\n| modifiedDate | The date that the Article was last modified on.\n| topicBreadcrumb | Contains a list of topics from the top-level topic to this Article. There may be multiple paths.\n| versionId | The ID of the Article version that is returned.\n",
+      ).optional(),
+    articleID: z.string().describe(
+      "The ID of the Article.<br><br>An Article ID is composed of a 2-4 letter prefix followed by a dash and 4-15 digits.",
+    ),
+    portalID: z.string().describe(
+      "The ID of the portal being accessed.<br><br>A portal ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.",
+    ),
+    publishViewId: z.string().describe(
+      "The ID of a publish view for an Article. A publish view is a set of tags used to generate multiple editions of the same Article for display on the self-service portal. Publish views are used in conjunction with single sourcing to tailor the content of an Article to a specific audience by granting access to an Article's version to users that possess the same tags.<br><br>A publish view ID is composed of a 4-letter prefix, followed by a dash and 4-15 digits.",
     ).optional(),
-  articleID: z.string().describe(
-    "The ID of the Article.<br><br>An Article ID is composed of a 2-4 letter prefix followed by a dash and 4-15 digits.",
-  ),
-  portalID: z.string().describe(
-    "The ID of the portal being accessed.<br><br>A portal ID is composed of a 2-4 letter prefix, followed by a dash and 4-15 digits.",
-  ),
-  publishViewId: z.string().describe(
-    "The ID of a publish view for an Article. A publish view is a set of tags used to generate multiple editions of the same Article for display on the self-service portal. Publish views are used in conjunction with single sourcing to tailor the content of an Article to a specific audience by granting access to an Article's version to users that possess the same tags.<br><br>A publish view ID is composed of a 4-letter prefix, followed by a dash and 4-15 digits.",
-  ).optional(),
-  workflowMilestone: WorkflowMilestone$zodSchema.optional(),
-});
+    workflowMilestone: WorkflowMilestone$zodSchema.optional(),
+    xEgainActivityId: z.string().describe(
+      "A unique numeric interaction identifier from eGain.",
+    ).optional(),
+    xExtIntegrationId: z.string().describe(
+      "The unique numeric identifier for a tenant, used in self-service functionality as well as third-party integrations.<br><br>*Note: If x-egain-activity-id is not provided, then this must be passed along with x-ext-interaction-id.*",
+    ).optional(),
+    xExtInteractionId: z.string().describe(
+      "A unique interaction identifier from other CRM applications.<br><br>*Note: If x-egain-activity-id is not provided, then this must be passed along with x-ext-integration-id.*",
+    ).optional(),
+  });
 
-export type GetArticleByIdResponse = {
-  ContentType: string;
-  StatusCode: number;
-  RawResponse: Response;
-  Article?: Article | undefined;
-  WSErrorCommon?: WSErrorCommon | undefined;
-};
+export type GetArticleByIdResponse = Article | WSErrorCommon;
 
 export const GetArticleByIdResponse$zodSchema: z.ZodType<
-  GetArticleByIdResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
-  Article: Article$zodSchema.optional(),
-  ContentType: z.string(),
-  RawResponse: z.instanceof(Response),
-  StatusCode: z.number().int(),
-  WSErrorCommon: WSErrorCommon$zodSchema.optional(),
-});
+  GetArticleByIdResponse
+> = z.union([
+  Article$zodSchema,
+  WSErrorCommon$zodSchema,
+]);
