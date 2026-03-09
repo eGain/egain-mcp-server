@@ -1,6 +1,6 @@
 {
   "name": "@egain/egain-mcp-server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Emily Loh - eGain Corporation",
   "type": "module",
   "sideEffects": false,

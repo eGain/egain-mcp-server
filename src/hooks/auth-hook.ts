@@ -49,6 +49,27 @@ const getConfigPath = (): string => {
   return path.join(getConfigDir(), 'config.json');
 };
 
+/**
+ * If value looks like base64, decode it and optionally URI-decode the result (IdP may send
+ * error_description as base64-encoded URL-encoded text). Returns original string if not base64 or decode fails.
+ */
+function decodeOAuthErrorValue(value: string): string {
+  if (!value || value.length < 4) return value;
+  const trimmed = value.trim();
+  if (!/^[A-Za-z0-9+/=_-]+$/.test(trimmed)) return value;
+  try {
+    const decoded = Buffer.from(trimmed, 'base64').toString('utf-8');
+    if (/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(decoded)) return value;
+    try {
+      return decodeURIComponent(decoded);
+    } catch {
+      return decoded;
+    }
+  } catch {
+    return value;
+  }
+}
+
 const execAsync = promisify(exec);
 
 interface AuthConfig {
@@ -123,7 +144,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Detect the default browser on macOS or Windows
    */
   private async detectDefaultBrowser(): Promise<void> {
-    console.error('🔍 Attempting to detect default browser...');
+    // console.error('🔍 Attempting to detect default browser...');
     
     const platform = process.platform;
     
@@ -166,12 +187,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     
     // Method 1: Try using defaultbrowser command (if installed)
     try {
-      console.error('   Method 1: Trying defaultbrowser command...');
+      // console.error('   Method 1: Trying defaultbrowser command...');
       const { stdout } = await execAsync('which defaultbrowser');
       if (stdout.trim()) {
         const { stdout: browserOutput } = await execAsync('defaultbrowser');
         const bundleId = browserOutput.trim();
-        console.error(`   Bundle ID from defaultbrowser: ${bundleId}`);
+        // console.error(`   Bundle ID from defaultbrowser: ${bundleId}`);
         
         if (bundleId && browserMap[bundleId]) {
           this.detectedBrowser = browserMap[bundleId];
@@ -185,10 +206,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     
     // Method 2: Check LaunchServices
     try {
-      console.error('   Method 2: Checking LaunchServices...');
+      // console.error('   Method 2: Checking LaunchServices...');
       const { stdout } = await execAsync(`defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers 2>/dev/null | grep -B 1 -A 3 'https' | grep LSHandlerRoleAll -A 2 | grep LSHandlerContentTag | head -1 | cut -d '"' -f 2`);
       const bundleId = stdout.trim();
-      console.error(`   Bundle ID from LaunchServices: ${bundleId || '(none)'}`);
+      // console.error(`   Bundle ID from LaunchServices: ${bundleId || '(none)'}`);
       
       if (bundleId && browserMap[bundleId]) {
         this.detectedBrowser = browserMap[bundleId];
@@ -200,7 +221,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     }
     
     // Method 3: Scan for installed browsers
-    console.error('   Method 3: Scanning for installed browsers...');
+    // console.error('   Method 3: Scanning for installed browsers...');
     const browsersToCheck = [
       'Google Chrome',
       'Microsoft Edge',
@@ -235,7 +256,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
    * Detect browser on Windows
    */
   private async detectBrowserWindows(): Promise<void> {
-    console.error('   Method 1: Checking Windows registry for default browser...');
+    // console.error('   Method 1: Checking Windows registry for default browser...');
     
     // Try to get default browser from Windows registry
     try {
@@ -269,7 +290,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
     }
     
     // Method 2: Scan for installed browsers in common locations
-    console.error('   Method 2: Scanning for installed browsers...');
+    // console.error('   Method 2: Scanning for installed browsers...');
     const browsersToCheck = [
       { name: 'chrome', paths: [
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -376,8 +397,8 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         mode: 0o600 
       });
       
-      console.error(`💾 Created config file: ${configPath}`);
-      console.error('   (Secured with user-only read/write permissions)');
+      // console.error(`💾 Created config file: ${configPath}`);
+      // console.error('   (Secured with user-only read/write permissions)');
     } catch (error) {
       console.error('❌ Failed to save config:', error);
       throw error;
@@ -521,7 +542,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       
       this.configPageHtml = fs.readFileSync(htmlPath, 'utf8');
       this.configPageJs = fs.readFileSync(jsPath, 'utf8');
-      console.error('✅ Config page content preloaded');
+      // console.error('✅ Config page content preloaded');
     } catch (error) {
       console.error('⚠️  Could not preload config page:', error);
       // Set fallbacks
@@ -1022,7 +1043,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             const configPath = getConfigPath();
             if (fs.existsSync(configPath)) {
               fs.unlinkSync(configPath);
-              console.error(`🗑️  Deleted config file: ${configPath}`);
+              // console.error(`🗑️  Deleted config file: ${configPath}`);
             }
             
             // Clear in-memory config
@@ -1044,7 +1065,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
           req.on('end', async () => {
             try {
               const config = JSON.parse(body);
-              console.error('📝 Received configuration from browser form');
+              // console.error('📝 Received configuration from browser form');
               
               // Validate URLs don't contain spaces (common mistake: pasting multiple URLs)
               const urlFields = [
@@ -1083,7 +1104,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               // Save config to secure file storage (home directory)
               try {
                 this.saveConfigToFile(this.authConfig);
-                console.error('✅ Configuration saved to secure file storage');
+                // console.error('✅ Configuration saved to secure file storage');
               } catch (error) {
                 console.error('⚠️  Failed to save config to file:', error);
                 // Continue with authentication even if file save fails
@@ -1143,16 +1164,18 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
             const error = url.searchParams.get('error');
             
             if (error) {
-              const errorDesc = url.searchParams.get('error_description') || 'No description';
-              console.error('❌ OAuth error:', error, errorDesc);
+              const rawErrorDesc = url.searchParams.get('error_description') || 'No description';
+              const displayError = decodeOAuthErrorValue(error);
+              const displayErrorDesc = decodeOAuthErrorValue(rawErrorDesc);
+              console.error('❌ OAuth error:', displayError, displayErrorDesc);
               res.writeHead(200, { 'Content-Type': 'text/html' });
               res.end(`
                 <html>
                   <head><title>Authentication Error</title></head>
                   <body style="font-family: sans-serif; padding: 40px; text-align: center;">
                     <h1>❌ Authentication Error</h1>
-                    <p><strong>${error}</strong></p>
-                    <p>${errorDesc}</p>
+                    <p><strong>${displayError}</strong></p>
+                    <p>${displayErrorDesc}</p>
                     <p>You can close this window and try again.</p>
                     <script>setTimeout(() => window.close(), 3000);</script>
                   </body>
@@ -1283,7 +1306,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         // Verify the server is actually responding before resolving
         // Use a separate async function to properly await
         (async () => {
-          console.error('⏳ Verifying config server is ready...');
+          // console.error('⏳ Verifying config server is ready...');
           let verified = false;
           const maxAttempts = 15; // Increased attempts
           for (let i = 0; i < maxAttempts; i++) {
@@ -1293,7 +1316,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
               });
               if (resp.ok) {
                 verified = true;
-                console.error(`✅ Config server verified and ready (attempt ${i + 1}/${maxAttempts})`);
+                // console.error(`✅ Config server verified and ready (attempt ${i + 1}/${maxAttempts})`);
                 break;
               }
             } catch (error: any) {
@@ -1450,14 +1473,16 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 resolve(code);
               }
             } else if (err) {
-              const desc = reqUrl.searchParams.get('error_description') || 'No description';
+              const rawDesc = reqUrl.searchParams.get('error_description') || 'No description';
+              const displayErr = decodeOAuthErrorValue(err);
+              const displayDesc = decodeOAuthErrorValue(rawDesc);
               res.statusCode = 400;
               res.setHeader('Content-Type', 'text/html; charset=utf-8');
-              res.end(`<html><body><h3>Authentication error: ${err}</h3><p>${desc}</p></body></html>`);
+              res.end(`<html><body><h3>Authentication error: ${displayErr}</h3><p>${displayDesc}</p></body></html>`);
               if (!settled) {
                 settled = true;
                 server.close(() => {});
-                reject(new Error(`OAuth error: ${err} - ${desc}`));
+                reject(new Error(`OAuth error: ${displayErr} - ${displayDesc}`));
               }
             } else {
               res.statusCode = 400;
@@ -1565,9 +1590,12 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
                 
                 const errMatch = tUrl.match(/[?&]error=([^&]+)/);
                 if (errMatch && errMatch[1]) {
+                  const rawErr = decodeURIComponent(errMatch[1]);
                   const errDescMatch = tUrl.match(/error_description=([^&]+)/);
-                  const errDesc = errDescMatch && errDescMatch[1] ? decodeURIComponent(errDescMatch[1]) : 'No description';
-                  throw new Error(`OAuth error: ${decodeURIComponent(errMatch[1])} - ${errDesc}`);
+                  const rawErrDesc = errDescMatch && errDescMatch[1] ? decodeURIComponent(errDescMatch[1]) : 'No description';
+                  const errDisplay = decodeOAuthErrorValue(rawErr);
+                  const errDescDisplay = decodeOAuthErrorValue(rawErrDesc);
+                  throw new Error(`OAuth error: ${errDisplay} - ${errDescDisplay}`);
                 }
               }
             }
@@ -1876,8 +1904,10 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
         if (currentUrl && currentUrl.includes('error=')) {
           const errorMatch = currentUrl.match(/[?&]error=([^&]+)/);
           const errorDescMatch = currentUrl.match(/error_description=([^&]+)/);
-          const error = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
-          const errorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
+          const rawError = errorMatch && errorMatch[1] ? decodeURIComponent(errorMatch[1]) : 'unknown_error';
+          const rawErrorDesc = errorDescMatch && errorDescMatch[1] ? decodeURIComponent(errorDescMatch[1]) : 'No description';
+          const error = decodeOAuthErrorValue(rawError);
+          const errorDesc = decodeOAuthErrorValue(rawErrorDesc);
           
           // Scope errors are configuration issues - stop monitoring and let user see error
           // Username/password errors can be retried - continue monitoring
@@ -2017,7 +2047,7 @@ export class AuthenticationHook implements SDKInitHook, BeforeRequestHook {
       if (platform === 'darwin') {
         // macOS - Open default browser in private mode
         const incognitoFlag = this.getIncognitoFlag();
-        console.error(`🕵️  Using private mode flag: ${incognitoFlag || '(none - browser limitation)'}`);
+        // console.error(`🕵️  Using private mode flag: ${incognitoFlag || '(none - browser limitation)'}`);
         
         // Safari doesn't support --args flags well, use AppleScript for private browsing
         if (this.detectedBrowser === 'Safari') {

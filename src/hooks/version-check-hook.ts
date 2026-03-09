@@ -59,6 +59,49 @@ function isGitRepo(projectRoot: string): boolean {
 }
 
 /**
+ * Result when an update is available. Returned so MCP can send a proper error to the client.
+ */
+export interface UpdateAvailableResult {
+  message: string;
+  current: string;
+  latest: string;
+  installCommand: string;
+  link: string;
+}
+
+/**
+ * Check if a newer version is available on npm. Returns update info for the client if so, null otherwise.
+ * Used by the version-check hook (stderr) and by the MCP initialize handler (to return an error to the client).
+ */
+export async function checkUpdateAvailable(): Promise<UpdateAvailableResult | null> {
+  const localVersion = getLocalVersion();
+  if (!localVersion) return null;
+
+  const latestVersion = await getLatestVersion();
+  if (!latestVersion) return null;
+
+  if (compareVersions(latestVersion, localVersion) <= 0) return null;
+
+  const projectRoot = getProjectRoot();
+  const isGit = isGitRepo(projectRoot);
+
+  const installCommand = isGit
+    ? "git pull && npm run build"
+    : "npm install -g @egain/egain-mcp-server@latest";
+  const link = isGit
+    ? "https://github.com/eGain/egain-mcp-server"
+    : "https://www.npmjs.com/package/@egain/egain-mcp-server";
+
+  const message = [
+    `Update available: ${localVersion} → ${latestVersion}.`,
+    `Update with: ${installCommand}`,
+    `Or visit: ${link}`,
+  ].join(" ");
+
+  return { message, current: localVersion, latest: latestVersion, installCommand, link };
+}
+
+/**
  * Get local version from package.json
  */
 function getLocalVersion(): string | null {
@@ -114,50 +157,30 @@ export class VersionCheckHook implements SDKInitHook {
     
     this.checkPerformed = true;
     
-    // Perform version check asynchronously (non-blocking)
+    // Perform version check asynchronously (non-blocking) for stderr notice
     setImmediate(async () => {
       try {
         const localVersion = getLocalVersion();
-        
         if (!localVersion) {
-          console.error('⚠️  Could not determine local version');
+          console.error("⚠️  Could not determine local version");
           return;
         }
-        
         console.error(`📦 Checking for updates (current version: ${localVersion})...`);
-        
-        const latestVersion = await getLatestVersion();
-        
-        if (!latestVersion) {
-          // Silently fail - network issues shouldn't be noisy
-          return;
-        }
-        
-        if (compareVersions(latestVersion, localVersion) > 0) {
-          const projectRoot = getProjectRoot();
-          const isGit = isGitRepo(projectRoot);
-          
-          console.error('');
-          console.error('⚠️  UPDATE AVAILABLE');
-          console.error(`   Current version: ${localVersion}`);
-          console.error(`   Latest version:  ${latestVersion}`);
-          
-          if (isGit) {
-            console.error(`   Update with: git pull && npm run build`);
-            console.error(`   Or visit: https://github.com/eGain/egain-mcp-server`);
-          } else {
-            console.error(`   Update with: npm install -g @egain/egain-mcp-server@latest`);
-            console.error(`   Or visit: https://www.npmjs.com/package/@egain/egain-mcp-server`);
-          }
-          console.error('');
+        const update = await checkUpdateAvailable();
+        if (update) {
+          console.error("");
+          console.error("⚠️  UPDATE AVAILABLE");
+          console.error(`   Current version: ${update.current}`);
+          console.error(`   Latest version:  ${update.latest}`);
+          console.error(`   Update with: ${update.installCommand}`);
+          console.error(`   Or visit: ${update.link}`);
+          console.error("");
         } else {
           console.error(`✅ You are running the latest version (${localVersion})`);
         }
       } catch (error) {
-        // Silently fail - version check shouldn't break initialization
-        // Only log if it's a non-network error
-        if (error instanceof Error && !error.message.includes('fetch')) {
-          console.error('⚠️  Version check failed:', error.message);
+        if (error instanceof Error && !error.message.includes("fetch")) {
+          console.error("⚠️  Version check failed:", error.message);
         }
       }
     });
